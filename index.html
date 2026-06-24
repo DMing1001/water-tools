@@ -14,10 +14,7 @@
   .header::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 50%,rgba(255,255,255,.08) 0%,transparent 50%);pointer-events:none}
   .header h1{font-size:28px;font-weight:700;letter-spacing:2px;position:relative}
   .header p{font-size:15px;opacity:.8;margin-top:8px;font-weight:300;position:relative}
-  .header .nav{margin-top:16px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap;position:relative}
-  .header .nav a{color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid rgba(255,255,255,.2);border-radius:20px;transition:all .2s}
-  .header .nav a:hover{color:#fff;border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.1)}
-  .header .nav a.active{color:#fff;border-color:#fff;background:rgba(255,255,255,.15)}
+  .header .nav{display:none}
 
   .main{flex:1;max-width:960px;margin:32px auto;padding:0 20px;width:100%}
 
@@ -47,12 +44,7 @@
 <div class="header">
   <h1>🔧 水利计算工具集</h1>
   <p>Water Engineering Calculator Collection</p>
-  <div class="nav">
-    <a href="https://citeglow.com/">主站</a>
-    <a href="https://citeglow.com/journals/">期刊查询</a>
-    <a href="https://citeglow.com/water-teaching/">水利工程教学</a>
-    <a href="./" class="active">计算工具</a>
-  </div>
+
 </div>
 
 <div class="main">
@@ -119,7 +111,7 @@
 </div>
 
 <div class="footer">
-  依据国家及行业规范编制 · 仅供参考学习 · <a href="https://citeglow.com/">citeglow.com</a>
+  依据国家及行业规范编制 · 仅供参考学习
 </div>
 
 </body>
