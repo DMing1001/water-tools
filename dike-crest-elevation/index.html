@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>堤顶高程计算工具 | GB 50286-2013</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root{
+    --pri:#2563eb;--pri-l:#eff6ff;--pri-d:#1d4ed8;--pri-bg:#dbeafe;
+    --bg:#f8fafc;--card:#fff;--bdr:#e2e8f0;--bdr2:#cbd5e1;
+    --txt:#0f172a;--t2:#475569;--t3:#94a3b8;
+    --ok:#059669;--ok-bg:#ecfdf5;--ok-bdr:#a7f3d0;
+    --input-bg:#f8fafc;--input-bdr:#cbd5e1;
+    --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+    --shadow-md:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -2px rgba(0,0,0,.05);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--txt);line-height:1.6;font-size:14px;-webkit-font-smoothing:antialiased}
+
+  /* Header */
+  .header{background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 50%,#3b82f6 100%);color:#fff;padding:24px 0;text-align:center;position:relative;overflow:hidden}
+  .header::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 50%,rgba(255,255,255,.08) 0%,transparent 50%);pointer-events:none}
+  .header h1{font-size:22px;font-weight:700;letter-spacing:2px;position:relative}
+  .header p{font-size:13px;opacity:.75;margin-top:4px;font-weight:300;position:relative}
+  .header .back{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid rgba(255,255,255,.2);border-radius:16px;transition:all .2s}
+  .header .back:hover{color:#fff;border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.1)}
+  .wrap{max-width:1280px;margin:16px auto;padding:0 16px}
+
+  /* Tabs */
+  .tabs{display:flex;gap:0;margin-bottom:16px;background:var(--card);border-radius:10px;overflow:hidden;border:1px solid var(--bdr);box-shadow:var(--shadow)}
+  .tab{flex:1;padding:12px 16px;text-align:center;font-size:14px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--t2);transition:all .2s;position:relative}
+  .tab:not(:last-child)::after{content:'';position:absolute;right:0;top:20%;height:60%;width:1px;background:var(--bdr)}
+  .tab.active{background:var(--pri);color:#fff;font-weight:600}
+  .tab.active::after{display:none}
+  .tab:hover:not(.active){background:var(--pri-l);color:var(--pri)}
+
+  .mode{display:none}.mode.active{display:block}
+
+  /* Card */
+  .card{background:var(--card);border-radius:10px;border:1px solid var(--bdr);padding:20px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .card-title{font-size:15px;font-weight:600;color:var(--pri);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--pri-bg);display:flex;align-items:center;justify-content:space-between}
+  .card-title .badge{font-size:11px;background:var(--pri-bg);color:var(--pri);padding:2px 8px;border-radius:12px;font-weight:500}
+
+  /* Buttons */
+  .btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+  .btn{padding:9px 24px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+  .btn-p{background:var(--pri);color:#fff;box-shadow:0 1px 3px rgba(37,99,235,.3)}.btn-p:hover{background:var(--pri-d);transform:translateY(-1px);box-shadow:0 4px 8px rgba(37,99,235,.25)}
+  .btn-g{background:#f1f5f9;color:var(--t2);border:1px solid var(--bdr)}.btn-g:hover{background:#e2e8f0;color:var(--txt)}
+  .btn-ok{background:var(--ok);color:#fff;box-shadow:0 1px 3px rgba(5,150,105,.3)}.btn-ok:hover{background:#047857;transform:translateY(-1px)}
+  .btn-sm{padding:6px 14px;font-size:12px;border-radius:6px}
+
+  /* Collapsible */
+  .collapsible{border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:10px;background:var(--card)}
+  .collapse-hd{padding:12px 16px;cursor:pointer;user-select:none;font-size:13px;font-weight:500;color:var(--t2);display:flex;align-items:center;gap:8px;transition:all .15s}
+  .collapse-hd:hover{color:var(--pri);background:var(--pri-l)}
+  .collapse-hd .arrow{transition:transform .2s;font-size:11px}
+  .collapse-bd{display:none;padding:0 16px 16px}.collapse-bd.open{display:block}
+  .fml{background:var(--pri-l);border:1px solid var(--pri-bg);border-radius:8px;padding:14px 16px;margin:8px 0;font-size:13px;line-height:1.9;overflow-x:auto;color:var(--txt)}
+  .fml b{color:var(--pri);font-weight:600}
+  .fml .sym{font-family:'JetBrains Mono',monospace;font-style:normal;font-size:12.5px;background:rgba(37,99,235,.08);padding:1px 4px;border-radius:3px}
+  .ref-t{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
+  .ref-t th,.ref-t td{padding:7px 10px;border:1px solid var(--bdr);text-align:center}
+  .ref-t th{background:var(--pri-l);font-weight:600;color:var(--pri);font-size:12px}
+  .ref-t tr:hover td{background:#f8fafc}
+
+  /* ===== 单断面 ===== */
+  .single-layout{display:grid;grid-template-columns:380px 1fr;gap:16px;align-items:start}
+  @media(max-width:900px){.single-layout{grid-template-columns:1fr}}
+
+  /* 输入表单 - 精致卡片风格 */
+  .sf-group{margin-bottom:14px}
+  .sf-label{font-size:12px;font-weight:500;color:var(--t2);margin-bottom:4px;display:flex;align-items:center;gap:4px}
+  .sf-label .hint{font-size:11px;color:var(--t3);font-weight:400}
+  .sf-label .sf-tip{display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;font-size:10px;font-weight:700;color:var(--t3);background:#e2e8f0;border-radius:50%;cursor:help;margin-left:4px;position:relative}
+  .sf-label .sf-tip:hover::after{content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 8px);background:var(--txt);color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;white-space:pre-line;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,.15);font-weight:400;line-height:1.6;min-width:200px;max-width:300px;text-align:left}
+  .sf-label .sf-tip:hover::before{content:'';position:absolute;left:8px;bottom:calc(100% + 2px);border:5px solid transparent;border-top-color:var(--txt);z-index:21}
+  .sf-input{width:100%;padding:9px 12px;border:1.5px solid var(--input-bdr);border-radius:8px;font-size:14px;font-family:inherit;color:var(--txt);background:var(--input-bg);transition:all .2s;outline:none}
+  .sf-input:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(37,99,235,.1);background:#fff}
+  .sf-input::placeholder{color:var(--t3);font-size:13px}
+  .sf-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .sf-select{width:100%;padding:9px 12px;border:1.5px solid var(--input-bdr);border-radius:8px;font-size:13px;font-family:inherit;color:var(--txt);background:var(--input-bg);cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+  .sf-select:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+  .sf-divider{height:1px;background:linear-gradient(90deg,transparent,var(--bdr),transparent);margin:16px 0}
+  .sf-section{font-size:13px;font-weight:600;color:var(--pri);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .sf-section .dot{width:6px;height:6px;background:var(--pri);border-radius:50%}
+
+  /* 结果面板 */
+  .result-panel{background:var(--card);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;box-shadow:var(--shadow-md)}
+  .rp-header{background:linear-gradient(135deg,#065f46,#059669);color:#fff;padding:16px 20px;text-align:center}
+  .rp-header h3{font-size:16px;font-weight:600;letter-spacing:1px}
+  .rp-header .sub{font-size:12px;opacity:.75;margin-top:2px}
+  .rp-body{padding:20px}
+
+  /* 结果中的属性行 */
+  .attr-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:16px}
+  .attr{display:flex;align-items:baseline;gap:6px;font-size:13px}
+  .attr .k{color:var(--t3);min-width:fit-content;white-space:nowrap}
+  .attr .v{font-weight:600;color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:13px;border-bottom:1.5px solid var(--bdr2);padding-bottom:1px;flex:1;text-align:right}
+
+  /* 结果表 */
+  .rp-table{width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0}
+  .rp-table th{background:var(--pri-l);color:var(--pri);font-weight:600;padding:8px 10px;border:1px solid var(--bdr);font-size:12px;white-space:nowrap}
+  .rp-table td{padding:7px 10px;border:1px solid var(--bdr);text-align:center;font-size:12.5px}
+  .rp-table tr:hover td{background:#f8fafc}
+  .rp-table .total td{background:var(--ok-bg);font-weight:700;color:var(--ok);border-color:var(--ok-bdr)}
+  .rp-table .total td:first-child{text-align:left}
+
+  /* 高程汇总框 */
+  .crest-box{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:2px solid var(--ok-bdr);border-radius:10px;padding:18px;text-align:center;margin:16px 0}
+  .crest-box .cb-label{font-size:12px;color:var(--t2);margin-bottom:4px}
+  .crest-box .cb-val{font-size:28px;font-weight:700;color:var(--ok);font-family:'JetBrains Mono',monospace}
+  .crest-box .cb-fm{font-size:12px;color:var(--t3);margin-top:6px;font-family:'JetBrains Mono',monospace;letter-spacing:.5px}
+
+  /* ===== 批量模式 ===== */
+  .input-table{width:100%;border-collapse:collapse;font-size:13px}
+  .input-table th,.input-table td{padding:8px 7px;border:1px solid var(--bdr);text-align:center;vertical-align:middle}
+  .input-table th{background:linear-gradient(180deg,#eff6ff,#dbeafe);font-weight:600;color:var(--pri);font-size:12px;line-height:1.5}
+  .input-table th small{display:block;font-weight:400;color:var(--t3);font-size:11px}
+  .input-table td{background:var(--card)}
+  .input-table tr:hover td{background:#f8fafc}
+  .input-table input,.input-table select{width:100%;padding:7px 5px;border:1.5px solid var(--input-bdr);border-radius:6px;font-size:13px;text-align:center;outline:none;font-family:inherit;background:var(--input-bg);transition:border-color .15s}
+  .input-table input:focus,.input-table select:focus{border-color:var(--pri);box-shadow:0 0 0 2px rgba(37,99,235,.08);background:#fff}
+  .input-table .row-idx{background:var(--pri-bg);font-weight:700;color:var(--pri);width:34px;font-size:12px;border-radius:6px}
+  .input-table .row-del{width:30px;cursor:pointer;color:#ef4444;font-size:15px;background:none;border:none;font-weight:700;border-radius:6px;transition:all .15s}
+  .input-table .row-del:hover{background:#fef2f2;color:#dc2626}
+
+  .tip{cursor:help;border-bottom:1px dotted var(--t3);position:relative}
+  .tip:hover::after{content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 8px);background:var(--txt);color:#fff;padding:6px 12px;border-radius:6px;font-size:11px;white-space:nowrap;z-index:10;box-shadow:var(--shadow-md);font-weight:400}
+
+  .result-table{width:100%;border-collapse:collapse;font-size:13px}
+  .result-table th,.result-table td{padding:9px 10px;border:1px solid var(--bdr);text-align:center}
+  .result-table th{background:linear-gradient(180deg,#065f46,#059669);color:#fff;font-weight:600;font-size:12px;white-space:nowrap;letter-spacing:.5px}
+  .result-table td{font-family:'JetBrains Mono','Noto Sans SC',monospace;font-size:12.5px;background:var(--card)}
+  .result-table tr:hover td{background:#f0fdf4}
+  .result-table .hl td{background:var(--ok-bg)!important;font-weight:700;color:var(--ok)}
+
+  /* 弹窗 */
+  .modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center}
+  .modal-bg.show{display:flex}
+  .modal{background:#fff;border-radius:14px;width:92%;max-width:820px;max-height:85vh;overflow-y:auto;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+  .modal h2{font-size:17px;margin-bottom:14px;color:var(--txt);font-weight:600}
+  .modal .close{float:right;font-size:20px;cursor:pointer;color:var(--t3);background:none;border:none;transition:color .15s}.modal .close:hover{color:var(--txt)}
+  .report-box{background:#fafafa;border:1px solid var(--bdr);border-radius:8px;padding:18px;font-family:'Microsoft YaHei','SimSun',sans-serif;font-size:13px;line-height:2;white-space:pre-wrap;word-break:break-all;max-height:55vh;overflow-y:auto;user-select:text;color:var(--txt)}
+
+  .footer{text-align:center;padding:20px;font-size:11px;color:var(--t3)}
+  @media print{.header{background:#1e3a5f!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.btn,.modal-bg,.tabs{display:none!important}.card{break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a class="back" href="../">← 工具集</a>
+  <h1>堤顶高程计算工具</h1>
+  <p>GB 50286-2013《堤防工程设计规范》附录 C · 莆田试验站公式</p>
+</div>
+
+<div class="wrap">
+
+  <!-- 模式切换 -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchMode('single')">📐 单断面计算</div>
+    <div class="tab" onclick="switchMode('batch')">📊 批量断面计算</div>
+  </div>
+
+  <!-- ===== 单断面模式 ===== -->
+  <div class="mode active" id="modeSingle">
+    <div class="single-layout">
+      <!-- 左侧输入 -->
+      <div class="card" style="position:sticky;top:16px">
+        <div class="card-title">📐 参数输入 <span class="badge">单断面</span></div>
+
+        <div class="sf-section"><span class="dot"></span>工程信息</div>
+        <div class="sf-row">
+          <div class="sf-group">
+            <div class="sf-label">工程名称</div>
+            <input class="sf-input" id="s_name" value="堤防工程" placeholder="工程名称">
+          </div>
+          <div class="sf-group">
+            <div class="sf-label">计算断面 <span class="hint">桩号</span></div>
+            <input class="sf-input" id="s_section" placeholder="如 K5+200">
+          </div>
+        </div>
+
+        <div class="sf-divider"></div>
+        <div class="sf-section"><span class="dot"></span>基本参数</div>
+        <div class="sf-row">
+          <div class="sf-group">
+            <div class="sf-label">设计水位 <span class="hint">(m)</span><span class="sf-tip" data-tip="设计洪水位或设计潮位，
+根据防洪标准确定。
+一般取堤防设计频率
+对应的水位。">?</span></div>
+            <input class="sf-input" type="number" step="0.01" id="s_wl" placeholder="52.50">
+          </div>
+          <div class="sf-group">
+            <div class="sf-label">堤前水深 d <span class="hint">(m)</span><span class="sf-tip" data-tip="设计水位下，堤防
+迎水侧的水深。
+等于设计水位减去
+堤前河床高程。">?</span></div>
+            <input class="sf-input" type="number" step="0.01" id="s_d" placeholder="3.50">
+          </div>
+        </div>
+        <div class="sf-row">
+          <div class="sf-group">
+            <div class="sf-label">堤防等级<span class="sf-tip" data-tip="根据保护对象的
+重要性确定堤防等级：
+1级：特别重要城市
+2级：重要城市
+3级：一般城镇
+4~5级：农田/村庄">?</span></div>
+            <select class="sf-select" id="s_grade">
+              <option value="1">1 级</option><option value="2">2 级</option>
+              <option value="3" selected>3 级</option><option value="4">4 级</option><option value="5">5 级</option>
+            </select>
+          </div>
+          <div class="sf-group">
+            <div class="sf-label">安全超高 A <span class="hint">(m)</span><span class="sf-tip" data-tip="按堤防等级和越浪条件
+自动填入，也可手动修改。
+
+不允许越浪：
+1级≥1.0 2级≥0.8
+3级≥0.7 4级≥0.6 5级≥0.5
+
+允许越浪：
+1级≥0.5 2级≥0.4
+3级≥0.4 4级≥0.3 5级≥0.3">?</span></div>
+            <input class="sf-input" type="number" step="0.01" id="s_a" value="0.5">
+          </div>
+        </div>
+
+        <div class="sf-divider"></div>
+        <div class="sf-section"><span class="dot"></span>风浪参数</div>
+        <div class="sf-row">
+          <div class="sf-group">
+            <div class="sf-label">计算风速 V <span class="hint">(m/s)</span><span class="sf-tip" data-tip="多年平均最大风速，
+可从气象站资料获取。
+注意：应取汛期最大
+风速，非年最大。">?</span></div>
+            <input class="sf-input" type="number" step="0.1" id="s_v" placeholder="6.0">
+          </div>
+          <div class="sf-group">
+            <div class="sf-label">风区长度 F <span class="hint">(m)</span><span class="sf-tip" data-tip="水域上有效风区长度，
+即风吹过水面的距离。
+有对岸时取对岸距离；
+宽阔水域可取等效
+风区长度。">?</span></div>
+            <input class="sf-input" type="number" step="1" id="s_f" placeholder="2000">
+          </div>
+        </div>
+        <div class="sf-group">
+          <div class="sf-label">风向与堤轴线法线夹角 β <span class="hint">(°)</span><span class="sf-tip" data-tip="风向与堤防轴线法线
+方向的夹角。
+正向来波（风垂直吹向
+堤防）填 0°。
+斜向来波需折减爬高。">?</span></div>
+          <input class="sf-input" type="number" step="1" id="s_beta" value="0" style="width:50%">
+        </div>
+
+        <div class="sf-divider"></div>
+        <div class="sf-section"><span class="dot"></span>堤坡参数</div>
+        <div class="sf-row">
+          <div class="sf-group">
+            <div class="sf-label">边坡系数 m<span class="sf-tip" data-tip="迎水侧边坡系数，
+即水平距离与垂直距离
+之比。
+如坡比 1:2.5 则填 2.5；
+1:3.0 则填 3.0。
+一般土堤 m = 2~3。">?</span></div>
+            <input class="sf-input" type="number" step="0.1" id="s_m" placeholder="2.5">
+          </div>
+          <div class="sf-group">
+            <div class="sf-label">护面类型<span class="sf-tip" data-tip="决定糙率渗透系数 KΔ：
+
+砌石          → 0.85
+混凝土板      → 0.92
+抛填块石(不透水)→ 0.80
+抛填块石(透水)  → 0.75
+草皮          → 0.60">?</span></div>
+            <select class="sf-select" id="s_surf">
+              <option value="1.00">沥青混凝土（KΔ=1.00）</option>
+              <option value="0.92">混凝土板（KΔ=0.92）</option>
+              <option value="0.85" selected>砌石（KΔ=0.85）</option>
+              <option value="0.80">抛填块石-不透水（KΔ=0.80）</option>
+              <option value="0.75">抛填块石-透水（KΔ=0.75）</option>
+              <option value="0.60">草皮（KΔ=0.60）</option>
+              <option value="0.55">四脚空心方块（KΔ=0.55）</option>
+              <option value="0.50">四脚锥体（KΔ=0.50）</option>
+              <option value="0.45">扭工字块体（KΔ=0.45）</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sf-divider"></div>
+        <div class="sf-section"><span class="dot"></span>其他</div>
+        <div class="sf-row">
+          <div class="sf-group">
+            <div class="sf-label">是否允许越浪<span class="sf-tip" data-tip="影响安全超高 A 取值。
+
+不允许越浪：堤顶不得
+过水，安全超高较大。
+
+允许越浪：可接受少量
+越浪，安全超高较小，
+但堤顶和后坡需防护。">?</span></div>
+            <select class="sf-select" id="s_overtop">
+              <option value="0" selected>不允许越浪</option>
+              <option value="1">允许越浪</option>
+            </select>
+          </div>
+          <div class="sf-group">
+            <div class="sf-label">爬高累积频率 P<span class="sf-tip" data-tip="波浪爬高的统计概率。
+
+常规堤防取 P=2%
+重要堤防取 P=1%
+
+P 越小，设计爬高越大，
+堤防越安全但造价越高。">?</span></div>
+            <select class="sf-select" id="s_freq">
+              <option value="0.1">P = 0.1%</option><option value="1">P = 1%</option>
+              <option value="2" selected>P = 2%（常规）</option><option value="5">P = 5%</option><option value="13">P = 13%（均值）</option>
+            </select>
+          </div>
+          <div class="sf-group">
+            <div class="sf-label">计入风雍 e<span class="sf-tip" data-tip="风雍水面高度 =
+风把水面吹高了多少。
+e = KV²Fcosβ/(2gd)
+
+一般平原河流很小，
+可忽略；
+宽阔湖泊/海域建议计入。">?</span></div>
+            <select class="sf-select" id="s_useE">
+              <option value="1" selected>是</option><option value="0">否</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="btn-row" style="margin-top:16px">
+          <button class="btn btn-p" onclick="calcSingle()">🧮 计算</button>
+          <button class="btn btn-ok" onclick="exportSingleReport()" id="btnSingleReport" style="display:none">📄 计算书</button>
+        </div>
+      </div>
+
+      <!-- 右侧结果 -->
+      <div id="singleResultWrap" style="display:none">
+        <div class="result-panel" id="singleResult"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 批量模式 ===== -->
+  <div class="mode" id="modeBatch">
+    <div class="card">
+      <div class="card-title">
+        <span>📊 参数输入 <span class="badge">多断面</span></span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-g btn-sm" onclick="addRow()">＋ 添加断面</button>
+          <button class="btn btn-g btn-sm" onclick="clearRows()">清空</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="input-table">
+          <thead><tr>
+            <th style="width:34px">#</th>
+            <th style="min-width:80px">断面</th>
+            <th class="tip" data-tip="设计洪水位或设计潮位">设计水位<small>(m)</small></th>
+            <th class="tip" data-tip="按堤防等级和越浪条件取值">安全超高<small>A (m)</small></th>
+            <th class="tip" data-tip="设计水位下堤前水深">水深<small>d (m)</small></th>
+            <th class="tip" data-tip="多年平均最大风速">风速<small>V (m/s)</small></th>
+            <th class="tip" data-tip="有效风区长度">风区<small>F (m)</small></th>
+            <th class="tip" data-tip="风向与堤轴法线夹角，正向来波填0">夹角<small>β (°)</small></th>
+            <th class="tip" data-tip="迎水侧边坡系数，1:2.5填2.5">坡比<small>m</small></th>
+            <th class="tip" data-tip="护面类型，决定KΔ值">护面<small>类型</small></th>
+            <th class="tip" data-tip="越浪条件影响安全超高">越浪<small>条件</small></th>
+            <th class="tip" data-tip="爬高累积频率，常规取2%">频率<small>P</small></th>
+            <th class="tip" data-tip="是否计入风雍高度e">风雍<small>e</small></th>
+            <th style="width:30px"></th>
+          </tr></thead>
+          <tbody id="inputBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="calcBatch()">🧮 计算全部断面</button>
+      <button class="btn btn-ok" onclick="exportBatchReport()" id="btnBatchReport" style="display:none">📄 导出计算书</button>
+    </div>
+    <div class="card" id="batchResult" style="display:none">
+      <div class="card-title">✅ 计算结果</div>
+      <div style="overflow-x:auto"><table class="result-table"><thead id="bHead"></thead><tbody id="bBody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- 公式 -->
+  <div class="collapsible">
+    <div class="collapse-hd" onclick="toggleCollapse(this)"><span class="arrow">▶</span> 计算公式</div>
+    <div class="collapse-bd">
+      <div class="fml"><b>一、平均波高（莆田试验站公式）</b><br><span class="sym">g</span>H̄/V² = 0.13·tanh[0.7·(<span class="sym">g</span>d/V²)<sup>0.7</sup>]·tanh{ 0.0018·(<span class="sym">g</span>F/V²)<sup>0.45</sup> / [0.13·tanh(…)] }</div>
+      <div class="fml"><b>二、平均波周期</b><br>T̄ = 4.438·√H̄</div>
+      <div class="fml"><b>三、平均波长（迭代）</b><br>L₀ = <span class="sym">g</span>T̄²/(2π) ， L̄ = L₀·tanh(2πd/L̄)</div>
+      <div class="fml"><b>四、风雍水面高度</b><br>e = K·V²·F·cosβ/(2<span class="sym">g</span>d) ， K = 3.6×10⁻⁶</div>
+      <div class="fml"><b>五、波浪爬高</b><br>Rp = KΔ · Kv · Kp · R₀ · H̄</div>
+      <div class="fml"><b>六、堤顶高程</b><br>= 设计水位 + Rp + e + A</div>
+    </div>
+  </div>
+
+  <!-- 参考表 -->
+  <div class="collapsible">
+    <div class="collapse-hd" onclick="toggleCollapse(this)"><span class="arrow">▶</span> 常用系数参考表</div>
+    <div class="collapse-bd">
+      <p style="font-size:12px;font-weight:600;color:var(--pri);margin-bottom:4px">KΔ 护面糙率渗透性系数</p>
+      <table class="ref-t"><tr><th>护面类型</th><th>KΔ</th></tr>
+        <tr><td>沥青混凝土</td><td>1.00</td></tr><tr><td>混凝土板</td><td>0.92</td></tr>
+        <tr><td>砌石</td><td>0.85</td></tr><tr><td>抛填块石(不透水)</td><td>0.80</td></tr>
+        <tr><td>抛填块石(透水)</td><td>0.75</td></tr><tr><td>草皮</td><td>0.60</td></tr></table>
+      <p style="font-size:12px;font-weight:600;color:var(--pri);margin:12px 0 4px">安全超高 A</p>
+      <table class="ref-t"><tr><th>等级</th><th>1级</th><th>2级</th><th>3级</th><th>4级</th><th>5级</th></tr>
+        <tr><td>不允许越浪</td><td>1.0</td><td>0.8</td><td>0.7</td><td>0.6</td><td>0.5</td></tr>
+        <tr><td>允许越浪</td><td>0.5</td><td>0.4</td><td>0.4</td><td>0.3</td><td>0.3</td></tr></table>
+      <p style="font-size:12px;font-weight:600;color:var(--pri);margin:12px 0 4px">R₀ 值（P=2%摘录）</p>
+      <table class="ref-t"><tr><th>m</th><th>.001</th><th>.005</th><th>.01</th><th>.02</th><th>.05</th><th>.1</th></tr>
+        <tr><td>1.0</td><td>1.40</td><td>1.60</td><td>1.75</td><td>1.90</td><td>2.10</td><td>2.30</td></tr>
+        <tr><td>1.5</td><td>1.35</td><td>1.55</td><td>1.70</td><td>1.85</td><td>2.05</td><td>2.25</td></tr>
+        <tr><td>2.0</td><td>1.30</td><td>1.50</td><td>1.65</td><td>1.80</td><td>2.00</td><td>2.20</td></tr>
+        <tr><td>2.5</td><td>1.25</td><td>1.45</td><td>1.60</td><td>1.75</td><td>1.95</td><td>2.15</td></tr>
+        <tr><td>3.0</td><td>1.20</td><td>1.40</td><td>1.55</td><td>1.70</td><td>1.90</td><td>2.10</td></tr>
+        <tr><td>4.0</td><td>1.10</td><td>1.30</td><td>1.45</td><td>1.60</td><td>1.80</td><td>2.00</td></tr>
+        <tr><td>5.0</td><td>1.00</td><td>1.20</td><td>1.35</td><td>1.50</td><td>1.70</td><td>1.90</td></tr></table>
+    </div>
+  </div>
+
+  <div class="footer">依据 GB 50286-2013 · 仅供参考，实际工程以规范原文及审查意见为准</div>
+</div>
+
+<!-- 弹窗 -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="close" onclick="closeModal()">✕</button>
+    <h2>📄 计算书</h2>
+    <p style="font-size:12px;color:var(--t3);margin-bottom:10px">Ctrl+A 全选 → Ctrl+C 复制，可直接粘贴到 Word</p>
+    <div class="report-box" id="reportBox"></div>
+    <div style="text-align:center;margin-top:14px;display:flex;gap:8px;justify-content:center">
+      <button class="btn btn-p" onclick="copyReport()">📋 一键复制</button>
+      <button class="btn btn-g" onclick="closeModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const gradeFB_noOW={1:1.0,2:0.8,3:0.7,4:0.6,5:0.5}; // 不允许越浪
+const gradeFB_ow={1:0.5,2:0.4,3:0.4,4:0.3,5:0.3};  // 允许越浪
+const gradeName={1:'一',2:'二',3:'三',4:'四',5:'五'};
+const surfMap={'1.00':'沥青混凝土','0.92':'混凝土板','0.85':'砌石','0.80':'抛填块石(不透水)','0.75':'抛填块石(透水)','0.60':'草皮','0.55':'四脚空心方块','0.50':'四脚锥体','0.45':'扭工字块体'};
+
+const KpSeg={0.1:[[0,.1,2.97,2.97],[.1,.2,2.97,2.82],[.2,.3,2.82,2.68],[.3,.5,2.68,2.46],[.5,1,2.46,2.13]],
+  1:[[0,.1,2.42,2.42],[.1,.2,2.42,2.30],[.2,.3,2.30,2.18],[.3,.5,2.18,2.00],[.5,1,2.00,1.75]],
+  2:[[0,.1,2.07,2.07],[.1,.2,2.07,1.96],[.2,.3,1.96,1.86],[.3,.5,1.86,1.70],[.5,1,1.70,1.50]],
+  5:[[0,.1,1.64,1.64],[.1,.2,1.64,1.56],[.2,.3,1.56,1.49],[.3,.5,1.49,1.38],[.5,1,1.38,1.24]],
+  13:[[0,.1,1.18,1.18],[.1,.2,1.18,1.14],[.2,.3,1.14,1.10],[.3,.5,1.10,1.05],[.5,1,1.05,0.97]]};
+const KbB=[0,10,20,30,40,50,60,70,80,90],KbV=[1,.98,.96,.93,.90,.86,.80,.72,.61,.45];
+const R0m=[1.0,1.25,1.5,1.75,2.0,2.5,3.0,3.5,4.0,5.0,6.0];
+const R0hl=[.001,.005,.01,.02,.05,.1];
+const R0d=[[1.40,1.60,1.75,1.90,2.10,2.30],[1.38,1.58,1.73,1.88,2.08,2.28],[1.35,1.55,1.70,1.85,2.05,2.25],[1.33,1.53,1.68,1.83,2.03,2.23],[1.30,1.50,1.65,1.80,2.00,2.20],[1.25,1.45,1.60,1.75,1.95,2.15],[1.20,1.40,1.55,1.70,1.90,2.10],[1.15,1.35,1.50,1.65,1.85,2.05],[1.10,1.30,1.45,1.60,1.80,2.00],[1.00,1.20,1.35,1.50,1.70,1.90],[0.90,1.10,1.25,1.40,1.60,1.80]];
+
+let lastSingle=null, batchResults=[], rowCnt=0;
+
+function switchMode(m){
+  document.querySelectorAll('.tab').forEach((t,i)=>{t.classList.toggle('active',i===(m==='single'?0:1))});
+  document.getElementById('modeSingle').classList.toggle('active',m==='single');
+  document.getElementById('modeBatch').classList.toggle('active',m==='batch');
+}
+function updateA(){
+  const g=parseInt(document.getElementById('s_grade').value);
+  const ow=document.getElementById('s_overtop').value==='1';
+  document.getElementById('s_a').value=ow?gradeFB_ow[g]:gradeFB_noOW[g];
+}
+document.getElementById('s_grade').onchange=updateA;
+document.getElementById('s_overtop').onchange=updateA;
+
+function lerp(xA,yA,x){if(x<=xA[0])return yA[0];if(x>=xA[xA.length-1])return yA[yA.length-1];for(let i=0;i<xA.length-1;i++)if(x>=xA[i]&&x<=xA[i+1])return yA[i]+(x-xA[i])/(xA[i+1]-xA[i])*(yA[i+1]-yA[i]);return yA[yA.length-1];}
+function biLerp(xA,yA,z,x,y){
+  let xi=0;for(let i=0;i<xA.length-1;i++){if(x>=xA[i]&&x<=xA[i+1]){xi=i;break}if(i===xA.length-2)xi=i}
+  let yi=0;for(let j=0;j<yA.length-1;j++){if(y>=yA[j]&&y<=yA[j+1]){yi=j;break}if(j===yA.length-2)yi=j}
+  const x0=xA[xi],x1=xA[Math.min(xi+1,xA.length-1)],y0=yA[yi],y1=yA[Math.min(yi+1,yA.length-1)];
+  const tx=x1===x0?0:(x-x0)/(x1-x0),ty=y1===y0?0:(y-y0)/(y1-y0);
+  return z[xi][yi]*(1-tx)*(1-ty)+z[Math.min(xi+1,xA.length-1)][yi]*tx*(1-ty)+z[xi][Math.min(yi+1,yA.length-1)]*(1-tx)*ty+z[Math.min(xi+1,xA.length-1)][Math.min(yi+1,yA.length-1)]*tx*ty;
+}
+
+function calc(r){
+  const g=9.81,V=r.V,F=r.F,d=r.d;
+  const gV2=g/(V*V),A1=.13*Math.tanh(.7*Math.pow(gV2*d,.7)),B1=.0018*Math.pow(gV2*F,.45);
+  const Hbar=A1*Math.tanh(B1/A1)*V*V/g;
+  const Tbar=4.438*Math.sqrt(Hbar),L0=g*Tbar*Tbar/(2*Math.PI);
+  let Lbar=L0;for(let i=0;i<200;i++){const n=L0*Math.tanh(2*Math.PI*d/Lbar);if(Math.abs(n-Lbar)<1e-8)break;Lbar=n}
+  const hl=Hbar/Lbar,Hd=Hbar/d,Kw=V/Math.sqrt(g*d);
+  const Kc=3.6e-6,cosb=Math.cos(r.beta*Math.PI/180),e=Kc*V*V*F*cosb/(2*g*d);
+  const seg=KpSeg[r.P]||KpSeg[2];let Kp=2.07;
+  for(const[lo,hi,kl,kh]of seg)if(Hd>=lo&&Hd<=hi){Kp=(hi-lo)<1e-10?kl:kl+(Hd-lo)/(hi-lo)*(kh-kl);break}
+  const Kv=lerp(KbB,KbV,Math.min(r.beta,90));
+  const R0=biLerp(R0m,R0hl,R0d,Math.max(1,Math.min(6,r.m)),Math.max(.001,Math.min(.1,hl)));
+  const Rp=r.Kd*Kv*Kp*R0*Hbar;
+  const crest=r.WL+Rp+(r.useE?e:0)+r.A;
+  return{...r,Hbar,Tbar,L0,Lbar,hl,Hd,Kw,e,cosb,Kp,Kv,R0,Rp,crest,tmin:136*F/V};
+}
+function fv(v,d=2){return v==null?'—':Number(v).toFixed(d)}
+
+// === 单断面 ===
+function calcSingle(){
+  const g=id=>document.getElementById('s_'+id);
+  const WL=parseFloat(g('wl').value),A=parseFloat(g('a').value),d=parseFloat(g('d').value);
+  const V=parseFloat(g('v').value),F=parseFloat(g('f').value),beta=parseFloat(g('beta').value)||0;
+  const m=parseFloat(g('m').value),Kd=parseFloat(g('surf').value),P=parseFloat(g('freq').value),useE=g('useE').value==='1';
+  const overtop=g('overtop').value==='1';
+  if([WL,d,V,F,m].some(isNaN)){alert('请填写完整参数');return}
+  const r=calc({name:g('name').value||'堤防工程',section:g('section').value||'',WL,A,d,V,F,beta,m,Kd,P,useE,overtop,grade:parseInt(g('grade').value),surfText:surfMap[g('surf').value]});
+  lastSingle=r;
+
+  const el=document.getElementById('singleResult');
+  el.innerHTML=`
+    <div class="rp-header">
+      <h3>${r.name} — 堤顶高程计算</h3>
+      ${r.section?'<div class="sub">断面 '+r.section+'</div>':''}
+    </div>
+    <div class="rp-body">
+      <div style="font-size:13px;font-weight:600;color:var(--t2);margin-bottom:10px">一、波浪要素</div>
+      <div class="attr-grid">
+        <div class="attr"><span class="k">设计水位</span><span class="v">${fv(r.WL)} m</span></div>
+        <div class="attr"><span class="k">堤前水深 d</span><span class="v">${fv(r.d)} m</span></div>
+        <div class="attr"><span class="k">计算风速 V</span><span class="v">${fv(r.V,1)} m/s</span></div>
+        <div class="attr"><span class="k">风区长度 F</span><span class="v">${fv(r.F,0)} m</span></div>
+        <div class="attr"><span class="k">平均波高 H̄</span><span class="v">${fv(r.Hbar,4)} m</span></div>
+        <div class="attr"><span class="k">平均波周期 T̄</span><span class="v">${fv(r.Tbar,3)} s</span></div>
+        <div class="attr"><span class="k">平均波长 L̄</span><span class="v">${fv(r.Lbar,3)} m</span></div>
+        <div class="attr"><span class="k">波陡 H̄/L̄</span><span class="v">${fv(r.hl,5)}</span></div>
+      </div>
+
+      <div style="font-size:13px;font-weight:600;color:var(--t2);margin:14px 0 10px">二、波浪爬高计算</div>
+      <table class="rp-table">
+        <tr><th>项目</th><th>取值/公式</th><th>结果</th></tr>
+        <tr><td style="text-align:left">护面糙率系数 KΔ</td><td>${r.surfText}</td><td>${fv(r.Kd)}</td></tr>
+        <tr><td style="text-align:left">斜向折减系数 Kv</td><td>β=${r.beta}° 查表</td><td>${fv(r.Kv,3)}</td></tr>
+        <tr><td style="text-align:left">频率换算系数 Kp</td><td>P=${r.P}%, H̄/d=${fv(r.Hd,3)}</td><td>${fv(r.Kp,3)}</td></tr>
+        <tr><td style="text-align:left">无风浪爬高 R₀</td><td>m=${fv(r.m,1)}, H̄/L̄=${fv(r.hl,4)}</td><td>${fv(r.R0,3)}</td></tr>
+        ${r.useE?`<tr><td style="text-align:left">风雍高度 e</td><td>KV²Fcosβ/(2gd)</td><td>${fv(r.e,4)} m</td></tr>`:''}
+        <tr class="total"><td style="text-align:left">设计爬高 Rp</td><td>KΔ·Kv·Kp·R₀·H̄</td><td>${fv(r.Rp,3)} m</td></tr>
+      </table>
+
+      <div style="font-size:13px;font-weight:600;color:var(--t2);margin:14px 0 10px">三、堤顶高程</div>
+      <table class="rp-table">
+        <tr><th>部位</th><th>桩号</th><th>堤型</th><th>堤防等级</th><th>越浪条件</th><th>设计坡度</th><th>安全超高</th><th>堤顶高程</th></tr>
+        <tr><td>${r.name}</td><td>${r.section||'—'}</td><td>${r.surfText}</td><td>${r.grade}级</td><td>${r.overtop?'允许':'不允许'}</td><td>1:${fv(r.m,1)}</td><td>${fv(r.A)} m</td><td><b>${fv(r.crest)} m</b></td></tr>
+      </table>
+
+      <table class="rp-table" style="margin-top:8px">
+        <tr><th rowspan="2">部位</th><th colspan="2">波浪爬高</th><th rowspan="2">安全加高(m)</th><th rowspan="2">堤顶高程(m)</th></tr>
+        <tr><th>频率P</th><th>爬高Rp(m)</th></tr>
+        <tr><td>${r.name}</td><td>P=${r.P}%</td><td>${fv(r.Rp,3)}</td><td>${fv(r.A)}</td><td><b>${fv(r.crest)}</b></td></tr>
+      </table>
+
+      <div class="crest-box">
+        <div class="cb-label">堤顶高程 = 设计水位 + Rp + e + A</div>
+        <div class="cb-val">${fv(r.crest)} m</div>
+        <div class="cb-fm">${fv(r.WL)} + ${fv(r.Rp,3)} + ${r.useE?fv(r.e,4):'0'} + ${fv(r.A)} = ${fv(r.crest)}</div>
+      </div>
+    </div>`;
+
+  document.getElementById('singleResultWrap').style.display='block';
+  document.getElementById('btnSingleReport').style.display='inline-flex';
+  document.getElementById('singleResultWrap').scrollIntoView({behavior:'smooth'});
+}
+
+// === 批量 ===
+function addRow(name,wl,a,d,v,f,beta,m,surf,freq,e){
+  rowCnt++;
+  const tr=document.createElement('tr');tr.id='r'+rowCnt;
+  tr.innerHTML=`<td class="row-idx">${rowCnt}</td>
+    <td><input value="${name||'断面'+rowCnt}" style="width:90px;text-align:left;font-weight:500"></td>
+    <td><input type="number" step="0.01" value="${wl||''}" placeholder="52.50"></td>
+    <td><input type="number" step="0.01" value="${a!=null?a:''}" placeholder="0.5"></td>
+    <td><input type="number" step="0.01" value="${d||''}" placeholder="3.5"></td>
+    <td><input type="number" step="0.1" value="${v||''}" placeholder="6.0"></td>
+    <td><input type="number" step="1" value="${f||''}" placeholder="2000"></td>
+    <td><input type="number" step="1" value="${beta!=null?beta:0}" placeholder="0"></td>
+    <td><input type="number" step="0.1" value="${m||''}" placeholder="2.5"></td>
+    <td><select style="min-width:100px">${Object.entries(surfMap).map(([k,t])=>`<option value="${k}"${k===(surf||'0.85')?' selected':''}>${t}</option>`).join('')}</select></td>
+    <td><select style="min-width:60px"><option value="0" selected>不允许</option><option value="1">允许</option></select></td>
+    <td><select style="min-width:50px">${[{v:2,t:'2%'},{v:1,t:'1%'},{v:5,t:'5%'}].map(o=>`<option value="${o.v}"${o.v==(freq||2)?' selected':''}>${o.t}</option>`).join('')}</select></td>
+    <td><select style="min-width:46px"><option value="1"${e!='0'?' selected':''}>是</option><option value="0"${e==='0'?' selected':''}>否</option></select></td>
+    <td><button class="row-del" onclick="this.closest('tr').remove()">✕</button></td>`;
+  document.getElementById('inputBody').appendChild(tr);
+}
+function clearRows(){document.getElementById('inputBody').innerHTML='';rowCnt=0;document.getElementById('batchResult').style.display='none';document.getElementById('btnBatchReport').style.display='none';batchResults=[]}
+addRow('断面-1');addRow('断面-2');addRow('断面-3');
+
+function calcBatch(){
+  const rows=document.querySelectorAll('#inputBody tr');
+  if(!rows.length){alert('请添加断面');return}
+  batchResults=[];
+  for(const tr of rows){
+    const inp=tr.querySelectorAll('input'),sel=tr.querySelectorAll('select');
+    const name=inp[0].value||'—';
+    const WL=parseFloat(inp[1].value),A=parseFloat(inp[2].value),d=parseFloat(inp[3].value);
+    const V=parseFloat(inp[4].value),F=parseFloat(inp[5].value),beta=parseFloat(inp[6].value)||0;
+    const m=parseFloat(inp[7].value),Kd=parseFloat(sel[0].value),overtop=sel[1].value==='1',P=parseFloat(sel[2].value),useE=sel[3].value==='1';
+    if([WL,d,V,F,m].some(isNaN)){alert('"'+name+'" 参数不完整');return}
+    batchResults.push(calc({name,WL,A,d,V,F,beta,m,Kd,P,useE,overtop,surfText:surfMap[sel[0].value]}));
+  }
+  const hasE=batchResults.some(r=>r.useE);
+  document.getElementById('bHead').innerHTML=`<tr><th>断面</th><th>设计水位</th><th>H̄</th><th>T̄</th><th>L̄</th>${hasE?'<th>e</th>':''}<th>Rp</th><th>越浪</th><th>A</th><th>堤顶高程</th></tr>`;
+  let body='';
+  for(const r of batchResults){
+    body+=`<tr class="hl"><td style="text-align:left;font-family:inherit">${r.name}</td><td>${fv(r.WL)}</td><td>${fv(r.Hbar,4)}</td><td>${fv(r.Tbar,3)}</td><td>${fv(r.Lbar,2)}</td>${hasE?`<td>${fv(r.e,4)}</td>`:''}<td>${fv(r.Rp,3)}</td><td>${r.overtop?'允许':'不允许'}</td><td>${fv(r.A)}</td><td>${fv(r.crest)}</td></tr>`;
+  }
+  document.getElementById('bBody').innerHTML=body;
+  document.getElementById('batchResult').style.display='block';
+  document.getElementById('btnBatchReport').style.display='inline-flex';
+  document.getElementById('batchResult').scrollIntoView({behavior:'smooth'});
+}
+
+// === 计算书（Word 友好纯文本）===
+function makeReport(results){
+  const today=new Date().toLocaleDateString('zh-CN');
+  const W=58; // 行宽
+  const hr=(c='=')=>c.repeat(W);
+  const pad=(s,w)=>{s=String(s);return s.length>=s?s:' '.repeat(w-s.length)+s};
+
+  let t='';
+  t+=hr()+'\n';
+  t+='            堤 顶 高 程 计 算 书\n\n';
+  t+='  依据: GB 50286-2013《堤防工程设计规范》附录 C\n';
+  t+=hr()+'\n\n';
+  t+='  计算日期: '+today+'        计算者: ________        校核者: ________\n\n';
+
+  for(let i=0;i<results.length;i++){
+    const r=results[i];
+    if(results.length>1){
+      t+=hr('-')+'\n';
+      t+='  【'+(i+1)+'】'+r.name+(r.section?' ('+r.section+')':'')+'\n';
+      t+=hr('-')+'\n\n';
+    }
+
+    t+='  一、基本参数\n\n';
+    t+='    设计水位     '+pad(fv(r.WL),10)+' m\n';
+    t+='    堤前水深 d   '+pad(fv(r.d),10)+' m\n';
+    t+='    计算风速 V   '+pad(fv(r.V,1),10)+' m/s\n';
+    t+='    风区长度 F   '+pad(fv(r.F,0),10)+' m\n';
+    t+='    风向夹角 β   '+pad(r.beta+'°',10)+'\n';
+    t+='    边坡系数 m   '+pad(fv(r.m,1),10)+'\n';
+    t+='    护面类型     '+r.surfText+' (KΔ='+fv(r.Kd)+')\n';
+    t+='    堤防等级     '+r.grade+'级\n';
+    t+='    越浪条件     '+(r.overtop?'允许越浪':'不允许越浪')+'\n';
+    t+='    安全超高 A   '+pad(fv(r.A),10)+' m\n';
+    t+='    爬高频率 P   '+pad(r.P+'%',10)+'\n\n';
+
+    t+='  二、波浪要素计算（莆田试验站公式）\n\n';
+    t+='    平均波高 H̄ = '+fv(r.Hbar,4)+' m\n';
+    t+='    平均波周期 T̄ = '+fv(r.Tbar,3)+' s\n';
+    t+='    平均波长 L̄ = '+fv(r.Lbar,3)+' m\n';
+    t+='    波陡 H̄/L̄ = '+fv(r.hl,5)+'\n\n';
+
+    t+='  三、波浪爬高\n\n';
+    t+='    Rp = KΔ × Kv × Kp × R₀ × H̄\n\n';
+    t+='    KΔ = '+fv(r.Kd)+'  ('+r.surfText+')\n';
+    t+='    Kv = '+fv(r.Kv,3)+'  (β='+r.beta+'°查表)\n';
+    t+='    Kp = '+fv(r.Kp,3)+'  (P='+r.P+'%, H̄/d='+fv(r.Hd,3)+')\n';
+    t+='    R₀ = '+fv(r.R0,3)+'  (m='+fv(r.m,1)+', H̄/L̄='+fv(r.hl,4)+'查表)\n';
+    if(r.useE) t+='    e  = '+fv(r.e,4)+' m  (风雍水面高度)\n';
+    t+='\n    Rp = '+fv(r.Kd)+' × '+fv(r.Kv,3)+' × '+fv(r.Kp,3)+' × '+fv(r.R0,3)+' × '+fv(r.Hbar,4)+'\n';
+    t+='       = '+fv(r.Rp,3)+' m\n\n';
+
+    t+='  四、堤顶高程\n\n';
+    t+='    +----------------------------------------------+\n';
+    t+='    |                                              |\n';
+    t+='    |    设计水位              '+pad(fv(r.WL),10)+' m          |\n';
+    t+='    |  + 波浪爬高 Rp          '+pad(fv(r.Rp,3),10)+' m          |\n';
+    t+='    |  + 风雍高度 e           '+pad(r.useE?fv(r.e,4):'0 (忽略)',10)+' m          |\n';
+    t+='    |  + 安全超高 A           '+pad(fv(r.A),10)+' m          |\n';
+    t+='    |  --------------------------------------------  |\n';
+    t+='    |  = 堤顶高程             '+pad(fv(r.crest),10)+' m          |\n';
+    t+='    |                                              |\n';
+    t+='    +----------------------------------------------+\n\n';
+
+    if(i<results.length-1) t+='\n';
+  }
+
+  if(results.length>1){
+    t+=hr()+'\n';
+    t+='  汇总:\n';
+    for(const r of results) t+='    '+r.name+': 堤顶高程 >= '+fv(r.crest)+' m\n';
+    t+='\n';
+  }
+  t+='  注: 本计算书仅供参考, 实际工程以规范原文及审查意见为准.\n';
+  t+='      R₀采用双线性插值, 与规范原表可能存在微小差异.\n';
+  t+=hr()+'\n';
+  return t;
+}
+
+function exportSingleReport(){
+  if(!lastSingle){alert('请先计算');return}
+  document.getElementById('reportBox').textContent=makeReport([lastSingle]);
+  document.getElementById('modalBg').classList.add('show');
+}
+function exportBatchReport(){
+  if(!batchResults.length){alert('请先计算');return}
+  document.getElementById('reportBox').textContent=makeReport(batchResults);
+  document.getElementById('modalBg').classList.add('show');
+}
+
+function copyReport(){
+  const box=document.getElementById('reportBox');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(box.textContent).then(()=>alert('✅ 已复制，可直接粘贴到 Word'));
+  }else{
+    const range=document.createRange();range.selectNodeContents(box);
+    const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
+    document.execCommand('copy');sel.removeAllRanges();
+    alert('✅ 已复制');
+  }
+}
+function closeModal(){document.getElementById('modalBg').classList.remove('show')}
+function toggleCollapse(el){const bd=el.nextElementSibling;const arr=el.querySelector('.arrow');bd.classList.toggle('open');arr.textContent=bd.classList.contains('open')?'▼':'▶'}
+</script>
+</body>
+</html>
