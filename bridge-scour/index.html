@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>桥墩冲刷计算工具 | SL/T 808-2025</title>
+<link rel="icon" type="image/svg+xml" href="../icons/favicon-bridge-scour.svg">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--pri:#2563eb;--pri-l:#eff6ff;--pri-d:#1d4ed8;--pri-bg:#dbeafe;--bg:#f8fafc;--card:#fff;--bdr:#e2e8f0;--bdr2:#cbd5e1;--txt:#0f172a;--t2:#475569;--t3:#94a3b8;--ok:#059669;--ok-bg:#ecfdf5;--ok-bdr:#a7f3d0;--input-bg:#f8fafc;--input-bdr:#cbd5e1;--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -2px rgba(0,0,0,.05)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--txt);line-height:1.6;font-size:14px;-webkit-font-smoothing:antialiased}
+.header{background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 50%,#3b82f6 100%);color:#fff;padding:20px 0;text-align:center;position:relative}
+.header h1{font-size:20px;font-weight:700;letter-spacing:2px}.header p{font-size:12px;opacity:.75;margin-top:3px}
+.header .back{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid rgba(255,255,255,.2);border-radius:16px}
+.header .back:hover{color:#fff;border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.1)}
+.wrap{max-width:1280px;margin:14px auto;padding:0 14px}
+.tabs{display:flex;gap:0;margin-bottom:14px;background:var(--card);border-radius:10px;overflow:hidden;border:1px solid var(--bdr);box-shadow:var(--shadow)}
+.tab{flex:1;padding:11px 16px;text-align:center;font-size:14px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--t2);transition:all .2s}
+.tab:not(:last-child)::after{content:'';position:absolute;right:0;top:20%;height:60%;width:1px;background:var(--bdr)}
+.tab.active{background:var(--pri);color:#fff;font-weight:600}.tab:hover:not(.active){background:var(--pri-l);color:var(--pri)}
+.mode{display:none}.mode.active{display:block}
+.card{background:var(--card);border-radius:10px;border:1px solid var(--bdr);padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card-title{font-size:14px;font-weight:600;color:var(--pri);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--pri-bg);display:flex;align-items:center;justify-content:space-between}
+.card-title .badge{font-size:11px;background:var(--pri-bg);color:var(--pri);padding:2px 8px;border-radius:12px;font-weight:500}
+.btn-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px 0}
+.btn{padding:9px 22px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:var(--pri);color:#fff;box-shadow:0 1px 3px rgba(37,99,235,.3)}.btn-p:hover{background:var(--pri-d);transform:translateY(-1px)}
+.btn-g{background:#f1f5f9;color:var(--t2);border:1px solid var(--bdr)}.btn-g:hover{background:#e2e8f0}
+.btn-ok{background:var(--ok);color:#fff}.btn-ok:hover{background:#047857;transform:translateY(-1px)}
+.btn-sm{padding:6px 14px;font-size:12px;border-radius:6px}
+.collapsible{border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:10px;background:var(--card)}
+.collapse-hd{padding:11px 16px;cursor:pointer;user-select:none;font-size:13px;font-weight:500;color:var(--t2);display:flex;align-items:center;gap:8px}
+.collapse-hd:hover{color:var(--pri);background:var(--pri-l)}
+.collapse-bd{display:none;padding:0 16px 16px}.collapse-bd.open{display:block}
+.fml{background:var(--pri-l);border:1px solid var(--pri-bg);border-radius:8px;padding:12px 14px;margin:8px 0;font-size:13px;line-height:1.9;overflow-x:auto}
+.fml b{color:var(--pri);font-weight:600;font-size:12px}
+.fml .sym{font-family:'JetBrains Mono',monospace;font-style:normal;font-size:12px;background:rgba(37,99,235,.08);padding:1px 4px;border-radius:3px}
+.sf-group{margin-bottom:12px}
+.sf-label{font-size:12.5px;font-weight:500;color:var(--t2);margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.sf-label .hint{font-size:11px;color:var(--t3);font-weight:400}
+.sf-label .sf-tip{display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;font-size:10px;font-weight:700;color:var(--t3);background:#e2e8f0;border-radius:50%;cursor:help;margin-left:3px;position:relative}
+.sf-label .sf-tip:hover::after{content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 8px);background:var(--txt);color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;white-space:pre-line;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,.15);font-weight:400;line-height:1.6;min-width:200px;max-width:320px;text-align:left}
+.sf-label .sf-tip:hover::before{content:'';position:absolute;left:8px;bottom:calc(100% + 2px);border:5px solid transparent;border-top-color:var(--txt);z-index:21}
+.sf-input{width:100%;padding:8px 11px;border:1.5px solid var(--input-bdr);border-radius:8px;font-size:13px;font-family:inherit;color:var(--txt);background:var(--input-bg);transition:all .2s;outline:none}
+.sf-input:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(37,99,235,.1);background:#fff}
+.sf-select{width:100%;padding:8px 11px;border:1.5px solid var(--input-bdr);border-radius:8px;font-size:13px;font-family:inherit;color:var(--txt);background:var(--input-bg);cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.sf-select:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.sf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sf-divider{height:1px;background:linear-gradient(90deg,transparent,var(--bdr),transparent);margin:14px 0}
+.sf-section{font-size:13px;font-weight:600;color:var(--pri);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sf-section .dot{width:6px;height:6px;background:var(--pri);border-radius:50%}
+.single-layout{display:grid;grid-template-columns:400px 1fr;gap:14px;align-items:start}
+@media(max-width:900px){.single-layout{grid-template-columns:1fr}}
+.result-panel{background:var(--card);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;box-shadow:var(--shadow-md)}
+.rp-header{background:linear-gradient(135deg,#065f46,#059669);color:#fff;padding:14px 18px;text-align:center}
+.rp-header h3{font-size:15px;font-weight:600}.rp-header .sub{font-size:12px;opacity:.75;margin-top:2px}
+.rp-body{padding:18px}
+.crest-box{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:2px solid var(--ok-bdr);border-radius:10px;padding:16px;text-align:center;margin:14px 0}
+.crest-box .cb-label{font-size:12px;color:var(--t2);margin-bottom:2px}
+.crest-box .cb-val{font-size:24px;font-weight:700;color:var(--ok);font-family:'JetBrains Mono',monospace}
+.crest-box .cb-fm{font-size:11px;color:var(--t3);margin-top:4px;font-family:'JetBrains Mono',monospace}
+.attr-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin-bottom:12px}
+.attr{display:flex;align-items:baseline;gap:6px;font-size:12.5px}
+.attr .k{color:var(--t3);min-width:fit-content;white-space:nowrap}
+.attr .v{font-weight:600;color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:12.5px;border-bottom:1.5px solid var(--bdr2);padding-bottom:1px;flex:1;text-align:right}
+.rp-table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+.rp-table th{background:var(--pri-l);color:var(--pri);font-weight:600;padding:7px 8px;border:1px solid var(--bdr);font-size:12px;white-space:nowrap}
+.rp-table td{padding:6px 8px;border:1px solid var(--bdr);text-align:center;font-size:12.5px}
+.rp-table .total td{background:var(--ok-bg);font-weight:700;color:var(--ok);border-color:var(--ok-bdr)}
+.modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:14px;width:92%;max-width:800px;max-height:85vh;overflow-y:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal h2{font-size:16px;margin-bottom:12px}
+.modal .close{float:right;font-size:20px;cursor:pointer;color:var(--t3);background:none;border:none}.modal .close:hover{color:var(--txt)}
+.report-box{background:#fafafa;border:1px solid var(--bdr);border-radius:8px;padding:16px;font-family:'Microsoft YaHei',sans-serif;font-size:13px;line-height:2;white-space:pre-wrap;word-break:break-all;max-height:55vh;overflow-y:auto;user-select:text}
+.footer{text-align:center;padding:16px;font-size:11px;color:var(--t3)}
+@media print{.header{background:#1e3a5f!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.btn,.modal-bg,.tabs{display:none!important}.card{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back" href="../">← 工具集</a>
+  <h1>桥墩冲刷计算工具</h1>
+  <p>SL/T 808-2025 附录 A.3 · JTG C30 · TB 10017</p>
+</div>
+<div class="wrap">
+
+<div class="tabs">
+  <div class="tab active" onclick="switchMode('single')">📐 单断面计算</div>
+  <div class="tab" onclick="switchMode('batch')">📊 批量断面计算</div>
+</div>
+
+<!-- ===== 单断面 ===== -->
+<div class="mode active" id="modeSingle">
+<div class="single-layout">
+<div class="card" style="position:sticky;top:14px">
+  <div class="card-title">📐 参数输入 <span class="badge">单断面</span></div>
+
+  <div class="sf-section"><span class="dot"></span>基本参数</div>
+  <div class="sf-row">
+    <div class="sf-group">
+      <div class="sf-label">设计水位 <span class="hint">(m)</span><span class="sf-tip" data-tip="设计洪水位">?</span></div>
+      <input class="sf-input" type="number" step="0.01" id="s_wl" placeholder="如 52.50">
+    </div>
+    <div class="sf-group">
+      <div class="sf-label">设计流量 QP <span class="hint">(m³/s)</span><span class="sf-tip" data-tip="设计洪峰流量">?</span></div>
+      <input class="sf-input" type="number" step="0.01" id="s_qp" placeholder="如 3680">
+    </div>
+  </div>
+  <div class="sf-row">
+    <div class="sf-group">
+      <div class="sf-label">河床类型<span class="sf-tip" data-tip="非黏性土：沙、砾石等\n黏性土：黏土、壤土等">?</span></div>
+      <select class="sf-select" id="s_soil" onchange="onSoilChange()">
+        <option value="noncohesive">非黏性土</option>
+        <option value="cohesive">黏性土</option>
+      </select>
+    </div>
+    <div class="sf-group">
+      <div class="sf-label">自然冲刷 <span class="hint">(m)</span><span class="sf-tip" data-tip="河床自然演变冲刷深度\n根据河段演变趋势确定\n一般取0~2m">?</span></div>
+      <input class="sf-input" type="number" step="0.01" id="s_nat" value="0" placeholder="0">
+    </div>
+  </div>
+
+  <div class="sf-divider"></div>
+  <div class="sf-section"><span class="dot"></span>一般冲刷</div>
+  <div class="sf-group">
+    <div class="sf-label">公式选择<span class="sf-tip" data-tip="包尔达可夫：均匀土质估算\n64-1：非黏性土河槽（推荐）\n64-2：非黏性土沙质河槽\n黏性土公式：黏性土河床">?</span></div>
+    <select class="sf-select" id="s_genFormula" onchange="onGenFormulaChange()">
+      <option value="bao">包尔达可夫（均匀土质）</option>
+      <option value="64-1" selected>64-1 冲止流速（推荐）</option>
+      <option value="64-2">64-2 输沙平衡</option>
+      <option value="cohesive">黏性土公式</option>
+    </select>
+  </div>
+  <div id="baoInputs" style="display:none">
+    <div class="sf-row">
+      <div class="sf-group"><div class="sf-label">冲刷前最大水深 hmax <span class="hint">(m)</span></div><input class="sf-input" type="number" step="0.01" id="s_hmax" placeholder="桥下最大水深"></div>
+      <div class="sf-group"><div class="sf-label">冲刷系数 P<span class="sf-tip" data-tip="松软土1.2~1.5\n中等土1.0~1.2\n密实土0.8~1.0">?</span></div><input class="sf-input" type="number" step="0.01" id="s_P" value="1.5" placeholder="1.5"></div>
+    </div>
+  </div>
+  <div id="noncohesiveInputs">
+    <div class="sf-row">
+      <div class="sf-group"><div class="sf-label">河槽最大水深 hmc <span class="hint">(m)</span><span class="sf-tip" data-tip="桥下河槽部分\n最大水深">?</span></div><input class="sf-input" type="number" step="0.01" id="s_hmc" placeholder="如 8.5"></div>
+      <div class="sf-group"><div class="sf-label">河槽平均水深 hc <span class="hint">(m)</span></div><input class="sf-input" type="number" step="0.01" id="s_hc" placeholder="如 5.2"></div>
+    </div>
+    <div class="sf-row">
+      <div class="sf-group"><div class="sf-label">河槽桥孔净宽 Bc <span class="hint">(m)</span></div><input class="sf-input" type="number" step="0.01" id="s_Bc" placeholder="如 363"></div>
+      <div class="sf-group"><div class="sf-label">河槽设计流量 Qc <span class="hint">(m³/s)</span><span class="sf-tip" data-tip="桥下河槽部分通过的\n设计流量\n河槽扩宽至全桥时Qc=QP">?</span></div><input class="sf-input" type="number" step="0.01" id="s_Qc" placeholder="如 3680"></div>
+    </div>
+    <div class="sf-row" id="ncExtraInputs">
+      <div class="sf-group"><div class="sf-label">含沙量<span class="sf-tip" data-tip="历年汛期6~9月\n年最大月平均值的\n算术平均值\n决定E系数">?</span></div>
+        <select class="sf-select" id="s_sediment">
+          <option value="0.46">< 1.0 kg/m³</option>
+          <option value="0.66" selected>1~10 kg/m³</option>
+          <option value="0.86">> 10 kg/m³</option>
+        </select>
+      </div>
+      <div class="sf-group"><div class="sf-label">平均粒径 dc <span class="hint">(mm)</span><span class="sf-tip" data-tip="河槽土平均粒径\n沙：0.05~2mm\n砾石：2~60mm">?</span></div><input class="sf-input" type="number" step="0.01" id="s_dc" placeholder="如 0.5"></div>
+    </div>
+    <div class="sf-row">
+      <div class="sf-group"><div class="sf-label">单宽流量系数 A<span class="sf-tip" data-tip="A = (Bd/H)^0.15\nBd: 造床流量时河宽\nH: 造床流量时平均水深\n一般1.0~1.8\n宽浅游荡河段≤1.8">?</span></div><input class="sf-input" type="number" step="0.01" id="s_A" value="1.0" placeholder="1.0~1.8"></div>
+      <div class="sf-group" id="cohesiveA" style="display:none"><div class="sf-label">液性指数 IL<span class="sf-tip" data-tip="黏性土液性指数\n取值范围 0.16~1.19\nIL越大土越软">?</span></div><input class="sf-input" type="number" step="0.01" id="s_IL" placeholder="如 0.5"></div>
+    </div>
+  </div>
+
+  <div style="display:none" id="cohesiveInputs">
+    <div class="sf-row">
+      <div class="sf-group"><div class="sf-label">河槽最大水深 hmc <span class="hint">(m)</span></div><input class="sf-input" type="number" step="0.01" id="s_hmc_c" placeholder="如 8.5"></div>
+      <div class="sf-group"><div class="sf-label">河槽平均水深 hc <span class="hint">(m)</span></div><input class="sf-input" type="number" step="0.01" id="s_hc_c" placeholder="如 5.2"></div>
+    </div>
+    <div class="sf-row">
+      <div class="sf-group"><div class="sf-label">河槽桥孔净宽 Bc <span class="hint">(m)</span></div><input class="sf-input" type="number" step="0.01" id="s_Bc_c" placeholder="如 363"></div>
+      <div class="sf-group"><div class="sf-label">河槽设计流量 Qc <span class="hint">(m³/s)</span></div><input class="sf-input" type="number" step="0.01" id="s_Qc_c" placeholder="如 3680"></div>
+    </div>
+    <div class="sf-row">
+      <div class="sf-group"><div class="sf-label">液性指数 IL<span class="sf-tip" data-tip="黏性土液性指数\n取值范围 0.16~1.19">?</span></div><input class="sf-input" type="number" step="0.01" id="s_IL_c" placeholder="如 0.5"></div>
+      <div class="sf-group"><div class="sf-label">单宽流量系数 A<span class="sf-tip" data-tip="黏性土取 1.0~1.2">?</span></div><input class="sf-input" type="number" step="0.01" id="s_A_c" value="1.0" placeholder="1.0~1.2"></div>
+    </div>
+  </div>
+
+  <div class="sf-divider"></div>
+  <div class="sf-section"><span class="dot"></span>局部冲刷</div>
+  <div class="sf-group">
+    <div class="sf-label">公式选择<span class="sf-tip" data-tip="65-1：非黏性土（推荐）\n65-2：非黏性土\n黏性土：黏性土河床">?</span></div>
+    <select class="sf-select" id="s_locFormula" onchange="onLocFormulaChange()">
+      <option value="65-1" selected>65-1 修正式（推荐）</option>
+      <option value="65-2">65-2 公式</option>
+      <option value="cohesive">黏性土公式</option>
+    </select>
+  </div>
+  <div id="locNoncohesive">
+    <div class="sf-row">
+      <div class="sf-group"><div class="sf-label">桥墩计算宽度 B1 <span class="hint">(m)</span><span class="sf-tip" data-tip="垂直水流方向的\n桥墩计算宽度\n圆形墩取直径d\n矩形墩取垂直宽度">?</span></div><input class="sf-input" type="number" step="0.01" id="s_B1" placeholder="如 3.0"></div>
+      <div class="sf-group"><div class="sf-label">墩形系数 Kξ<span class="sf-tip" data-tip="半圆形 0.85\n圆形 1.00\n圆端形 0.90\n尖端90° 0.75\n尖端60° 0.68\n尖端30° 0.60\n矩形 1.20\n矩形圆角 1.05">?</span></div>
+        <select class="sf-select" id="s_Kxi">
+          <option value="0.85">半圆形墩头（0.85）</option>
+          <option value="1.00" selected>圆形墩（1.00）</option>
+          <option value="0.90">圆端形墩（0.90）</option>
+          <option value="0.75">尖端形 α=90°（0.75）</option>
+          <option value="0.68">尖端形 α=60°（0.68）</option>
+          <option value="0.60">尖端形 α=30°（0.60）</option>
+          <option value="1.20">矩形墩（1.20）</option>
+          <option value="1.05">矩形圆角墩（1.05）</option>
+        </select>
+      </div>
+    </div>
+    <div class="sf-group"><div class="sf-label">平均粒径 d <span class="hint">(mm)</span><span class="sf-tip" data-tip="河床土平均粒径\n局部冲刷辅助计算用">?</span></div><input class="sf-input" type="number" step="0.01" id="s_d_loc" placeholder="如 0.5"></div>
+  </div>
+  <div id="locCohesive" style="display:none">
+    <div class="sf-row">
+      <div class="sf-group"><div class="sf-label">桥墩计算宽度 B1 <span class="hint">(m)</span></div><input class="sf-input" type="number" step="0.01" id="s_B1_c" placeholder="如 3.0"></div>
+      <div class="sf-group"><div class="sf-label">墩形系数 Kξ</div>
+        <select class="sf-select" id="s_Kxi_c">
+          <option value="0.85">半圆形（0.85）</option><option value="1.00" selected>圆形（1.00）</option>
+          <option value="0.90">圆端形（0.90）</option><option value="1.20">矩形（1.20）</option>
+        </select>
+      </div>
+    </div>
+    <div class="sf-group"><div class="sf-label">液性指数 IL<span class="sf-tip" data-tip="黏性土液性指数\n取值范围 0.16~1.48">?</span></div><input class="sf-input" type="number" step="0.01" id="s_IL_loc" placeholder="如 0.5"></div>
+  </div>
+
+  <div class="btn-row" style="margin-top:14px">
+    <button class="btn btn-p" onclick="calcSingle()">🧮 计算</button>
+    <button class="btn btn-ok" onclick="exportReport()" id="btnReport" style="display:none">📄 计算书</button>
+  </div>
+</div>
+
+<div id="singleResultWrap" style="display:none">
+  <div class="result-panel" id="singleResult"></div>
+</div>
+</div>
+</div>
+
+<!-- ===== 批量模式 ===== -->
+<div class="mode" id="modeBatch">
+<div class="card">
+  <div class="card-title"><span>📊 批量计算</span>
+    <div style="display:flex;gap:6px"><button class="btn btn-g btn-sm" onclick="addBatchRow()">＋ 添加</button><button class="btn btn-g btn-sm" onclick="clearBatch()">清空</button></div>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="rp-table" style="font-size:12px">
+      <thead><tr>
+        <th>#</th><th>断面</th><th>水位(m)</th><th>QP(m³/s)</th><th>hmc(m)</th><th>hc(m)</th><th>Bc(m)</th><th>Qc(m³/s)</th><th>dc(mm)</th><th>B1(m)</th><th>Kξ</th><th>公式</th><th style="width:28px"></th>
+      </tr></thead>
+      <tbody id="batchBody"></tbody>
+    </table>
+  </div>
+</div>
+<div class="btn-row">
+  <button class="btn btn-p" onclick="calcBatch()">🧮 计算全部</button>
+  <button class="btn btn-ok" onclick="exportBatchReport()" id="btnBatchReport" style="display:none">📄 计算书</button>
+</div>
+<div class="card" id="batchResult" style="display:none">
+  <div class="card-title">✅ 计算结果</div>
+  <div style="overflow-x:auto"><table class="rp-table"><thead id="bHead"></thead><tbody id="bBody"></tbody></table></div>
+</div>
+</div>
+
+<!-- 公式 -->
+<div class="collapsible">
+  <div class="collapse-hd" onclick="toggleCollapse(this)"><span class="arrow">▶</span> 计算公式</div>
+  <div class="collapse-bd">
+    <div class="fml"><b>包尔达可夫：</b> <span class="sym">hp</span> = P × h<sub>max</sub></div>
+    <div class="fml"><b>64-1 河槽：</b> <span class="sym">hp</span> = [ A·Q<sub>c</sub> / (B<sub>c</sub>·(h<sub>mc</sub>/h<sub>c</sub>)<sup>5/3</sup>·E·d<sub>c</sub><sup>1/6</sup>) ]<sup>3/5</sup></div>
+    <div class="fml"><b>64-1 河滩：</b> <span class="sym">hp</span> = [ A<sub>t</sub>·Q<sub>t</sub> / (B<sub>t</sub>·(h<sub>mt</sub>/h<sub>t</sub>)<sup>5/3</sup>·V<sub>H1</sub>) ]<sup>5/6</sup></div>
+    <div class="fml"><b>64-2 河槽：</b> <span class="sym">hp</span> = [ A·Q<sub>c</sub> / (B<sub>c</sub>·(h<sub>mc</sub>/h<sub>c</sub>)<sup>5/3</sup>·E·d<sub>c</sub><sup>1/6</sup>) ]<sup>3/5</sup> × (h<sub>mc</sub>/h<sub>c</sub>)</div>
+    <div class="fml"><b>黏性土 河槽：</b> <span class="sym">hp</span> = [ A·Q<sub>c</sub> / (B<sub>c</sub>·(h<sub>mc</sub>/h<sub>c</sub>)<sup>5/3</sup>·0.33/I<sub>L</sub>) ]<sup>5/8</sup></div>
+    <div class="fml"><b>65-1 清水：</b> h<sub>b</sub> = K<sub>ξ</sub>·K<sub>η</sub>·B<sub>1</sub><sup>0.6</sup>·(v-v'<sub>0</sub>)</div>
+    <div class="fml"><b>65-1 动床：</b> h<sub>b</sub> = K<sub>ξ</sub>·K<sub>η</sub>·B<sub>1</sub><sup>0.6</sup>·(v-v'<sub>0</sub>)·((v-v'<sub>0</sub>)/(v<sub>0</sub>-v'<sub>0</sub>))<sup>n</sup></div>
+    <div class="fml"><b>65-2 清水：</b> h<sub>b</sub> = K<sub>ξ</sub>·K<sub>η2</sub>·B<sub>1</sub><sup>0.6</sup>·h<sub>p</sub><sup>0.15</sup>·(v/v<sub>0</sub>-v'<sub>0</sub>/v<sub>0</sub>)</div>
+    <div class="fml"><b>黏性土局部：</b> h<sub>b</sub> = 0.83·K<sub>ξ</sub>·B<sub>1</sub><sup>0.6</sup>·I<sub>L</sub><sup>1.25</sup>·v （h<sub>p</sub>/B<sub>1</sub>≥2.5）</div>
+
+  </div>
+</div>
+
+<!-- 参考表 -->
+<div class="collapsible">
+  <div class="collapse-hd" onclick="toggleCollapse(this)"><span class="arrow">▶</span> 参考系数表</div>
+  <div class="collapse-bd">
+    <p style="font-size:12px;font-weight:600;color:var(--pri);margin:8px 0 4px">墩形系数 Kξ</p>
+    <table class="rp-table"><tr><th>墩形</th><th>Kξ</th><th>B1</th></tr>
+      <tr><td>半圆形墩头</td><td>0.85</td><td>d（墩径）</td></tr>
+      <tr><td>圆形墩</td><td>1.00</td><td>d</td></tr>
+      <tr><td>圆端形墩</td><td>0.90</td><td>d</td></tr>
+      <tr><td>尖端形 α=90°</td><td>0.75</td><td>投影宽</td></tr>
+      <tr><td>尖端形 α=60°</td><td>0.68</td><td>投影宽</td></tr>
+      <tr><td>尖端形 α=30°</td><td>0.60</td><td>投影宽</td></tr>
+      <tr><td>矩形墩</td><td>1.20</td><td>垂直宽度</td></tr>
+      <tr><td>矩形圆角墩</td><td>1.05</td><td>垂直宽度</td></tr>
+    </table>
+    <p style="font-size:12px;font-weight:600;color:var(--pri);margin:12px 0 4px">E 系数</p>
+    <table class="rp-table"><tr><th>含沙量 (kg/m³)</th><th><1.0</th><th>1~10</th><th>>10</th></tr>
+      <tr><td>E</td><td>0.46</td><td>0.66</td><td>0.86</td></tr></table>
+
+    <p style="font-size:12px;font-weight:600;color:var(--pri);margin:12px 0 4px">不冲刷流速 VH1（水深1m，非黏性土）</p>
+    <table class="rp-table"><tr><th>土质</th><th>粒径(mm)</th><th>VH1(m/s)</th></tr>
+      <tr><td>细沙</td><td>0.05~0.25</td><td>0.35~0.50</td></tr>
+      <tr><td>中沙</td><td>0.25~1.0</td><td>0.50~0.70</td></tr>
+      <tr><td>粗沙</td><td>1.0~2.5</td><td>0.70~0.90</td></tr>
+      <tr><td>细砾</td><td>2.5~5.0</td><td>0.90~1.10</td></tr>
+      <tr><td>中砾</td><td>5.0~15</td><td>1.10~1.50</td></tr>
+      <tr><td>粗砾</td><td>15~25</td><td>1.50~1.80</td></tr>
+      <tr><td>卵石</td><td>25~40</td><td>1.80~2.20</td></tr></table>
+  </div>
+</div>
+
+<div class="footer">依据 SL/T 808-2025 · JTG C30 · TB 10017 · 仅供参考</div>
+</div>
+
+<!-- 弹窗 -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+<div class="modal">
+  <button class="close" onclick="closeModal()">✕</button>
+  <h2>📄 计算书</h2>
+  <p style="font-size:12px;color:var(--t3);margin-bottom:8px">Ctrl+A 全选 → Ctrl+C 复制，可直接粘贴到 Word</p>
+  <div class="report-box" id="reportBox"></div>
+  <div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center">
+    <button class="btn btn-p" onclick="copyReport()">📋 一键复制</button>
+    <button class="btn btn-g" onclick="closeModal()">关闭</button>
+  </div>
+</div>
+</div>
+
+<script>
+// === 模式切换 ===
+function switchMode(m){
+  document.querySelectorAll('.tab').forEach((t,i)=>{t.classList.toggle('active',i===(m==='single'?0:1))});
+  document.getElementById('modeSingle').classList.toggle('active',m==='single');
+  document.getElementById('modeBatch').classList.toggle('active',m==='batch');
+}
+
+// === UI 联动 ===
+function onSoilChange(){
+  const v=document.getElementById('s_soil').value;
+  const nc=document.getElementById('noncohesiveInputs');
+  const c=document.getElementById('cohesiveInputs');
+  if(v==='cohesive'){nc.style.display='none';c.style.display='block';
+    document.getElementById('s_genFormula').value='cohesive';
+    document.getElementById('s_locFormula').value='cohesive';
+    onGenFormulaChange();onLocFormulaChange();
+  }else{nc.style.display='block';c.style.display='none';
+    if(document.getElementById('s_genFormula').value==='cohesive')document.getElementById('s_genFormula').value='64-1';
+    if(document.getElementById('s_locFormula').value==='cohesive')document.getElementById('s_locFormula').value='65-1';
+    onGenFormulaChange();onLocFormulaChange();
+  }
+}
+function onGenFormulaChange(){
+  const v=document.getElementById('s_genFormula').value;
+  document.getElementById('baoInputs').style.display=v==='bao'?'block':'none';
+  document.getElementById('noncohesiveInputs').style.display=(v==='64-1'||v==='64-2')?'block':'none';
+  document.getElementById('cohesiveInputs').style.display=v==='cohesive'?'block':'none';
+  document.getElementById('ncExtraInputs').style.display=(v==='64-1'||v==='64-2')?'grid':'none';
+}
+function onLocFormulaChange(){
+  const v=document.getElementById('s_locFormula').value;
+  document.getElementById('locNoncohesive').style.display=v==='cohesive'?'none':'block';
+  document.getElementById('locCohesive').style.display=v==='cohesive'?'block':'none';
+}
+
+// === 核心计算 ===
+function fv(v,d=2){return v==null?'—':Number(v).toFixed(d)}
+
+function calcGeneralScour(){
+  const formula=document.getElementById('s_genFormula').value;
+  const wl=parseFloat(document.getElementById('s_wl').value);
+  const qp=parseFloat(document.getElementById('s_qp').value);
+  let hp, details={};
+
+  if(formula==='bao'){
+    const hmax=parseFloat(document.getElementById('s_hmax').value);
+    const P=parseFloat(document.getElementById('s_P').value);
+    if(isNaN(hmax)||isNaN(P))return null;
+    hp=P*hmax;
+    details={formula:'包尔达可夫',hmax,P,hp};
+  }
+  else if(formula==='64-1'){
+    const hmc=parseFloat(document.getElementById('s_hmc').value);
+    const hc=parseFloat(document.getElementById('s_hc').value);
+    const Bc=parseFloat(document.getElementById('s_Bc').value);
+    const Qc=parseFloat(document.getElementById('s_Qc').value);
+    const E=parseFloat(document.getElementById('s_sediment').value);
+    const dc=parseFloat(document.getElementById('s_dc').value);
+    const A=parseFloat(document.getElementById('s_A').value);
+    if([hmc,hc,Bc,Qc,dc].some(isNaN))return null;
+    const ratio=Math.pow(hmc/hc,5/3);
+    const inner=A*Qc/(Bc*ratio*E*Math.pow(dc,1/6));
+    hp=Math.pow(inner,3/5);
+    details={formula:'64-1 冲止流速',hmc,hc,Bc,Qc,E,dc,A,ratio,hp};
+  }
+  else if(formula==='64-2'){
+    const hmc=parseFloat(document.getElementById('s_hmc').value);
+    const hc=parseFloat(document.getElementById('s_hc').value);
+    const Bc=parseFloat(document.getElementById('s_Bc').value);
+    const Qc=parseFloat(document.getElementById('s_Qc').value);
+    const E=parseFloat(document.getElementById('s_sediment').value);
+    const dc=parseFloat(document.getElementById('s_dc').value);
+    const A=parseFloat(document.getElementById('s_A').value);
+    if([hmc,hc,Bc,Qc,dc].some(isNaN))return null;
+    const ratio=Math.pow(hmc/hc,5/3);
+    const inner=A*Qc/(Bc*ratio*E*Math.pow(dc,1/6));
+    hp=Math.pow(inner,3/5)*(hmc/hc);
+    details={formula:'64-2 输沙平衡',hmc,hc,Bc,Qc,E,dc,A,ratio,hp};
+  }
+  else if(formula==='cohesive'){
+    const hmc=parseFloat(document.getElementById('s_hmc_c').value);
+    const hc=parseFloat(document.getElementById('s_hc_c').value);
+    const Bc=parseFloat(document.getElementById('s_Bc_c').value);
+    const Qc=parseFloat(document.getElementById('s_Qc_c').value);
+    const IL=parseFloat(document.getElementById('s_IL_c').value);
+    const A=parseFloat(document.getElementById('s_A_c').value);
+    if([hmc,hc,Bc,Qc,IL].some(isNaN))return null;
+    const ratio=Math.pow(hmc/hc,5/3);
+    const inner=A*Qc/(Bc*ratio*0.33/IL);
+    hp=Math.pow(inner,5/8);
+    details={formula:'黏性土',hmc,hc,Bc,Qc,IL,A,ratio,hp};
+  }
+  return{hp,...details};
+}
+
+function calcLocalScour(hp_val){
+  const formula=document.getElementById('s_locFormula').value;
+  const wl=parseFloat(document.getElementById('s_wl').value);
+  let hb,details={};
+
+  if(formula==='65-1'||formula==='65-2'){
+    const B1=parseFloat(document.getElementById('s_B1').value);
+    const Kxi=parseFloat(document.getElementById('s_Kxi').value);
+    const d=parseFloat(document.getElementById('s_d_loc').value);
+    if([B1,d].some(isNaN)||isNaN(hp_val))return null;
+
+    // 行近流速 v (冲止流速)
+    const genF=document.getElementById('s_genFormula').value;
+    let v;
+    if(genF==='64-1'||genF==='64-2'){
+      const dc=parseFloat(document.getElementById('s_dc').value);
+      const E=parseFloat(document.getElementById('s_sediment').value);
+      v=E*Math.pow(dc,1/6)*Math.pow(hp_val,2/3);
+    }else{
+      const qp=parseFloat(document.getElementById('s_qp').value);
+      v=qp/(hp_val*B1*Math.cos(0));
+    }
+
+    if(formula==='65-1'){
+      const v0=0.0246*Math.pow(hp_val/d,0.14)*Math.sqrt(332*d+10+Math.pow(hp_val/d,0.72));
+      const Keta=0.8*(1/Math.pow(d,0.45)+1/Math.pow(d,0.15));
+      const v0p=0.462*Math.pow(d/B1,0.06)*v0;
+      const n=Math.pow(v0/v,0.25)*Math.pow(d,-0.19);
+      if(v<=v0){
+        hb=Kxi*Keta*Math.pow(B1,0.6)*(v-v0p);
+      }else{
+        hb=Kxi*Keta*Math.pow(B1,0.6)*(v-v0p)*Math.pow((v-v0p)/(v0-v0p),n);
+      }
+      details={formula:'65-1 修正式',B1,Kxi,d,v,v0,Keta,v0p,n,hb,type:v<=v0?'清水':'动床'};
+    }else{
+      const v0=0.0246*Math.pow(hp_val/d,0.14)*Math.sqrt(332*d+10+Math.pow(hp_val/d,0.72));
+      const Keta2=0.0023/Math.pow(d,2.2)+0.375/Math.pow(d,0.5);
+      const v0p=0.12*Math.pow(d,0.5);
+      const n2=0.23+0.19*Math.log10(d);
+      if(v<=v0){
+        hb=Kxi*Keta2*Math.pow(B1,0.6)*Math.pow(hp_val,0.15)*(v/v0-v0p/v0);
+      }else{
+        hb=Kxi*Keta2*Math.pow(B1,0.6)*Math.pow(hp_val,0.15)*Math.pow((v-v0p)/(v0-v0p),n2);
+      }
+      details={formula:'65-2',B1,Kxi,d,v,v0,Keta2,v0p,n2,hb,type:v<=v0?'清水':'动床'};
+    }
+    hb=Math.max(hb,0);
+    details.v=v;details.hp=hp_val;
+  }
+  else if(formula==='cohesive'){
+    const B1=parseFloat(document.getElementById('s_B1_c').value);
+    const Kxi=parseFloat(document.getElementById('s_Kxi_c').value);
+    const IL=parseFloat(document.getElementById('s_IL_loc').value);
+    if([B1,IL].some(isNaN)||isNaN(hp_val))return null;
+    // 行近流速简化
+    const qp=parseFloat(document.getElementById('s_qp').value);
+    const v=qp/(hp_val*B1);
+    if(hp_val/B1>=2.5){
+      hb=0.83*Kxi*Math.pow(B1,0.6)*Math.pow(IL,1.25)*v;
+    }else{
+      hb=0.55*Kxi*Math.pow(B1,0.6)*Math.pow(hp_val,0.1)*IL*v;
+    }
+    details={formula:'黏性土局部冲刷',B1,Kxi,IL,v,hp:hp_val,hb,type:hp_val/B1>=2.5?'hp/B1≥2.5':'hp/B1<2.5'};
+    hb=Math.max(hb,0);
+  }
+  return{hb,...details};
+}
+
+
+
+// === 单断面计算 ===
+let lastResult=null;
+
+function calcSingle(){
+  const wl=parseFloat(document.getElementById('s_wl').value);
+  const nat=parseFloat(document.getElementById('s_nat').value)||0;
+  const qp=parseFloat(document.getElementById('s_qp').value);
+  if(isNaN(wl)){alert('请填写设计水位');return;}
+
+  const gen=calcGeneralScour();
+  if(!gen||isNaN(gen.hp)){alert('一般冲刷参数不完整');return;}
+
+  const loc=calcLocalScour(gen.hp);
+  if(!loc||isNaN(loc.hb)){alert('局部冲刷参数不完整');return;}
+
+  lastResult={wl,qp,nat,gen,loc,totalScour,lowestLine};
+  renderSingleResult();
+}
+
+function renderSingleResult(){
+  const r=lastResult; if(!r)return;
+  const el=document.getElementById('singleResult');
+  const genF=document.getElementById('s_genFormula').value;
+  const locF=document.getElementById('s_locFormula').value;
+
+  let html=`
+    <div class="rp-header"><h3>桥墩冲刷计算结果</h3></div>
+    <div class="rp-body">
+      <div style="font-size:13px;font-weight:600;color:var(--t2);margin-bottom:8px">一、冲刷总成</div>
+      <div class="attr-grid">
+        <div class="attr"><span class="k">设计水位</span><span class="v">${fv(r.wl)} m</span></div>
+        <div class="attr"><span class="k">设计流量 QP</span><span class="v">${fv(r.qp,0)} m³/s</span></div>
+        <div class="attr"><span class="k">一般冲刷公式</span><span class="v">${r.gen.formula}</span></div>
+        <div class="attr"><span class="k">局部冲刷公式</span><span class="v">${r.loc.formula}</span></div>
+      </div>
+
+      <div class="crest-box">
+        <div class="cb-label">总冲刷深度 = 自然冲刷 + 一般冲刷 + 局部冲刷</div>
+        <div class="cb-val">${fv(r.totalScour)} m</div>
+        <div class="cb-fm">${fv(r.nat)} + ${fv(r.gen.hp)} + ${fv(r.loc.hb)} = ${fv(r.totalScour)}</div>
+      </div>
+
+      <div class="crest-box" style="border-color:#93c5fd;background:linear-gradient(135deg,#eff6ff,#dbeafe)">
+        <div class="cb-label">最低冲刷线高程 = 设计水位 - 总冲刷深度</div>
+        <div class="cb-val" style="color:var(--pri)">${fv(r.lowestLine)} m</div>
+        <div class="cb-fm">${fv(r.wl)} - ${fv(r.totalScour)} = ${fv(r.lowestLine)}</div>
+      </div>
+
+      <div style="font-size:13px;font-weight:600;color:var(--t2);margin:14px 0 8px">二、一般冲刷计算</div>
+      <table class="rp-table"><tr><th>项目</th><th>公式/取值</th><th>结果</th></tr>`;
+
+  if(r.gen.formula==='包尔达可夫'){
+    html+=`<tr><td>冲刷前最大水深 hmax</td><td>—</td><td>${fv(r.gen.hmax)} m</td></tr>
+           <tr><td>冲刷系数 P</td><td>—</td><td>${fv(r.gen.P)}</td></tr>`;
+  }else if(r.gen.formula.includes('64')){
+    html+=`<tr><td>河槽最大水深 hmc</td><td>—</td><td>${fv(r.gen.hmc)} m</td></tr>
+           <tr><td>河槽平均水深 hc</td><td>—</td><td>${fv(r.gen.hc)} m</td></tr>
+           <tr><td>桥孔净宽 Bc</td><td>—</td><td>${fv(r.gen.Bc,0)} m</td></tr>
+           <tr><td>河槽流量 Qc</td><td>—</td><td>${fv(r.gen.Qc,0)} m³/s</td></tr>
+           <tr><td>含沙量系数 E</td><td>—</td><td>${fv(r.gen.E)}</td></tr>
+           <tr><td>平均粒径 dc</td><td>—</td><td>${fv(r.gen.dc)} mm</td></tr>
+           <tr><td>单宽流量系数 A</td><td>—</td><td>${fv(r.gen.A)}</td></tr>
+           <tr><td>(hmc/hc)^(5/3)</td><td>—</td><td>${fv(r.gen.ratio,4)}</td></tr>`;
+  }else{
+    html+=`<tr><td>液性指数 IL</td><td>—</td><td>${fv(r.gen.IL)}</td></tr>`;
+  }
+  html+=`<tr class="total"><td>一般冲刷深度 hp</td><td>${r.gen.formula}</td><td>${fv(r.gen.hp)} m</td></tr></table>`;
+
+  html+=`<div style="font-size:13px;font-weight:600;color:var(--t2);margin:14px 0 8px">三、局部冲刷计算</div>
+         <table class="rp-table"><tr><th>项目</th><th>公式/取值</th><th>结果</th></tr>`;
+  html+=`<tr><td>桥墩计算宽度 B1</td><td>—</td><td>${fv(r.loc.B1)} m</td></tr>
+         <tr><td>墩形系数 Kξ</td><td>—</td><td>${fv(r.loc.Kxi)}</td></tr>`;
+  if(r.loc.v!==undefined)html+=`<tr><td>行近流速 v</td><td>—</td><td>${fv(r.loc.v,3)} m/s</td></tr>`;
+  if(r.loc.v0!==undefined)html+=`<tr><td>启动流速 v0</td><td>—</td><td>${fv(r.loc.v0,3)} m/s</td></tr>`;
+  if(r.loc.v0p!==undefined)html+=`<tr><td>始冲流速 v'0</td><td>—</td><td>${fv(r.loc.v0p,3)} m/s</td></tr>`;
+  if(r.loc.type)html+=`<tr><td>冲刷类型</td><td colspan="2">${r.loc.type}</td></tr>`;
+  html+=`<tr class="total"><td>局部冲刷深度 hb</td><td>${r.loc.formula}</td><td>${fv(r.loc.hb)} m</td></tr></table>`;
+
+
+  html+=`</div>`;
+  el.innerHTML=html;
+  document.getElementById('singleResultWrap').style.display='block';
+  document.getElementById('btnReport').style.display='inline-flex';
+  document.getElementById('singleResultWrap').scrollIntoView({behavior:'smooth'});
+}
+
+// === 批量 ===
+let batchResults=[];
+let batchCnt=0;
+function addBatchRow(name,wl,qp,hmc,hc,Bc,Qc,dc,B1,Kxi){
+  batchCnt++;
+  const tr=document.createElement('tr');tr.id='br'+batchCnt;
+  tr.innerHTML=`<td style="background:var(--pri-bg);font-weight:700;color:var(--pri);font-size:12px">${batchCnt}</td>
+    <td><input value="${name||'断面'+batchCnt}" style="width:70px;text-align:left;font-size:12px"></td>
+    <td><input type="number" step="0.01" value="${wl||''}" style="width:60px;font-size:12px"></td>
+    <td><input type="number" step="1" value="${qp||''}" style="width:70px;font-size:12px"></td>
+    <td><input type="number" step="0.01" value="${hmc||''}" style="width:55px;font-size:12px"></td>
+    <td><input type="number" step="0.01" value="${hc||''}" style="width:55px;font-size:12px"></td>
+    <td><input type="number" step="0.01" value="${Bc||''}" style="width:60px;font-size:12px"></td>
+    <td><input type="number" step="1" value="${Qc||''}" style="width:70px;font-size:12px"></td>
+    <td><input type="number" step="0.01" value="${dc||''}" style="width:55px;font-size:12px"></td>
+    <td><input type="number" step="0.01" value="${B1||''}" style="width:50px;font-size:12px"></td>
+    <td><select style="font-size:12px;width:60px"><option value="1.00" selected>1.00</option><option value="0.85">0.85</option><option value="0.90">0.90</option><option value="0.75">0.75</option><option value="1.20">1.20</option></select></td>
+    <td><select style="font-size:11px;width:50px"><option value="64-1" selected>64-1</option><option value="64-2">64-2</option></select></td>
+    <td><button style="cursor:pointer;color:#ef4444;background:none;border:none;font-weight:700" onclick="this.closest('tr').remove()">✕</button></td>`;
+  document.getElementById('batchBody').appendChild(tr);
+}
+function clearBatch(){document.getElementById('batchBody').innerHTML='';batchCnt=0;batchResults=[];document.getElementById('batchResult').style.display='none';document.getElementById('btnBatchReport').style.display='none';}
+addBatchRow();addBatchRow();addBatchRow();
+
+function calcBatch(){
+  const rows=document.getElementById('batchBody').querySelectorAll('tr');
+  if(!rows.length){alert('请添加断面');return;}
+  batchResults=[];
+  for(const tr of rows){
+    const inp=tr.querySelectorAll('input');
+    const sel=tr.querySelectorAll('select');
+    const name=inp[0].value||'—';
+    const wl=parseFloat(inp[1].value),qp=parseFloat(inp[2].value);
+    const hmc=parseFloat(inp[3].value),hc=parseFloat(inp[4].value),Bc=parseFloat(inp[5].value),Qc=parseFloat(inp[6].value);
+    const dc=parseFloat(inp[7].value),B1=parseFloat(inp[8].value);
+    const Kxi=parseFloat(sel[0].value),formula=sel[1].value;
+    if([wl,hmc,hc,Bc,Qc,dc,B1].some(isNaN)){alert('"'+name+'" 参数不完整');return;}
+    const E=0.66,A=1.0;
+    let hp,hb;
+    if(formula==='64-1'){
+      const ratio=Math.pow(hmc/hc,5/3);
+      hp=Math.pow(A*Qc/(Bc*ratio*Math.pow(dc,1/6)*E),3/5);
+    }else{
+      const ratio=Math.pow(hmc/hc,5/3);
+      hp=Math.pow(A*Qc/(Bc*ratio*Math.pow(dc,1/6)*E),3/5)*(hmc/hc);
+    }
+    const v=E*Math.pow(dc,1/6)*Math.pow(hp,2/3);
+    const v0=0.0246*Math.pow(hp/dc,0.14)*Math.sqrt(332*dc+10+Math.pow(hp/dc,0.72));
+    const Keta=0.8*(1/Math.pow(dc,0.45)+1/Math.pow(dc,0.15));
+    const v0p=0.462*Math.pow(dc/B1,0.06)*v0;
+    if(v<=v0){hb=Kxi*Keta*Math.pow(B1,0.6)*(v-v0p);}
+    else{const n=Math.pow(v0/v,0.25)*Math.pow(dc,-0.19);hb=Kxi*Keta*Math.pow(B1,0.6)*(v-v0p)*Math.pow((v-v0p)/(v0-v0p),n);}
+    hb=Math.max(hb,0);
+    const total=hp+hb;
+    const lowest=wl-total;
+    batchResults.push({name,wl,qp,hmc,hc,Bc,Qc,dc,B1,Kxi,formula,hp,v,v0,hb,total,lowest});
+  }
+  document.getElementById('bHead').innerHTML=`<tr><th>断面</th><th>水位</th><th>一般冲刷</th><th>局部冲刷</th><th>总冲刷</th><th>最低冲刷线</th></tr>`;
+  let body='';
+  for(const r of batchResults){
+    body+=`<tr class="hl"><td style="text-align:left;font-family:inherit">${r.name}</td><td>${fv(r.wl)}</td><td>${fv(r.hp)}</td><td>${fv(r.hb)}</td><td>${fv(r.total)}</td><td>${fv(r.lowest)}</td></tr>`;
+  }
+  document.getElementById('bBody').innerHTML=body;
+  document.getElementById('batchResult').style.display='block';
+  document.getElementById('btnBatchReport').style.display='inline-flex';
+  document.getElementById('batchResult').scrollIntoView({behavior:'smooth'});
+}
+
+// === 计算书 ===
+function makeReport(r){
+  const W=56;
+  const hr=(c='=')=>c.repeat(W);
+  const pad=(s,w)=>{s=String(s);return s.length>=w?s:' '.repeat(w-s.length)+s};
+  let t='';
+  t+=hr()+'\n            桥 墩 冲 刷 计 算 书\n\n';
+  t+='  依据: SL/T 808-2025 附录 A.3\n';
+  t+=hr()+'\n\n';
+  t+='  设计水位     '+pad(fv(r.wl),10)+' m\n';
+  t+='  设计流量 QP  '+pad(fv(r.qp,0),10)+' m³/s\n';
+  t+='  自然冲刷     '+pad(fv(r.nat),10)+' m\n\n';
+  t+=hr('-')+'\n';
+  t+='  一、一般冲刷（'+r.gen.formula+'）\n\n';
+  if(r.gen.formula==='包尔达可夫'){
+    t+='    hmax = '+fv(r.gen.hmax)+' m,  P = '+fv(r.gen.P)+'\n';
+    t+='    hp = P × hmax = '+fv(r.gen.P)+' × '+fv(r.gen.hmax)+' = '+fv(r.gen.hp)+' m\n\n';
+  }else if(r.gen.formula.includes('64')){
+    t+='    hmc = '+fv(r.gen.hmc)+' m,  hc = '+fv(r.gen.hc)+' m\n';
+    t+='    Bc = '+fv(r.gen.Bc,0)+' m,  Qc = '+fv(r.gen.Qc,0)+' m³/s\n';
+    t+='    E = '+fv(r.gen.E)+',  dc = '+fv(r.gen.dc)+' mm,  A = '+fv(r.gen.A)+'\n';
+    t+='    (hmc/hc)^(5/3) = '+fv(r.gen.ratio,4)+'\n';
+    t+='    hp = '+fv(r.gen.hp)+' m\n\n';
+  }else{
+    t+='    IL = '+fv(r.gen.IL)+'\n';
+    t+='    hp = '+fv(r.gen.hp)+' m\n\n';
+  }
+  t+='  一般冲刷深度: '+fv(r.gen.hp)+' m\n\n';
+  t+=hr('-')+'\n';
+  t+='  二、局部冲刷（'+r.loc.formula+'）\n\n';
+  t+='    B1 = '+fv(r.loc.B1)+' m,  Kξ = '+fv(r.loc.Kxi)+'\n';
+  if(r.loc.v!==undefined)t+='    行近流速 v = '+fv(r.loc.v,3)+' m/s\n';
+  if(r.loc.v0!==undefined)t+='    启动流速 v0 = '+fv(r.loc.v0,3)+' m/s\n';
+  if(r.loc.v0p!==undefined)t+='    始冲流速 v\'0 = '+fv(r.loc.v0p,3)+' m/s\n';
+  if(r.loc.type)t+='    冲刷类型: '+r.loc.type+'\n';
+  t+='    局部冲刷深度: '+fv(r.loc.hb)+' m\n\n';
+  t+=hr('-')+'\n';
+  t+='  三、冲刷总成\n\n';
+  t+='    +----------------------------------------------+\n';
+  t+='    |                                              |\n';
+  t+='    |  自然冲刷            '+pad(fv(r.nat),10)+' m            |\n';
+  t+='    |  + 一般冲刷          '+pad(fv(r.gen.hp),10)+' m            |\n';
+  t+='    |  + 局部冲刷          '+pad(fv(r.loc.hb),10)+' m            |\n';
+  t+='    |  --------------------------------------------  |\n';
+  t+='    |  = 总冲刷深度        '+pad(fv(r.totalScour),10)+' m            |\n';
+  t+='    |                                              |\n';
+  t+='    |  设计水位            '+pad(fv(r.wl),10)+' m            |\n';
+  t+='    |  - 总冲刷深度        '+pad(fv(r.totalScour),10)+' m            |\n';
+  t+='    |  --------------------------------------------  |\n';
+  t+='    |  = 最低冲刷线高程    '+pad(fv(r.lowestLine),10)+' m            |\n';
+  t+='    |                                              |\n';
+  t+='    +----------------------------------------------+\n\n';
+
+  t+='  注: 本计算书仅供参考, 实际工程以规范原文为准.\n';
+  t+=hr()+'\n';
+  return t;
+}
+
+function exportReport(){
+  if(!lastResult){alert('请先计算');return;}
+  document.getElementById('reportBox').textContent=makeReport(lastResult);
+  document.getElementById('modalBg').classList.add('show');
+}
+function exportBatchReport(){
+  if(!batchResults.length){alert('请先计算');return;}
+  let txt='桥墩冲刷批量计算结果\n'+'='.repeat(56)+'\n\n';
+  txt+='断面'.padEnd(12)+'一般冲刷'.padStart(10)+'局部冲刷'.padStart(10)+'总冲刷'.padStart(10)+'最低线'.padStart(10)+'\n';
+  txt+='-'.repeat(56)+'\n';
+  for(const r of batchResults){
+    txt+=r.name.padEnd(12)+fv(r.hp).padStart(10)+fv(r.hb).padStart(10)+fv(r.total).padStart(10)+fv(r.lowest).padStart(10)+'\n';
+  }
+  txt+='\n'+'='.repeat(56)+'\n';
+  document.getElementById('reportBox').textContent=txt;
+  document.getElementById('modalBg').classList.add('show');
+}
+function copyReport(){
+  const box=document.getElementById('reportBox');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(box.textContent).then(()=>alert('✅ 已复制'));}
+  else{const r=document.createRange();r.selectNodeContents(box);const s=window.getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy');s.removeAllRanges();alert('✅ 已复制');}
+}
+function closeModal(){document.getElementById('modalBg').classList.remove('show');}
+function toggleCollapse(el){const bd=el.nextElementSibling;const arr=el.querySelector('.arrow');bd.classList.toggle('open');arr.textContent=bd.classList.contains('open')?'▼':'▶';}
+</script>
+</body>
+</html>
