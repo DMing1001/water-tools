@@ -12,19 +12,20 @@
 
   .header{background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 50%,#3b82f6 100%);color:#fff;padding:48px 24px;text-align:center;position:relative;overflow:hidden}
   .header::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 50%,rgba(255,255,255,.08) 0%,transparent 50%);pointer-events:none}
-  .header h1{font-size:28px;font-weight:700;letter-spacing:2px;position:relative}
+  .header-logo{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:8px;position:relative}
+  .header-logo img{width:48px;height:48px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.2))}
+  .header h1{font-size:28px;font-weight:700;letter-spacing:2px}
   .header p{font-size:15px;opacity:.8;margin-top:8px;font-weight:300;position:relative}
-  .header .nav{display:none}
 
   .main{flex:1;max-width:960px;margin:32px auto;padding:0 20px;width:100%}
 
-  .section-title{font-size:13px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px}
+  .section-title{font-size:13px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
 
   .tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:40px}
 
   .tool-card{background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:24px;transition:all .2s;cursor:pointer;text-decoration:none;color:var(--txt);display:block;position:relative;overflow:hidden}
   .tool-card:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,0,0,.08);border-color:var(--pri)}
-  .tool-card .icon{font-size:32px;margin-bottom:12px}
+  .tool-card .icon{width:48px;height:48px;margin-bottom:14px}
   .tool-card h3{font-size:16px;font-weight:600;margin-bottom:6px}
   .tool-card p{font-size:13px;color:var(--t2);line-height:1.6}
   .tool-card .tag{display:inline-block;font-size:11px;background:var(--pri-l);color:var(--pri);padding:2px 8px;border-radius:10px;margin-top:10px;font-weight:500}
@@ -42,29 +43,31 @@
 <body>
 
 <div class="header">
-  <h1>🔧 水利计算工具集</h1>
+  <div class="header-logo">
+    <img src="icons/water-tools.svg" alt="水利计算工具集">
+    <h1>水利计算工具集</h1>
+  </div>
   <p>Water Engineering Calculator Collection</p>
-
 </div>
 
 <div class="main">
   <div class="section-title">📐 堤防工程</div>
   <div class="tools-grid">
     <a class="tool-card" href="./dike-crest-elevation/">
-      <div class="icon">🌊</div>
+      <img class="icon" src="icons/dike.svg" alt="堤顶高程">
       <h3>堤顶高程计算</h3>
       <p>依据 GB 50286-2013 附录 C 莆田试验站公式，计算波浪要素、波浪爬高、风雍水面高度，确定堤顶高程。支持单断面和批量计算。</p>
       <span class="tag">GB 50286-2013</span>
       <span class="arrow">→</span>
     </a>
     <div class="tool-card coming-soon">
-      <div class="icon">🏗️</div>
+      <img class="icon" src="icons/seepage.svg" alt="渗流">
       <h3>堤防渗流计算</h3>
       <p>堤防渗透稳定计算，浸润线分析。</p>
       <span class="tag">开发中</span>
     </div>
     <div class="tool-card coming-soon">
-      <div class="icon">📊</div>
+      <img class="icon" src="icons/stability.svg" alt="稳定">
       <h3>堤防稳定分析</h3>
       <p>边坡稳定计算，瑞典圆弧法/毕肖普法。</p>
       <span class="tag">开发中</span>
@@ -74,14 +77,14 @@
   <div class="section-title">🌊 桥梁水文</div>
   <div class="tools-grid">
     <a class="tool-card" href="./bridge-scour/">
-      <div class="icon">🏗️</div>
+      <img class="icon" src="icons/bridge-scour.svg" alt="桥墩冲刷">
       <h3>桥墩冲刷计算</h3>
       <p>一般冲刷（包尔达可夫、64-1、64-2、黏性土）+ 局部冲刷（65-1、65-2、黏性土），依据 SL/T 808-2025、JTG C30、TB 10017。</p>
       <span class="tag">SL/T 808-2025</span>
       <span class="arrow">→</span>
     </a>
     <a class="tool-card" href="./bridge-scour/backwater.html">
-      <div class="icon">💧</div>
+      <img class="icon" src="icons/backwater.svg" alt="桥梁壅水">
       <h3>桥梁壅水计算</h3>
       <p>铁路公式（TB 10017）和公路公式（JTG C30-2015 铁科院陆浩公式），含壅水曲线长度计算。</p>
       <span class="tag">JTG C30 · TB 10017</span>
@@ -92,14 +95,14 @@
   <div class="section-title">💧 水力学</div>
   <div class="tools-grid">
     <a class="tool-card" href="./manning-qh.html">
-      <div class="icon">🌊</div>
+      <img class="icon" src="icons/manning-qh.svg" alt="水位流量">
       <h3>水位流量关系计算</h3>
       <p>曼宁公式断面计算 + 控制堰堰流 + 控制堰+天然复合断面，支持水位流量互查、Q-H/V-H/A-H曲线、断面淹没示意。</p>
       <span class="tag">Manning · 堰流</span>
       <span class="arrow">→</span>
     </a>
     <div class="tool-card coming-soon">
-      <div class="icon">⚡</div>
+      <img class="icon" src="icons/hydraulic-jump.svg" alt="水跃">
       <h3>水跃计算</h3>
       <p>共轭水深、水跃长度、能量损失。</p>
       <span class="tag">开发中</span>
@@ -109,13 +112,13 @@
   <div class="section-title">🌧️ 水文</div>
   <div class="tools-grid">
     <div class="tool-card coming-soon">
-      <div class="icon">📈</div>
+      <img class="icon" src="icons/frequency.svg" alt="频率分析">
       <h3>频率分析</h3>
       <p>P-III型频率曲线适配，设计洪水计算。</p>
       <span class="tag">开发中</span>
     </div>
     <div class="tool-card coming-soon">
-      <div class="icon">🗺️</div>
+      <img class="icon" src="icons/rainfall.svg" alt="暴雨强度">
       <h3>暴雨强度公式</h3>
       <p>暴雨强度公式参数拟合与计算。</p>
       <span class="tag">开发中</span>
