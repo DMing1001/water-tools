@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+  <circle cx="32" cy="32" r="28" fill="url(#g)" opacity="0.1"/>
+  <!-- bridge deck -->
+  <rect x="8" y="16" width="48" height="5" rx="2" fill="url(#g)" opacity="0.3" stroke="url(#g)" stroke-width="1.5"/>
+  <!-- piers -->
+  <rect x="20" y="21" width="4" height="18" rx="1" fill="url(#g)" opacity="0.25" stroke="url(#g)" stroke-width="1.5"/>
+  <rect x="40" y="21" width="4" height="18" rx="1" fill="url(#g)" opacity="0.25" stroke="url(#g)" stroke-width="1.5"/>
+  <!-- upstream water level (higher) -->
+  <line x1="4" y1="28" x2="20" y2="28" stroke="#06b6d4" stroke-width="2" stroke-linecap="round"/>
+  <!-- downstream water level (lower) -->
+  <line x1="44" y1="34" x2="60" y2="34" stroke="#06b6d4" stroke-width="2" stroke-linecap="round"/>
+  <!-- backwater curve -->
+  <path d="M4 28 Q12 27 20 28" stroke="#dc2626" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M44 28 Q48 30 52 34" stroke="#dc2626" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- delta Z arrow -->
+  <line x1="56" y1="28" x2="56" y2="34" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="3 2"/>
+  <path d="M56 28 L54 31 L58 31 Z" fill="#dc2626"/>
+  <path d="M56 34 L54 31 L58 31 Z" fill="#dc2626"/>
+  <text x="47" y="32" font-size="6" fill="#dc2626" font-weight="bold">ΔZ</text>
+  <!-- flow direction -->
+  <path d="M14 44 L28 44" stroke="#06b6d4" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M25 42 L28 44 L25 46" stroke="#06b6d4" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+  <text x="30" y="47" font-size="6" fill="#06b6d4" font-weight="500">→Q</text>
+</svg>
