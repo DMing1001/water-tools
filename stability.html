@@ -16,8 +16,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 .header .back{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid rgba(255,255,255,.2);border-radius:16px;transition:all .2s;z-index:2}
 .header .back:hover{color:#fff;border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.1)}
 .container{max-width:1400px;margin:0 auto;padding:20px}
-.main-grid{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start}
-@media(max-width:1000px){.main-grid{grid-template-columns:1fr}}
+.main-grid{display:grid;grid-template-columns:1fr;gap:20px;max-width:1200px;margin:0 auto}
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){.input-grid{grid-template-columns:1fr}}
 
 .card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);padding:18px 20px;margin-bottom:14px}
 .card-title{font-size:1rem;font-weight:600;color:#2d3748;margin-bottom:12px;display:flex;align-items:center;gap:8px}
@@ -113,52 +114,56 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 
 <div class="container">
   <div class="main-grid">
-    <!-- LEFT: Input -->
-    <div class="input-panel">
-      <!-- Section data -->
-      <div class="card">
-        <div class="card-title"><span class="icon">📐</span> 断面数据</div>
-        <div class="preset-row">
-          <label>示例：</label>
-          <button class="preset-btn" onclick="loadPreset('simple')">均质堤</button>
-          <button class="preset-btn" onclick="loadPreset('flood')">洪水期</button>
-          <button class="preset-btn" onclick="loadPreset('layered')">多层堤</button>
+    <!-- TOP: Input -->
+    <div>
+      <div class="input-grid">
+        <!-- Left col: Section data -->
+        <div class="card">
+          <div class="card-title"><span class="icon">📐</span> 断面数据</div>
+          <div class="preset-row">
+            <label>示例：</label>
+            <button class="preset-btn" onclick="loadPreset('simple')">均质堤</button>
+            <button class="preset-btn" onclick="loadPreset('flood')">洪水期</button>
+            <button class="preset-btn" onclick="loadPreset('layered')">多层堤</button>
+          </div>
+          <div class="section-area">
+            <label>桩号-高程（每行：桩号 高程，左→右）</label>
+            <textarea id="sectionData"></textarea>
+            <div class="hint">💡 桩号单调递增，高程为绝对高程(m)。</div>
+          </div>
+          <div class="preview-canvas-wrap"><canvas id="previewChart"></canvas></div>
         </div>
-        <div class="section-area">
-          <label>桩号-高程（每行：桩号 高程，左→右）</label>
-          <textarea id="sectionData"></textarea>
-          <div class="hint">💡 桩号单调递增，高程为绝对高程(m)。堤防断面应包含堤顶、堤坡、堤脚。</div>
+
+        <!-- Right col: Params + Formula -->
+        <div>
+          <div class="card">
+            <div class="card-title"><span class="icon">🧪</span> 土层参数</div>
+            <table class="soil-table" id="soilTable">
+              <thead><tr><th>土层</th><th>γ (kN/m³)</th><th>c (kPa)</th><th>φ (°)</th><th>下界(m)</th><th>上界(m)</th></tr></thead>
+              <tbody id="soilBody">
+                <tr><td>①</td><td><input type="number" value="18.5" step="0.1" id="soil0_g"></td><td><input type="number" value="15" step="0.5" id="soil0_c"></td><td><input type="number" value="20" step="0.5" id="soil0_phi"></td><td><input type="number" value="0" step="0.5" id="soil0_bot"></td><td><input type="number" value="20" step="0.5" id="soil0_top"></td></tr>
+              </tbody>
+            </table>
+            <button class="soil-add-btn" onclick="addSoilLayer()">+ 添加土层</button>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="icon">⚙️</span> 计算参数</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 14px">
+              <div class="form-row"><label>计算方法</label>
+                <select id="method"><option value="bishop">毕肖普法</option><option value="swedish">瑞典圆弧法</option></select>
+              </div>
+              <div class="form-row"><label>上游水位</label><input type="number" id="wseUp" value="15" step="any"><span class="unit">m</span></div>
+              <div class="form-row"><label>下游水位</label><input type="number" id="wseDown" value="5" step="any"><span class="unit">m</span></div>
+              <div class="form-row"><label>圆心X步长</label><input type="number" id="stepX" value="3" step="any" min="1"><span class="unit">m</span></div>
+              <div class="form-row"><label>圆心Y步长</label><input type="number" id="stepY" value="3" step="any" min="1"><span class="unit">m</span></div>
+              <div class="form-row"><label>半径步长</label><input type="number" id="stepR" value="2" step="any" min="0.5"><span class="unit">m</span></div>
+            </div>
+            <div class="tooltip-note blue" style="margin-top:8px">💡 先大步长粗搜，再小步长精搜。</div>
+          </div>
         </div>
-        <div class="preview-canvas-wrap"><canvas id="previewChart"></canvas></div>
       </div>
 
-      <!-- Soil parameters -->
-      <div class="card">
-        <div class="card-title"><span class="icon">🧪</span> 土层参数</div>
-        <table class="soil-table" id="soilTable">
-          <thead><tr><th>土层</th><th>γ (kN/m³)</th><th>c (kPa)</th><th>φ (°)</th><th>下界(m)</th><th>上界(m)</th></tr></thead>
-          <tbody id="soilBody">
-            <tr><td>①</td><td><input type="number" value="18.5" step="0.1" id="soil0_g"></td><td><input type="number" value="15" step="0.5" id="soil0_c"></td><td><input type="number" value="20" step="0.5" id="soil0_phi"></td><td><input type="number" value="0" step="0.5" id="soil0_bot"></td><td><input type="number" value="20" step="0.5" id="soil0_top"></td></tr>
-          </tbody>
-        </table>
-        <button class="soil-add-btn" onclick="addSoilLayer()">+ 添加土层</button>
-      </div>
-
-      <!-- Calculation parameters -->
-      <div class="card">
-        <div class="card-title"><span class="icon">⚙️</span> 计算参数</div>
-        <div class="form-row"><label>计算方法</label>
-          <select id="method"><option value="bishop">毕肖普法（迭代）</option><option value="swedish">瑞典圆弧法</option></select>
-        </div>
-        <div class="form-row"><label>上游水位</label><input type="number" id="wseUp" value="15" step="any"><span class="unit">m</span></div>
-        <div class="form-row"><label>下游水位</label><input type="number" id="wseDown" value="5" step="any"><span class="unit">m</span></div>
-        <div class="form-row"><label>圆心X步长</label><input type="number" id="stepX" value="3" step="any" min="1"><span class="unit">m</span></div>
-        <div class="form-row"><label>圆心Y步长</label><input type="number" id="stepY" value="3" step="any" min="1"><span class="unit">m</span></div>
-        <div class="form-row"><label>半径步长</label><input type="number" id="stepR" value="2" step="any" min="0.5"><span class="unit">m</span></div>
-        <div class="tooltip-note blue">💡 建议先用大步长（3~5m）粗搜定位，再用小步长（1~2m）精搜。步长太小会很慢。</div>
-      </div>
-
-      <!-- Formula reference -->
+      <!-- Formula + Button -->
       <div class="card">
         <div class="card-title" style="cursor:pointer" onclick="toggleFormula()"><span class="icon">📖</span> 计算原理 <span id="formulaArrow" style="font-size:.8rem;color:#a0aec0;margin-left:auto;transition:transform .2s">▼</span></div>
         <div id="formulaContent" style="display:none">
@@ -188,15 +193,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
         </div>
       </div>
 
-      <div class="btn-row">
+      <div class="btn-row" style="justify-content:center;margin-bottom:14px">
         <button class="btn btn-primary" id="calcBtn" onclick="calculate()">🔄 计算稳定安全系数</button>
         <button class="btn btn-secondary" onclick="clearAll()">清空</button>
       </div>
       <div class="progress-text" id="progressText"></div>
     </div>
 
-    <!-- RIGHT: Results -->
-    <div class="results-panel">
+    <!-- BOTTOM: Results -->
+    <div>
       <div class="card" id="summaryCard" style="display:none">
         <div class="card-title"><span class="icon">📊</span> 计算结果</div>
         <div class="summary-card" id="summaryBar"></div>
