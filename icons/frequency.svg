@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+  <circle cx="32" cy="32" r="28" fill="url(#g)" opacity="0.1"/>
+  <!-- axes -->
+  <line x1="12" y1="52" x2="12" y2="10" stroke="#64748b" stroke-width="1.5"/>
+  <line x1="12" y1="52" x2="56" y2="52" stroke="#64748b" stroke-width="1.5"/>
+  <!-- P-III frequency curve -->
+  <path d="M14 48 Q18 46 22 42 Q28 36 34 28 Q40 22 46 18 Q50 16 54 14" stroke="url(#g)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <!-- bars (histogram) -->
+  <rect x="15" y="44" width="5" height="8" fill="url(#g)" opacity="0.2" rx="1"/>
+  <rect x="22" y="40" width="5" height="12" fill="url(#g)" opacity="0.2" rx="1"/>
+  <rect x="29" y="32" width="5" height="20" fill="url(#g)" opacity="0.2" rx="1"/>
+  <rect x="36" y="24" width="5" height="28" fill="url(#g)" opacity="0.2" rx="1"/>
+  <rect x="43" y="16" width="5" height="36" fill="url(#g)" opacity="0.2" rx="1"/>
+  <rect x="50" y="12" width="5" height="40" fill="url(#g)" opacity="0.2" rx="1"/>
+  <!-- dot on curve -->
+  <circle cx="34" cy="28" r="2.5" fill="#2563eb"/>
+  <!-- labels -->
+  <text x="30" y="26" font-size="5.5" fill="#2563eb">P-III</text>
+  <text x="48" y="58" font-size="6" fill="#64748b">P(%)</text>
+  <text x="4" y="14" font-size="6" fill="#64748b">Q</text>
+</svg>
