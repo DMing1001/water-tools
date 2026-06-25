@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>水位流量关系计算器 — Manning + 堰流</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:#f0f4f8;color:#2d3748;line-height:1.6}
+.container{max-width:1440px;margin:0 auto;padding:20px}
+h1{text-align:center;color:#1a365d;margin-bottom:6px;font-size:1.7rem}
+.subtitle{text-align:center;color:#718096;margin-bottom:22px;font-size:0.92rem}
+.main-grid{display:grid;grid-template-columns:400px 1fr;gap:20px;align-items:start}
+@media(max-width:1000px){.main-grid{grid-template-columns:1fr}}
+
+/* Compound mode: top-bottom layout */
+.mode-compound .main-grid{grid-template-columns:1fr;max-width:1200px;margin-left:auto;margin-right:auto}
+.mode-compound .input-panel{order:1}
+.mode-compound .results-panel{order:2}
+.compound-inputs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:800px){.compound-inputs{grid-template-columns:1fr}}
+.compound-inputs .card{margin-bottom:0}
+.compound-inputs .span2{grid-column:1/-1}
+.compound-results-area{display:none}
+.mode-compound .compound-results-area{display:block}
+.mode-compound #resultsCard,.mode-compound #resultsTableCard,.mode-compound #exportRow,.mode-compound .results-panel>.card:first-child{display:none!important}
+.mode-compound .results-panel{display:none!important}
+.compound-hide{display:none}
+.mode-compound .compound-hide{display:block}
+
+/* Cards */
+.card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);padding:18px 20px;margin-bottom:14px}
+.card-title{font-size:1rem;font-weight:600;color:#2d3748;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card-title .icon{font-size:1.15rem}
+
+/* Form */
+.form-row{display:flex;gap:10px;margin-bottom:9px;align-items:center}
+.form-row label{min-width:88px;font-size:.86rem;color:#4a5568;text-align:right;flex-shrink:0}
+.form-row input,.form-row select{flex:1;padding:7px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:.88rem;transition:border-color .2s}
+.form-row input:focus,.form-row select:focus{outline:none;border-color:#4299e1;box-shadow:0 0 0 2px rgba(66,153,225,.2)}
+.form-row .unit{font-size:.78rem;color:#a0aec0;min-width:34px}
+.form-row input[type=checkbox]{flex:0;width:16px;height:16px;accent-color:#4299e1}
+.form-row label.cb-label{min-width:auto;text-align:left;font-size:.84rem;color:#2d3748;cursor:pointer}
+
+.section-area{margin-bottom:10px}
+.section-area label{display:block;font-size:.86rem;color:#4a5568;margin-bottom:4px}
+.section-area textarea{width:100%;height:180px;padding:10px;border:1px solid #cbd5e0;border-radius:8px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:.84rem;resize:vertical;line-height:1.5}
+.section-area textarea:focus{outline:none;border-color:#4299e1;box-shadow:0 0 0 2px rgba(66,153,225,.2)}
+.section-area .hint{font-size:.76rem;color:#a0aec0;margin-top:4px}
+
+/* Buttons */
+.btn-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.btn{padding:9px 20px;border:none;border-radius:8px;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,#4299e1,#3182ce);color:#fff}
+.btn-primary:hover{background:linear-gradient(135deg,#3182ce,#2b6cb0);transform:translateY(-1px);box-shadow:0 4px 12px rgba(49,130,206,.3)}
+.btn-secondary{background:#edf2f7;color:#4a5568}
+.btn-secondary:hover{background:#e2e8f0}
+.btn-sm{padding:5px 14px;font-size:.8rem;border-radius:6px}
+
+/* Chart */
+.chart-container{position:relative;width:100%;min-height:420px}
+.chart-tabs{display:flex;gap:0;margin-bottom:12px}
+.chart-tab{padding:7px 18px;font-size:.86rem;cursor:pointer;border:1px solid #cbd5e0;background:#f7fafc;color:#718096;font-weight:500;transition:all .2s}
+.chart-tab:first-child{border-radius:8px 0 0 8px}
+.chart-tab:last-child{border-radius:0 8px 8px 0}
+.chart-tab.active{background:#4299e1;color:#fff;border-color:#4299e1}
+.export-row{display:flex;gap:8px;justify-content:flex-end;margin-bottom:10px}
+
+/* Preview */
+.preview-canvas-wrap{width:100%;height:180px;margin-top:8px}
+.preview-canvas-wrap canvas{width:100%!important;height:100%!important}
+
+/* Preset */
+.preset-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.preset-row label{font-size:.84rem;color:#718096}
+.preset-btn{padding:4px 12px;font-size:.78rem;border:1px solid #cbd5e0;border-radius:16px;background:#fff;cursor:pointer;color:#4a5568;transition:all .15s}
+.preset-btn:hover{border-color:#4299e1;color:#4299e1}
+.preset-btn.active{background:#4299e1;color:#fff;border-color:#4299e1}
+
+/* Type selector */
+.type-selector{display:flex;gap:0;margin-bottom:14px}
+.type-btn{flex:1;padding:10px 8px;font-size:.82rem;cursor:pointer;border:1.5px solid #cbd5e0;background:#f7fafc;color:#718096;font-weight:500;transition:all .2s;text-align:center;line-height:1.4}
+.type-btn:first-child{border-radius:8px 0 0 8px}
+.type-btn:last-child{border-radius:0 8px 8px 0}
+.type-btn:hover{background:#edf2f7}
+.type-btn.active{background:#2b6cb0;color:#fff;border-color:#2b6cb0}
+.type-panel{display:none}
+.type-panel.active{display:block}
+
+/* Tooltip */
+.tooltip-note{background:#fffff0;border:1px solid #ecc94b;border-radius:6px;padding:8px 12px;font-size:.78rem;color:#744210;margin-bottom:10px;line-height:1.5}
+.tooltip-note.blue{background:#ebf8ff;border-color:#90cdf4;color:#2a4365}
+
+/* Multi n */
+.multi-n-table{width:100%;margin-bottom:8px}
+.multi-n-table th,.multi-n-table td{padding:5px 6px;font-size:.82rem}
+.multi-n-table input{width:100%;padding:4px 6px;border:1px solid #cbd5e0;border-radius:4px;font-size:.82rem;text-align:center}
+
+/* Loading */
+.loading{position:absolute;inset:0;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:12px;display:none}
+.loading.show{display:flex}
+.spinner{width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#4299e1;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Query */
+.query-panel{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.query-box{background:#f7fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px}
+.query-box h3{font-size:.9rem;color:#2d3748;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.query-input-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.query-input-row input{flex:1;padding:7px 12px;border:1px solid #cbd5e0;border-radius:6px;font-size:.9rem;text-align:center}
+.query-input-row input:focus{outline:none;border-color:#4299e1;box-shadow:0 0 0 2px rgba(66,153,225,.2)}
+.query-input-row .unit{font-size:.82rem;color:#a0aec0;min-width:44px}
+.query-btn{width:100%;padding:7px;border:none;border-radius:6px;font-size:.86rem;font-weight:600;cursor:pointer;transition:all .2s}
+.query-btn.q-blue{background:#ebf8ff;color:#2b6cb0;border:1px solid #bee3f8}
+.query-btn.q-blue:hover{background:#bee3f8}
+.query-btn.q-green{background:#f0fff4;color:#276749;border:1px solid #c6f6d5}
+.query-btn.q-green:hover{background:#c6f6d5}
+.query-result{margin-top:8px;padding:10px 12px;border-radius:8px;font-size:.84rem;line-height:1.7;display:none}
+.query-result.show{display:block}
+.query-result.qr-blue{background:#ebf8ff;border:1px solid #90cdf4;color:#2a4365}
+.query-result.qr-green{background:#f0fff4;border:1px solid #9ae6b4;color:#22543d}
+.query-result strong{font-size:1.05rem}
+
+/* Toast */
+.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-80px);background:#2d3748;color:#fff;padding:12px 28px;border-radius:10px;font-size:.9rem;font-weight:500;z-index:9999;opacity:0;transition:all .35s cubic-bezier(.4,0,.2,1);pointer-events:none;box-shadow:0 6px 24px rgba(0,0,0,.2)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Results table */
+.results-table-card{max-height:360px;overflow-y:auto}
+.results-table-card table{width:100%;border-collapse:collapse;font-size:.82rem}
+.results-table-card thead{position:sticky;top:0;z-index:1}
+.results-table-card th{background:#edf2f7;color:#4a5568;font-weight:600;padding:8px 6px;text-align:center;border-bottom:2px solid #cbd5e0;white-space:nowrap}
+.results-table-card td{padding:6px;text-align:center;border-bottom:1px solid #edf2f7}
+.results-table-card tr:hover td{background:#ebf8ff}
+.results-table-card tr.highlight td{background:#fefcbf;font-weight:600}
+
+/* Weir schematic */
+.weir-schematic{width:100%;height:200px;margin-top:8px;border:1px solid #e2e8f0;border-radius:8px;background:#fafbfc}
+.weir-schematic canvas{width:100%!important;height:100%!important}
+
+/* Coeff helper */
+.coeff-helper{background:#f7fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;margin-top:8px;margin-bottom:8px}
+.coeff-helper h4{font-size:.84rem;color:#2d3748;margin-bottom:8px}
+.coeff-table{width:100%;border-collapse:collapse;font-size:.78rem;margin-bottom:8px}
+.coeff-table th,.coeff-table td{padding:4px 8px;border:1px solid #e2e8f0;text-align:center}
+.coeff-table th{background:#edf2f7;color:#4a5568;font-weight:600}
+.coeff-table td{color:#2d3748}
+.coeff-pick{display:flex;gap:6px;flex-wrap:wrap}
+.coeff-pick button{padding:3px 10px;font-size:.76rem;border:1px solid #cbd5e0;border-radius:12px;background:#fff;cursor:pointer;color:#4a5568;transition:all .15s}
+.coeff-pick button:hover{border-color:#4299e1;color:#4299e1;background:#ebf8ff}
+
+/* Compound zone config */
+.zone-config{margin-top:8px}
+.zone-row{display:flex;gap:8px;align-items:center;margin-bottom:6px;font-size:.84rem}
+.zone-row label{min-width:72px;text-align:right;color:#4a5568}
+.zone-row input{flex:1;padding:5px 8px;border:1px solid #cbd5e0;border-radius:5px;font-size:.84rem}
+.zone-row .unit{font-size:.76rem;color:#a0aec0}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="container">
+  <h1>🌊 水位流量关系计算器</h1>
+  <p class="subtitle">Manning 公式 · 堰流公式 · 复合断面 — 一维水动力模型起推断面</p>
+
+  <div class="main-grid">
+    <!-- ===== LEFT PANEL ===== -->
+    <div class="input-panel">
+
+      <!-- Type selector -->
+      <div class="card">
+        <div class="card-title"><span class="icon">📋</span> 断面类型</div>
+        <div class="type-selector">
+          <div class="type-btn active" onclick="switchType('normal',this)">普通断面<br><span style="font-size:.72rem;opacity:.7">Manning 公式</span></div>
+          <div class="type-btn" onclick="switchType('weir',this)">控制堰<br><span style="font-size:.72rem;opacity:.7">堰流公式</span></div>
+          <div class="type-btn" onclick="switchType('compound',this)">控制堰+天然<br><span style="font-size:.72rem;opacity:.7">分区叠加</span></div>
+        </div>
+      </div>
+
+      <!-- ===== NORMAL ===== -->
+      <div id="panelNormal" class="type-panel active">
+        <div class="card">
+          <div class="card-title"><span class="icon">⚙️</span> 计算参数</div>
+          <div class="form-row"><label>比降 S</label><input type="number" id="slope" value="0.0005" step="any" min="1e-6"><span class="unit">m/m</span></div>
+          <div class="form-row"><label>糙率 n</label><input type="number" id="mannN" value="0.035" step="any" min="0.001" max="0.2"><span class="unit">—</span></div>
+          <div class="form-row"><label>计算模式</label>
+            <select id="modeSelect"><option value="single">单一糙率</option><option value="multi">分区糙率（左滩/主槽/右滩）</option></select>
+          </div>
+          <div id="multiNPanel" style="display:none;margin-top:8px">
+            <table class="multi-n-table"><thead><tr><th>分区</th><th>起始桩号(m)</th><th>糙率 n</th></tr></thead>
+            <tbody>
+              <tr><td>左滩</td><td><input type="number" id="m_leftStart" placeholder="自动"></td><td><input type="number" id="m_leftN" value="0.045" step="any"></td></tr>
+              <tr><td>主槽</td><td><input type="number" id="m_mainStart" placeholder="自动"></td><td><input type="number" id="m_mainN" value="0.030" step="any"></td></tr>
+              <tr><td>右滩</td><td><input type="number" id="m_rightStart" placeholder="自动"></td><td><input type="number" id="m_rightN" value="0.045" step="any"></td></tr>
+            </tbody></table>
+            <div class="tooltip-note">💡 桩号留空则自动按最低点划分主槽。</div>
+          </div>
+          <div class="form-row"><label>起算水位</label><input type="number" id="wseStart" step="any" placeholder="自动=河底最低点"><span class="unit">m</span></div>
+          <div class="form-row"><label>终止水位</label><input type="number" id="wseEnd" step="any" placeholder="自动=河底最高点"><span class="unit">m</span></div>
+          <div class="form-row"><label>水位步长</label><input type="number" id="wseStep" value="0.2" step="any" min="0.01"><span class="unit">m</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="icon">📐</span> 断面数据</div>
+          <div class="preset-row">
+            <label>示例：</label>
+            <button class="preset-btn" onclick="loadPreset('vshape','sectionData')">V形河谷</button>
+            <button class="preset-btn" onclick="loadPreset('ushape','sectionData')">U形河道</button>
+            <button class="preset-btn" onclick="loadPreset('compound','sectionData')">复式断面</button>
+            <button class="preset-btn" onclick="loadPreset('natural','sectionData')">天然河道</button>
+          </div>
+          <div class="section-area">
+            <label>桩号-高程（每行：桩号 高程）</label>
+            <textarea id="sectionData" placeholder="左岸 → 右岸，每行一组 桩号 高程"></textarea>
+            <div class="hint">💡 至少3个点，桩号单调递增，高程为绝对高程(m)。</div>
+          </div>
+          <div class="preview-canvas-wrap"><canvas id="previewChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ===== WEIR ===== -->
+      <div id="panelWeir" class="type-panel">
+        <div class="card">
+          <div class="card-title"><span class="icon">⚙️</span> 堰型与参数</div>
+          <div class="form-row"><label>堰型</label>
+            <select id="weirType" onchange="updateWeirCoeffHelp()"><option value="broad">宽顶堰</option><option value="practical">实用堰 (WES 型)</option><option value="sharp">薄壁堰 (矩形)</option></select>
+          </div>
+          <div class="form-row"><label>堰顶高程 P</label><input type="number" id="weirCrestZ" value="42.0" step="any"><span class="unit">m</span></div>
+          <div class="form-row"><label>堰宽 B</label><input type="number" id="weirWidth" value="50" step="any" min="0.1"><span class="unit">m</span></div>
+          <div class="form-row"><label>上游河底高程</label><input type="number" id="weirBedZ" value="39.0" step="any" placeholder="用于计算堰高 P"><span class="unit">m</span></div>
+          <div class="form-row"><label>流量系数 m</label><input type="number" id="weirM" value="0.36" step="any" min="0.1" max="1.0"><span class="unit">—</span></div>
+          <div class="form-row"><label>起算水位</label><input type="number" id="weirStart" step="any" placeholder="自动=堰顶"><span class="unit">m</span></div>
+          <div class="form-row"><label>终止水位</label><input type="number" id="weirEnd" value="48.0" step="any"><span class="unit">m</span></div>
+          <div class="form-row"><label>水位步长</label><input type="number" id="weirStep" value="0.2" step="any" min="0.01"><span class="unit">m</span></div>
+
+          <!-- Coefficient helper -->
+          <div class="coeff-helper" id="coeffHelper">
+            <h4>📊 流量系数 m 参考与计算</h4>
+            <div id="coeffContent"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="icon">📐</span> 堰体剖面示意</div>
+          <div class="weir-schematic"><canvas id="weirPreviewChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ===== COMPOUND ===== -->
+      <div id="panelCompound" class="type-panel">
+
+        <!-- Input section: 2-column grid -->
+        <div class="compound-inputs">
+
+          <!-- Left col: Section data + preview -->
+          <div class="card">
+            <div class="card-title"><span class="icon">📐</span> 全断面数据</div>
+            <div class="preset-row">
+              <label>示例：</label>
+              <button class="preset-btn" onclick="loadPreset('compound','cSectionData')">复式断面</button>
+              <button class="preset-btn" onclick="loadPreset('natural','cSectionData')">天然河道</button>
+              <button class="preset-btn" onclick="loadPreset('wide','cSectionData')">宽浅河道</button>
+            </div>
+            <div class="section-area">
+              <label>桩号-高程数据（每行：桩号 高程，左岸→右岸）</label>
+              <textarea id="cSectionData" placeholder="例：
+0    55.0
+20   49.0
+40   42.0   ← 堰段左桩号附近
+60   41.0   ← 河底最低点
+80   42.5   ← 堰段右桩号附近
+100  47.0
+130  55.0"></textarea>
+              <div class="hint">💡 至少3个点，桩号单调递增。输入后左侧自动预览断面，红色线标注堰段分区。</div>
+            </div>
+            <div class="preview-canvas-wrap"><canvas id="cPreviewChart"></canvas></div>
+          </div>
+
+          <!-- Right col: All parameters merged -->
+          <div class="card">
+            <div class="card-title"><span class="icon">⚙️</span> 计算参数</div>
+
+            <div style="font-weight:600;font-size:.84rem;color:#2b6cb0;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #e2e8f0">▸ 堰流参数</div>
+            <div class="form-row"><label>堰型</label>
+              <select id="cWeirType" onchange="updateCWeirCoeffHelp()"><option value="broad">宽顶堰</option><option value="practical">实用堰 (WES)</option><option value="sharp">薄壁堰</option></select>
+            </div>
+            <div class="form-row"><label>堰顶高程</label><input type="number" id="cWeirCrestZ" value="" step="any" placeholder="留空=自动取堰段最低点"><span class="unit">m</span></div>
+            <div class="form-row"><label>流量系数 m</label><input type="number" id="cWeirM" value="0.36" step="any" min="0.1" max="1.0"><span class="unit">—</span></div>
+            <div class="coeff-helper" id="cCoeffHelper" style="margin-bottom:10px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <span style="font-size:.82rem;font-weight:600;color:#4a5568">📊 快速选取</span>
+                <span style="font-size:.74rem;color:#a0aec0">（宽顶堰 0.32~0.385 · 实用堰 0.42~0.50 · 薄壁堰 ≈0.42）</span>
+              </div>
+              <div id="cCoeffContent"></div>
+            </div>
+
+            <div style="font-weight:600;font-size:.84rem;color:#2b6cb0;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #e2e8f0;margin-top:10px">▸ 分区配置 <span style="font-weight:400;font-size:.76rem;color:#a0aec0">— 左天然 + 堰段 + 右天然，覆盖整个断面</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 14px">
+              <!-- Left natural -->
+              <div style="background:#f0fff4;border:1px solid #c6f6d5;border-radius:6px;padding:8px 10px">
+                <div style="font-size:.82rem;font-weight:600;color:#276749;margin-bottom:4px">🌿 左岸天然段</div>
+                <div class="form-row" style="margin-bottom:4px"><label style="min-width:36px;font-size:.82rem">启用</label><input type="checkbox" id="cLeftOn" checked onchange="drawCPreview()"><span></span></div>
+                <div class="form-row" style="margin-bottom:0"><label style="min-width:36px;font-size:.82rem">n</label><input type="number" id="cLeftN" value="0.040" step="any" style="font-size:.82rem;padding:4px 6px"><span class="unit">—</span></div>
+              </div>
+              <!-- Right natural -->
+              <div style="background:#fffff0;border:1px solid #fefcbf;border-radius:6px;padding:8px 10px">
+                <div style="font-size:.82rem;font-weight:600;color:#744210;margin-bottom:4px">🌿 右岸天然段</div>
+                <div class="form-row" style="margin-bottom:4px"><label style="min-width:36px;font-size:.82rem">启用</label><input type="checkbox" id="cRightOn" checked onchange="drawCPreview()"><span></span></div>
+                <div class="form-row" style="margin-bottom:0"><label style="min-width:36px;font-size:.82rem">n</label><input type="number" id="cRightN" value="0.040" step="any" style="font-size:.82rem;padding:4px 6px"><span class="unit">—</span></div>
+              </div>
+              <!-- Weir zone -->
+              <div style="grid-column:1/-1;background:#fff5f5;border:1px solid #fed7d7;border-radius:6px;padding:8px 10px">
+                <div style="font-size:.82rem;font-weight:600;color:#c53030;margin-bottom:4px">🏗️ 中间堰段 <span style="font-weight:400;color:#a0aec0">（堰宽 B = 右桩号 − 左桩号）</span></div>
+                <div style="display:flex;gap:10px;align-items:center">
+                  <label style="font-size:.82rem;color:#4a5568;white-space:nowrap">左桩号</label>
+                  <input type="number" id="cWeirX0" value="" step="any" placeholder="自动=中心−25" style="font-size:.82rem;padding:4px 6px">
+                  <span class="unit">m</span>
+                  <label style="font-size:.82rem;color:#4a5568;white-space:nowrap">右桩号</label>
+                  <input type="number" id="cWeirX1" value="" step="any" placeholder="自动=中心+25" style="font-size:.82rem;padding:4px 6px">
+                  <span class="unit">m</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="font-weight:600;font-size:.84rem;color:#2b6cb0;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #e2e8f0;margin-top:12px">▸ 水位范围</div>
+            <div class="form-row"><label>比降 S</label><input type="number" id="cSlope" value="0.0005" step="any" min="1e-6"><span class="unit">m/m</span></div>
+            <div class="form-row"><label>起算水位</label><input type="number" id="cWseStart" step="any" placeholder="自动=断面与堰顶最低值"><span class="unit">m</span></div>
+            <div class="form-row"><label>终止水位</label><input type="number" id="cWseEnd" step="any" placeholder="自动=断面最高点"><span class="unit">m</span></div>
+            <div class="form-row"><label>水位步长</label><input type="number" id="cWseStep" value="0.2" step="any" min="0.01"><span class="unit">m</span></div>
+          </div>
+        </div>
+
+        <!-- Calculate button -->
+        <div class="btn-row" style="justify-content:center;margin-bottom:14px">
+          <button class="btn btn-primary" onclick="calculate()">🔄 计算水位流量关系</button>
+          <button class="btn btn-secondary" onclick="clearAll()">清空</button>
+        </div>
+
+        <!-- Results area (appears below inputs in compound mode) -->
+        <div class="compound-results-area">
+          <!-- Query panel -->
+          <div class="card">
+            <div class="card-title"><span class="icon">🔍</span> 水位流量互查</div>
+            <div class="query-panel">
+              <div class="query-box">
+                <h3><span style="font-size:1.1rem">💧</span> 已知水位查流量</h3>
+                <div class="query-input-row"><input type="number" id="cQueryH" step="any" placeholder="输入水位"><span class="unit">m</span></div>
+                <button class="query-btn q-blue" onclick="queryByH()">查询流量 →</button>
+                <div class="query-result qr-blue" id="cQueryHResult"></div>
+              </div>
+              <div class="query-box">
+                <h3><span style="font-size:1.1rem">🌊</span> 已知流量查水位</h3>
+                <div class="query-input-row"><input type="number" id="cQueryQ" step="any" placeholder="输入流量"><span class="unit">m³/s</span></div>
+                <button class="query-btn q-green" onclick="queryByQ()">查询水位 →</button>
+                <div class="query-result qr-green" id="cQueryQResult"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="position:relative">
+            <div class="chart-tabs">
+              <div class="chart-tab active" onclick="switchChart('qh',this)">Q-H 曲线</div>
+              <div class="chart-tab" onclick="switchChart('vh',this)">V-H 曲线</div>
+              <div class="chart-tab" onclick="switchChart('ah',this)">A-H 曲线</div>
+              <div class="chart-tab" onclick="switchChart('section',this)">断面图</div>
+            </div>
+            <div class="chart-container"><canvas id="cMainChart"></canvas></div>
+            <div class="export-row" id="cExportRow" style="display:none">
+              <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📥 导出CSV</button>
+              <button class="btn btn-secondary btn-sm" onclick="exportIMG()">📷 导出图片</button>
+              <button class="btn btn-secondary btn-sm" onclick="copyTable()">📋 复制表格</button>
+            </div>
+            <div class="loading" id="cLoadingOverlay"><div class="spinner"></div></div>
+          </div>
+          <div class="card" id="cResultsTableCard" style="display:none">
+            <div class="card-title"><span class="icon">📋</span> 计算成果表</div>
+            <div class="results-table-card">
+              <table><thead><tr id="cTableHead"></tr></thead><tbody id="cResultsBody"></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="calculate()">🔄 计算水位流量关系</button>
+        <button class="btn btn-secondary" onclick="clearAll()">清空</button>
+      </div>
+    </div>
+
+    <!-- ===== RIGHT PANEL ===== -->
+    <div class="results-panel">
+      <div class="card">
+        <div class="card-title"><span class="icon">🔍</span> 水位流量互查</div>
+        <div class="query-panel">
+          <div class="query-box">
+            <h3><span style="font-size:1.1rem">💧</span> 已知水位查流量</h3>
+            <div class="query-input-row"><input type="number" id="queryH" step="any" placeholder="输入水位"><span class="unit">m</span></div>
+            <button class="query-btn q-blue" onclick="queryByH()">查询流量 →</button>
+            <div class="query-result qr-blue" id="queryHResult"></div>
+          </div>
+          <div class="query-box">
+            <h3><span style="font-size:1.1rem">🌊</span> 已知流量查水位</h3>
+            <div class="query-input-row"><input type="number" id="queryQ" step="any" placeholder="输入流量"><span class="unit">m³/s</span></div>
+            <button class="query-btn q-green" onclick="queryByQ()">查询水位 →</button>
+            <div class="query-result qr-green" id="queryQResult"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="resultsCard" style="position:relative">
+        <div class="chart-tabs">
+          <div class="chart-tab active" onclick="switchChart('qh',this)">Q-H 曲线</div>
+          <div class="chart-tab" onclick="switchChart('vh',this)">V-H 曲线</div>
+          <div class="chart-tab" onclick="switchChart('ah',this)">A-H 曲线</div>
+          <div class="chart-tab" onclick="switchChart('section',this)">断面图</div>
+        </div>
+        <div class="chart-container"><canvas id="mainChart"></canvas></div>
+        <div class="export-row" id="exportRow" style="display:none">
+          <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📥 导出CSV</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportIMG()">📷 导出图片</button>
+          <button class="btn btn-secondary btn-sm" onclick="copyTable()">📋 复制表格</button>
+        </div>
+        <div class="loading" id="loadingOverlay"><div class="spinner"></div></div>
+      </div>
+
+      <div class="card" id="resultsTableCard" style="display:none">
+        <div class="card-title"><span class="icon">📋</span> 计算成果表</div>
+        <div class="results-table-card">
+          <table><thead><tr id="tableHead"></tr></thead><tbody id="resultsBody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   STATE
+   ============================================================ */
+let mainChart=null, previewChart=null, cPreviewChart=null;
+let currentResults=[], currentChartType='qh', currentSectionType='normal';
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+function showToast(msg,icon){
+  const t=document.getElementById('toast');t.innerHTML=(icon||'✅')+' '+msg;
+  t.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* ============================================================
+   SECTION TYPE SWITCH
+   ============================================================ */
+function switchType(type,el){
+  currentSectionType=type;
+  document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.type-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel'+type.charAt(0).toUpperCase()+type.slice(1)).classList.add('active');
+  // Toggle compound layout
+  document.querySelector('.container').classList.toggle('mode-compound',type==='compound');
+  if(type==='weir'){drawWeirPreview();updateWeirCoeffHelp();}
+  if(type==='compound'){drawCPreview();updateCWeirCoeffHelp();}
+}
+
+/* ============================================================
+   PRESETS
+   ============================================================ */
+const PRESETS={
+  vshape:`0    55.0\n5    50.0\n12   46.0\n20   43.0\n30   41.0\n40   43.0\n48   46.0\n55   50.0\n60   55.0`,
+  ushape:`0    52.0\n5    48.0\n10   45.5\n20   43.0\n40   42.0\n60   42.0\n80   42.2\n90   43.5\n100  46.0\n110  50.0\n120  52.0`,
+  compound:`0    55.0\n10   53.0\n20   49.0\n30   46.0\n35   43.5\n40   42.0\n50   41.5\n60   41.0\n65   41.0\n70   41.2\n75   41.8\n80   42.5\n90   44.0\n100  47.0\n110  50.0\n120  53.0\n130  55.0`,
+  natural:`0    62.0\n5    59.0\n10   56.5\n14   53.0\n17   50.0\n20   48.0\n23   46.5\n26   45.0\n28   44.0\n30   43.2\n33   42.5\n36   42.0\n40   41.5\n45   41.2\n50   41.0\n55   41.0\n60   41.3\n65   41.8\n70   42.5\n74   43.5\n78   45.0\n82   47.0\n86   49.5\n90   52.5\n94   56.0\n97   59.0\n100  62.0`,
+  wide:`0    48.0\n5    46.5\n10   45.0\n15   44.0\n20   43.2\n30   42.5\n40   42.0\n50   41.8\n60   41.5\n80   41.3\n100  41.2\n120  41.0\n140  41.0\n160  41.2\n180  41.5\n200  42.0\n210  42.5\n220  43.5\n230  44.5\n240  46.0\n250  48.0`
+};
+
+function loadPreset(key,targetEl){
+  document.getElementById(targetEl).value=PRESETS[key];
+  const panel=currentSectionType==='normal'?'#panelNormal':'#panelCompound';
+  document.querySelectorAll(panel+' .preset-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  if(targetEl==='sectionData') drawPreview(); else drawCPreview();
+}
+
+/* ============================================================
+   PARSE SECTION
+   ============================================================ */
+function parseSection(el){
+  const raw=document.getElementById(el).value.trim();
+  if(!raw)return[];
+  const lines=raw.split('\n').map(l=>l.trim()).filter(l=>l&&!l.startsWith('#'));
+  const pts=[];
+  for(const line of lines){
+    const parts=line.split(/[\s,;]+/).map(Number).filter(n=>!isNaN(n));
+    if(parts.length>=2) pts.push({x:parts[0],z:parts[1]});
+  }
+  pts.sort((a,b)=>a.x-b.x);
+  return pts;
+}
+
+/* ============================================================
+   PREVIEWS
+   ============================================================ */
+function drawPreview(){
+  const pts=parseSection('sectionData');if(pts.length<2)return;
+  const ctx=document.getElementById('previewChart').getContext('2d');
+  if(previewChart)previewChart.destroy();
+  previewChart=new Chart(ctx,{type:'line',
+    data:{labels:pts.map(p=>p.x),datasets:[{data:pts.map(p=>p.z),borderColor:'#4299e1',backgroundColor:'rgba(66,153,225,0.1)',fill:true,tension:0.2,pointRadius:3,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},title:{display:true,text:'断面预览',font:{size:13}}},scales:{x:{title:{display:true,text:'桩号 (m)'}},y:{title:{display:true,text:'高程 (m)'}}}}
+  });
+}
+
+function drawCPreview(){
+  const pts=parseSection('cSectionData');if(pts.length<2)return;
+  const ctx=document.getElementById('cPreviewChart').getContext('2d');
+  if(cPreviewChart)cPreviewChart.destroy();
+  const datasets=[{data:pts.map(p=>({x:p.x,y:p.z})),borderColor:'#4299e1',backgroundColor:'rgba(66,153,225,0.1)',fill:true,tension:0.2,pointRadius:3,borderWidth:2,label:'断面'}];
+  // Draw zone boundaries
+  const xMin=pts[0].x,xMax=pts[pts.length-1].x;
+  const cx=(xMin+xMax)/2;
+  let wx0=parseFloat(document.getElementById('cWeirX0').value);
+  let wx1=parseFloat(document.getElementById('cWeirX1').value);
+  if(isNaN(wx0))wx0=cx-25;if(isNaN(wx1))wx1=cx+25;
+  const cz=parseFloat(document.getElementById('cWeirCrestZ').value);
+  // Weir crest line
+  if(!isNaN(cz)){
+    datasets.push({data:[{x:wx0,y:cz},{x:wx1,y:cz}],borderColor:'#c53030',borderWidth:3,pointRadius:0,fill:false,label:'堰顶',borderDash:[8,4]});
+  }
+  // Zone boundary lines
+  const zMax=Math.max(...pts.map(p=>p.z));
+  datasets.push({data:[{x:wx0,y:Math.min(...pts.map(p=>p.z))-1},{x:wx0,y:zMax+2}],borderColor:'#e53e3e88',borderWidth:1.5,pointRadius:0,fill:false,label:'分界',borderDash:[4,4]});
+  datasets.push({data:[{x:wx1,y:Math.min(...pts.map(p=>p.z))-1},{x:wx1,y:zMax+2}],borderColor:'#e53e3e88',borderWidth:1.5,pointRadius:0,fill:false,label:'分界',borderDash:[4,4]});
+  cPreviewChart=new Chart(ctx,{type:'line',
+    data:{datasets},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',labels:{font:{size:10},filter:i=>i.text==='断面'||i.text==='堰顶'}}},scales:{x:{type:'linear',title:{display:true,text:'桩号 (m)'}},y:{title:{display:true,text:'高程 (m)'}}}}
+  });
+}
+
+function drawWeirPreview(){
+  const ctx=document.getElementById('weirPreviewChart').getContext('2d');
+  if(window._wc)window._wc.destroy();
+  const cz=parseFloat(document.getElementById('weirCrestZ').value)||42;
+  const bz=parseFloat(document.getElementById('weirBedZ').value)||39;
+  const B=parseFloat(document.getElementById('weirWidth').value)||50;
+  const P=cz-bz;
+  const bx0=50-B/4,bx1=50+B/4;
+  // P is weir height above bed
+  const datasets=[
+    // Upstream slope
+    {label:'河床',data:[{x:bx0-20,y:bz},{x:bx0-5,y:bz},{x:bx0,y:cz},{x:bx1,y:cz},{x:bx1+5,y:bz},{x:bx1+20,y:bz}],borderColor:'#8B6914',backgroundColor:'#D4A84322',fill:true,borderWidth:2.5,pointRadius:0,tension:0,order:2},
+    // Weir body (filled rect)
+    {label:'堰体',data:[{x:bx0,y:bz},{x:bx0,y:cz},{x:bx1,y:cz},{x:bx1,y:bz},{x:bx0,y:bz}],borderColor:'#744210',backgroundColor:'#FEFCBF',fill:true,borderWidth:2,pointRadius:0,tension:0,order:1}
+  ];
+  // Water level example
+  const wseEx=cz+2;
+  datasets.push({label:'水位示意',data:[{x:bx0-25,y:wseEx},{x:bx1+25,y:wseEx}],borderColor:'#3182ce',borderWidth:2,borderDash:[6,3],pointRadius:0,fill:false,order:3});
+  // Head H arrow (text annotation via dataset)
+  window._wc=new Chart(ctx,{type:'line',data:{datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'top',labels:{font:{size:10},filter:i=>i.text==='堰体'||i.text==='河床'}},
+        title:{display:true,text:`堰体剖面  (堰高 P=${P.toFixed(1)}m, 堰宽 B=${B.toFixed(0)}m)`,font:{size:12},color:'#2d3748'}},
+      scales:{x:{display:false},y:{title:{display:true,text:'高程 (m)'},min:bz-2}}}
+  });
+}
+
+/* Event listeners */
+document.getElementById('sectionData').addEventListener('input',()=>{clearTimeout(window._pv);window._pv=setTimeout(drawPreview,300)});
+document.getElementById('cSectionData').addEventListener('input',()=>{clearTimeout(window._cpv);window._cpv=setTimeout(drawCPreview,300)});
+document.getElementById('cWeirX0').addEventListener('input',()=>{clearTimeout(window._cpv);window._cpv=setTimeout(drawCPreview,300)});
+document.getElementById('cWeirX1').addEventListener('input',()=>{clearTimeout(window._cpv);window._cpv=setTimeout(drawCPreview,300)});
+document.getElementById('cWeirCrestZ').addEventListener('input',()=>{clearTimeout(window._cpv);window._cpv=setTimeout(drawCPreview,300)});
+['weirCrestZ','weirBedZ','weirWidth'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{clearTimeout(window._wpv);window._wpv=setTimeout(drawWeirPreview,300)}));
+document.getElementById('modeSelect').addEventListener('change',function(){document.getElementById('multiNPanel').style.display=this.value==='multi'?'block':'none'});
+
+/* ============================================================
+   COEFFICIENT HELPERS
+   ============================================================ */
+function updateWeirCoeffHelp(){
+  const wt=document.getElementById('weirType').value;
+  const el=document.getElementById('coeffContent');
+  if(wt==='broad'){
+    el.innerHTML=`
+      <table class="coeff-table"><tr><th>条件</th><th>m 范围</th><th>说明</th></tr>
+      <tr><td>无侧收缩、完全堰</td><td>0.32 ~ 0.385</td><td>标准宽顶堰</td></tr>
+      <tr><td>有侧收缩</td><td>0.28 ~ 0.35</td><td>进口修圆可提高</td></tr>
+      <tr><td>上游面倾斜</td><td>0.33 ~ 0.42</td><td>坡度 1:1 ~ 1:2</td></tr></table>
+      <div class="coeff-pick">
+        <button onclick="setCoeff('weirM',0.32)">0.32 (保守)</button>
+        <button onclick="setCoeff('weirM',0.35)">0.35 (常用)</button>
+        <button onclick="setCoeff('weirM',0.365)">0.365 (标准)</button>
+        <button onclick="setCoeff('weirM',0.385)">0.385 (理想)</button>
+      </div>
+      <div style="margin-top:6px;font-size:.76rem;color:#718096">公式：Q = m·B·√(2g)·H<sup>3/2</sup>，H 为堰上水头</div>`;
+  }else if(wt==='practical'){
+    el.innerHTML=`
+      <table class="coeff-table"><tr><th>堰型</th><th>m 范围</th><th>说明</th></tr>
+      <tr><td>WES 标准剖面</td><td>0.44 ~ 0.50</td><td>上游面垂直</td></tr>
+      <tr><td>克-奥剖面</td><td>0.42 ~ 0.46</td><td>苏联标准</td></tr>
+      <tr><td>驼峰堰</td><td>0.38 ~ 0.45</td><td>低堰常用</td></tr></table>
+      <div class="coeff-pick">
+        <button onclick="setCoeff('weirM',0.42)">0.42 (克-奥)</button>
+        <button onclick="setCoeff('weirM',0.45)">0.45 (WES常用)</button>
+        <button onclick="setCoeff('weirM',0.49)">0.49 (WES标准)</button>
+        <button onclick="setCoeff('weirM',0.50)">0.50 (理想)</button>
+      </div>
+      <div style="margin-top:6px;font-size:.76rem;color:#718096">公式：Q = m·B·√(2g)·(H+0.003)<sup>3/2</sup>，H 为堰上水头</div>`;
+  }else{
+    el.innerHTML=`
+      <table class="coeff-table"><tr><th>公式</th><th>适用条件</th><th>说明</th></tr>
+      <tr><td>Rehbock: m = 0.403 + 0.053·H/P + 1/305·H</td><td>H/P &lt; 5</td><td>自动计算</td></tr>
+      <tr><td>m ≈ 0.42 ~ 0.46</td><td>标准矩形薄壁堰</td><td>常用范围</td></tr></table>
+      <div style="margin-top:6px;font-size:.76rem;color:#718096">公式：Q = m·B·√(2g)·H<sup>3/2</sup>，薄壁堰 m 随 H/P 变化</div>
+      <div style="margin-top:6px"><button class="btn btn-sm btn-primary" onclick="calcSharpCoeff()">📐 根据 H/P 自动计算 m</button></div>`;
+  }
+}
+
+function updateCWeirCoeffHelp(){
+  const wt=document.getElementById('cWeirType').value;
+  const el=document.getElementById('cCoeffContent');
+  const pickId='cWeirM';
+  if(wt==='broad'){
+    el.innerHTML=`<div class="coeff-pick">
+      <button onclick="setCoeff('${pickId}',0.32)">0.32</button>
+      <button onclick="setCoeff('${pickId}',0.35)">0.35</button>
+      <button onclick="setCoeff('${pickId}',0.365)">0.365</button>
+      <button onclick="setCoeff('${pickId}',0.385)">0.385</button>
+    </div>`;
+  }else if(wt==='practical'){
+    el.innerHTML=`<div class="coeff-pick">
+      <button onclick="setCoeff('${pickId}',0.42)">0.42</button>
+      <button onclick="setCoeff('${pickId}',0.45)">0.45</button>
+      <button onclick="setCoeff('${pickId}',0.49)">0.49</button>
+      <button onclick="setCoeff('${pickId}',0.50)">0.50</button>
+    </div>`;
+  }else{
+    el.innerHTML=`<div class="coeff-pick">
+      <button onclick="setCoeff('${pickId}',0.42)">0.42</button>
+      <button onclick="setCoeff('${pickId}',0.44)">0.44</button>
+      <button onclick="setCoeff('${pickId}',0.46)">0.46</button>
+    </div>`;
+  }
+}
+
+function setCoeff(id,v){document.getElementById(id).value=v;showToast(`已设为 ${v}`,'📐');}
+
+function calcSharpCoeff(){
+  const cz=parseFloat(document.getElementById('weirCrestZ').value);
+  const bz=parseFloat(document.getElementById('weirBedZ').value);
+  if(isNaN(cz)||isNaN(bz)){showToast('请先输入堰顶高程和河底高程','⚠️');return;}
+  const P=cz-bz;
+  if(P<=0){showToast('堰高 P 须大于0','⚠️');return;}
+  // Estimate H as 1m for default, let user see formula
+  const H=1.0;
+  const m=0.403+0.053*(H/P)+H/305;
+  document.getElementById('weirM').value=m.toFixed(3);
+  showToast(`Rehbock: m=${m.toFixed(3)} (按H≈1m估算, P=${P.toFixed(1)}m)`,'📐');
+}
+
+/* ============================================================
+   MANNING COMPUTATION
+   ============================================================ */
+function getZ(pts,x){
+  if(x<=pts[0].x)return pts[0].z;
+  if(x>=pts[pts.length-1].x)return pts[pts.length-1].z;
+  for(let i=0;i<pts.length-1;i++){
+    if(x>=pts[i].x&&x<=pts[i+1].x){const t=(x-pts[i].x)/(pts[i+1].x-pts[i].x);return pts[i].z+t*(pts[i+1].z-pts[i].z);}
+  }
+  return pts[pts.length-1].z;
+}
+
+function computeManning(pts,wse,slopeVal,nVal){
+  const zMin=Math.min(...pts.map(p=>p.z));
+  if(wse<=zMin)return null;
+  const xMin=pts[0].x,xMax=pts[pts.length-1].x,dx=0.05;
+  // Find waterline crossings
+  const ints=[];
+  for(let i=0;i<pts.length-1;i++){
+    if((pts[i].z-wse)*(pts[i+1].z-wse)<0){
+      const t=(wse-pts[i].z)/(pts[i+1].z-pts[i].z);
+      ints.push(pts[i].x+t*(pts[i+1].x-pts[i].x));
+    }
+  }
+  const ui=[...new Set(ints.map(v=>v.toFixed(6)))].map(Number).sort((a,b)=>a-b);
+  const xCuts=[xMin];for(const xi of ui){if(xi>xMin&&xi<xMax)xCuts.push(xi);}xCuts.push(xMax);xCuts.sort((a,b)=>a-b);
+  let A=0,Pw=0;
+  for(let ci=0;ci<xCuts.length-1;ci++){
+    const xa=xCuts[ci],xb=xCuts[ci+1];
+    if(getZ(pts,(xa+xb)/2)>=wse)continue;
+    const ns=Math.max(2,Math.ceil((xb-xa)/dx)),sd=(xb-xa)/ns;
+    for(let s=0;s<ns;s++){
+      const x0=xa+s*sd,x1=x0+sd,z0=getZ(pts,x0),z1=getZ(pts,x1);
+      const d0=Math.max(0,wse-z0),d1=Math.max(0,wse-z1);
+      A+=(d0+d1)/2*sd;Pw+=Math.sqrt(sd*sd+(z1-z0)*(z1-z0));
+    }
+  }
+  if(A<=0)return null;
+  const R=A/Pw;
+  const V=(1/nVal)*Math.pow(R,2/3)*Math.sqrt(slopeVal);
+  return{area:A,wetPerimeter:Pw,hydraulicRadius:R,velocity:V,discharge:V*A,n:nVal};
+}
+
+function computeManningSubsection(pts,wse,slopeVal,nVal,xStart,xEnd){
+  // Same as computeManning but restricted to [xStart, xEnd]
+  const sub=pts.filter(p=>p.x>=xStart&&p.x<=xEnd);
+  if(sub.length<2)return{area:0,wetPerimeter:0,hydraulicRadius:0,velocity:0,discharge:0,n:nVal};
+  return computeManning(sub,wse,slopeVal,nVal);
+}
+
+/* ============================================================
+   WEIR COMPUTATION
+   ============================================================ */
+function computeWeirQ(wse,crestZ,B,m,wt){
+  if(wse<=crestZ)return 0;
+  const H=wse-crestZ,g=9.81;
+  if(wt==='broad') return m*B*Math.sqrt(2*g)*Math.pow(H,1.5);
+  if(wt==='practical') return m*B*Math.sqrt(2*g)*Math.pow(H+0.003,1.5);
+  // sharp: m may come from Rehbock
+  return m*B*Math.sqrt(2*g)*Math.pow(H,1.5);
+}
+
+/* ============================================================
+   MAIN CALCULATION
+   ============================================================ */
+function calculate(){
+  if(currentSectionType==='normal')calcNormal();
+  else if(currentSectionType==='weir')calcWeir();
+  else calcCompound();
+}
+
+function calcNormal(){
+  const pts=parseSection('sectionData');
+  if(pts.length<3){alert('请至少输入3个断面数据点');return;}
+  const slope=parseFloat(document.getElementById('slope').value);
+  if(!slope||slope<=0){alert('请输入有效的河床比降');return;}
+  const nVal=parseFloat(document.getElementById('mannN').value)||0.035;
+  const step=parseFloat(document.getElementById('wseStep').value)||0.2;
+  const zMin=Math.min(...pts.map(p=>p.z)),zMax=Math.max(...pts.map(p=>p.z));
+  const wS=parseFloat(document.getElementById('wseStart').value)||zMin+0.01;
+  const wE=parseFloat(document.getElementById('wseEnd').value)||zMax;
+  if(wS>=wE){alert('起算水位必须小于终止水位');return;}
+  showLoading();
+  setTimeout(()=>{
+    const res=[];
+    for(let w=wS;w<=wE+step*0.001;w+=step){
+      const r=computeManning(pts,w,slope,nVal);
+      if(r)res.push({wse:w,depth:w-zMin,...r});
+    }
+    currentResults=res;
+    finishNormal();
+  },50);
+}
+
+function finishNormal(){
+  drawMainChart(currentChartType);
+  setTable(['水位(m)','水深(m)','面积(m²)','湿周(m)','水力半径(m)','流速(m/s)','流量(m³/s)','n'],
+    r=>[r.wse.toFixed(2),r.depth.toFixed(2),r.area.toFixed(2),r.wetPerimeter.toFixed(2),r.hydraulicRadius.toFixed(3),r.velocity.toFixed(3),r.discharge.toFixed(2),r.n.toFixed(4)]);
+}
+
+function calcWeir(){
+  const cz=parseFloat(document.getElementById('weirCrestZ').value);
+  const B=parseFloat(document.getElementById('weirWidth').value);
+  const m=parseFloat(document.getElementById('weirM').value);
+  const wt=document.getElementById('weirType').value;
+  const step=parseFloat(document.getElementById('weirStep').value)||0.2;
+  const wS=parseFloat(document.getElementById('weirStart').value)||cz;
+  const wE=parseFloat(document.getElementById('weirEnd').value)||cz+6;
+  if(!cz||!B||!m){alert('请填写完整的堰流参数');return;}
+  if(wS>=wE){alert('起算水位必须小于终止水位');return;}
+  showLoading();
+  setTimeout(()=>{
+    const res=[];
+    for(let w=wS;w<=wE+step*0.001;w+=step){
+      const H=Math.max(0,w-cz);
+      const Q=computeWeirQ(w,cz,B,m,wt);
+      const V=H>0?Q/(B*H):0;
+      res.push({wse:w,depth:H,area:B*H,wetPerimeter:B+2*H,hydraulicRadius:H>0?B*H/(B+2*H):0,velocity:V,discharge:Q,n:m});
+    }
+    currentResults=res;
+    drawMainChart(currentChartType);
+    setTable(['水位(m)','堰上水头(m)','过水面积(m²)','堰宽(m)','水力半径(m)','流速(m/s)','流量(m³/s)','m'],
+      r=>[r.wse.toFixed(2),r.depth.toFixed(2),r.area.toFixed(2),(r.area>0&&r.depth>0?(r.area/r.depth):0).toFixed(1),r.hydraulicRadius.toFixed(3),r.velocity.toFixed(3),r.discharge.toFixed(2),r.n.toFixed(3)]);
+  },50);
+}
+
+function calcCompound(){
+  const pts=parseSection('cSectionData');
+  if(pts.length<3){alert('请至少输入3个断面数据点');return;}
+  const slope=parseFloat(document.getElementById('cSlope').value);
+  if(!slope||slope<=0){alert('请输入有效的河床比降');return;}
+  const cz=parseFloat(document.getElementById('cWeirCrestZ').value);
+  const cM=parseFloat(document.getElementById('cWeirM').value)||0.36;
+  const cWt=document.getElementById('cWeirType').value;
+  const step=parseFloat(document.getElementById('cWseStep').value)||0.2;
+  const xMin=pts[0].x,xMax=pts[pts.length-1].x;
+  const cx=(xMin+xMax)/2;
+  let wx0=parseFloat(document.getElementById('cWeirX0').value);
+  let wx1=parseFloat(document.getElementById('cWeirX1').value);
+  if(isNaN(wx0))wx0=cx-25;if(isNaN(wx1))wx1=cx+25;
+  if(wx0>=wx1){alert('堰段左桩号须小于右桩号');return;}
+  // Auto-detect crest Z from section data at weir zone
+  let crestZ=cz;
+  if(isNaN(crestZ)){
+    // Find min z in weir zone
+    const wz=pts.filter(p=>p.x>=wx0&&p.x<=wx1);
+    if(wz.length>0)crestZ=Math.min(...wz.map(p=>p.z));
+    else{alert('堰段桩号范围内无断面数据，请检查');return;}
+  }
+  const Bweir=wx1-wx0;
+  if(Bweir<=0){alert('堰宽须大于0');return;}
+  const leftOn=document.getElementById('cLeftOn').checked;
+  const rightOn=document.getElementById('cRightOn').checked;
+  const leftN=parseFloat(document.getElementById('cLeftN').value)||0.040;
+  const rightN=parseFloat(document.getElementById('cRightN').value)||0.040;
+  const zMin=Math.min(...pts.map(p=>p.z));
+  const zMax=Math.max(...pts.map(p=>p.z));
+  const wS=parseFloat(document.getElementById('cWseStart').value)||Math.min(zMin,crestZ)+0.01;
+  const wE=parseFloat(document.getElementById('cWseEnd').value)||Math.max(zMax,crestZ+5);
+  if(wS>=wE){alert('起算水位必须小于终止水位');return;}
+
+  showLoading();
+  setTimeout(()=>{
+    const res=[];
+    for(let w=wS;w<=wE+step*0.001;w+=step){
+      // Weir
+      const Qw=computeWeirQ(w,crestZ,Bweir,cM,cWt);
+      const Hw=Math.max(0,w-crestZ);
+      const Aw=Bweir*Hw;
+      const Vw=Hw>0?Qw/Aw:0;
+      // Left natural
+      let Ql=0,Al=0,Vl=0;
+      if(leftOn&&wx0>xMin){
+        const rl=computeManningSubsection(pts,w,slope,leftN,xMin,wx0);
+        if(rl){Ql=rl.discharge;Al=rl.area;Vl=rl.velocity;}
+      }
+      // Right natural
+      let Qr=0,Ar=0,Vr=0;
+      if(rightOn&&wx1<xMax){
+        const rr=computeManningSubsection(pts,w,slope,rightN,wx1,xMax);
+        if(rr){Qr=rr.discharge;Ar=rr.area;Vr=rr.velocity;}
+      }
+      const Qt=Qw+Ql+Qr,At=Aw+Al+Ar;
+      const Vt=At>0?Qt/At:0;
+      res.push({
+        wse:w,depth:w-Math.min(zMin,crestZ),
+        area:At,wetPerimeter:0,hydraulicRadius:0,
+        velocity:Vt,discharge:Qt,n:cM,
+        qWeir:Qw,qLeft:Ql,qRight:Qr,
+        vWeir:Vw,vLeft:Vl,vRight:Vr,
+        aWeir:Aw,aLeft:Al,aRight:Ar,
+        crestZ,Bweir,wx0,wx1
+      });
+    }
+    currentResults=res;
+    drawMainChart(currentChartType);
+    setTable(['水位(m)','总流量(m³/s)','堰Q','左天然Q','右天然Q','总流速','堰流速','堰上水头'],
+      r=>[r.wse.toFixed(2),r.discharge.toFixed(2),r.qWeir.toFixed(2),r.qLeft.toFixed(2),r.qRight.toFixed(2),r.velocity.toFixed(3),r.vWeir.toFixed(3),Math.max(0,r.wse-r.crestZ).toFixed(2)]);
+  },50);
+}
+
+/* ============================================================
+   FINISH / TABLE / LOADING
+   ============================================================ */
+function showLoading(){
+  const id=currentSectionType==='compound'?'cLoadingOverlay':'loadingOverlay';
+  document.getElementById(id).classList.add('show');
+}
+
+function setTable(headers,rowFn){
+  drawMainChart(currentChartType);
+  const isC=currentSectionType==='compound';
+  const thId=isC?'cTableHead':'tableHead';
+  const tbId=isC?'cResultsBody':'resultsBody';
+  const cardId=isC?'cResultsTableCard':'resultsTableCard';
+  const expId=isC?'cExportRow':'exportRow';
+  const loadId=isC?'cLoadingOverlay':'loadingOverlay';
+  document.getElementById(thId).innerHTML=headers.map(h=>`<th>${h}</th>`).join('');
+  const tbody=document.getElementById(tbId);tbody.innerHTML='';
+  currentResults.forEach((r,i)=>{
+    const vals=rowFn(r);const tr=document.createElement('tr');tr.id=`row-${i}`;
+    tr.innerHTML=vals.map(v=>`<td>${v}</td>`).join('');tbody.appendChild(tr);
+  });
+  document.getElementById(cardId).style.display='block';
+  document.getElementById(expId).style.display='flex';
+  document.getElementById(loadId).classList.remove('show');
+  document.getElementById('queryHResult').className='query-result';
+  document.getElementById('queryQResult').className='query-result';
+  const cqh=document.getElementById('cQueryHResult');if(cqh)cqh.className='query-result';
+  const cqq=document.getElementById('cQueryQResult');if(cqq)cqq.className='query-result';
+}
+
+/* ============================================================
+   CHARTS
+   ============================================================ */
+function drawMainChart(type){
+  currentChartType=type;
+  const R=currentResults;if(!R.length)return;
+  const canvasId=currentSectionType==='compound'?'cMainChart':'mainChart';
+  const ctx=document.getElementById(canvasId).getContext('2d');
+  if(mainChart)mainChart.destroy();
+  const isC=currentSectionType==='compound';
+  let ds,xl,yl,title;
+
+  switch(type){
+    case'qh':
+      if(isC){
+        ds=[
+          mkDS('总流量',R,'discharge','#2b6cb0',3.5),
+          mkDS('堰流量',R,'qWeir','#c53030',2,[8,4]),
+          mkDS('左天然',R,'qLeft','#38a169',2,[4,4]),
+          mkDS('右天然',R,'qRight','#d69e2e',2,[4,4])
+        ];
+      }else{
+        ds=[mkDS('Q-H',R,'discharge','#3182ce',3.5)];
+      }
+      xl='流量 Q (m³/s)';yl='水位 H (m)';title='水位-流量关系曲线 (Q-H)';
+      break;
+    case'vh':
+      ds=[mkDS('V-H',R,'velocity','#38a169',3.5)];
+      xl='平均流速 V (m/s)';yl='水位 H (m)';title='水位-流速关系曲线 (V-H)';break;
+    case'ah':
+      ds=[mkDS('A-H',R,'area','#d69e2e',3.5)];
+      xl='过水面积 A (m²)';yl='水位 H (m)';title='水位-面积关系曲线 (A-H)';break;
+    case'section':
+      if(currentSectionType==='weir')drawWeirSection(R);
+      else if(isC)drawCompoundSection(R);
+      else drawNormalSection(R);
+      return;
+  }
+  mainChart=new Chart(ctx,{type:'line',data:{datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{title:{display:true,text:title,font:{size:15,weight:'bold'},color:'#1a365d'},
+        legend:{display:isC&&type==='qh',position:'top',labels:{font:{size:11}}},
+        tooltip:{callbacks:{label:ci=>{
+          const r=R[ci.datasetIndex]; // wrong index for compound
+          const ri=ci.dataIndex;const rd=R[ri];
+          const ls=[`水位: ${rd.wse.toFixed(2)} m`,`流量: ${rd.discharge.toFixed(2)} m³/s`];
+          if(rd.qWeir!==undefined){ls.push(`堰: ${rd.qWeir.toFixed(2)}  左: ${rd.qLeft.toFixed(2)}  右: ${rd.qRight.toFixed(2)} m³/s`);}
+          ls.push(`流速: ${rd.velocity.toFixed(3)} m/s`,`面积: ${rd.area.toFixed(1)} m²`);
+          return ls;
+        }}}
+      },
+      scales:{x:{type:'linear',title:{display:true,text:xl,font:{size:12}}},y:{title:{display:true,text:yl,font:{size:12}}}}
+    }
+  });
+}
+
+function mkDS(label,R,key,color,lw,dash){
+  return{label,data:R.map(r=>({x:r[key],y:r.wse})),borderColor:color,borderWidth:lw,pointRadius:2,pointHoverRadius:5,tension:0.3,fill:false,borderDash:dash||undefined};
+}
+
+function drawNormalSection(R){
+  const pts=parseSection('sectionData');
+  const canvasId=currentSectionType==='compound'?'cMainChart':'mainChart';
+  const ctx=document.getElementById(canvasId).getContext('2d');if(mainChart)mainChart.destroy();
+  const n=R.length,idxs=[0,Math.floor(n*.25),Math.floor(n*.5),Math.floor(n*.75),n-1].filter(i=>i<n);
+  const xMin=pts[0].x,xMax=pts[pts.length-1].x;
+  const ds=[{label:'断面',data:pts.map(p=>({x:p.x,y:p.z})),borderColor:'#2d3748',borderWidth:2.5,pointRadius:0,tension:.2,fill:false,order:1}];
+  const fc=['rgba(66,153,225,.15)','rgba(66,153,225,.25)','rgba(66,153,225,.35)','rgba(66,153,225,.45)','rgba(30,64,175,.5)'];
+  idxs.forEach((i,ci)=>{const w=R[i].wse;
+    ds.push({label:`H=${w.toFixed(1)} Q=${R[i].discharge.toFixed(1)}`,data:[{x:xMin,y:w},{x:xMax,y:w}],borderColor:`rgba(30,100,200,${.3+ci*.15})`,borderWidth:1.5,borderDash:[6,3],pointRadius:0,fill:false,order:2});
+    const fd=[];for(let x=xMin;x<=xMax;x+=.5)fd.push({x,y:Math.min(w,getZ(pts,x))});
+    ds.push({data:fd,borderColor:'transparent',backgroundColor:fc[ci],fill:'-1',pointRadius:0,order:3});
+  });
+  mainChart=new Chart(ctx,{type:'line',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:'断面淹没示意图',font:{size:15,weight:'bold'},color:'#1a365d'},legend:{display:true,position:'top',labels:{font:{size:10},filter:i=>!i.text.includes('淹没')}}},scales:{x:{type:'linear',title:{display:true,text:'桩号 (m)'}},y:{title:{display:true,text:'高程 (m)'}}}}});
+}
+
+function drawWeirSection(R){
+  const canvasId=currentSectionType==='compound'?'cMainChart':'mainChart';
+  const ctx=document.getElementById(canvasId).getContext('2d');if(mainChart)mainChart.destroy();
+  const cz=parseFloat(document.getElementById('weirCrestZ').value);
+  const bz=parseFloat(document.getElementById('weirBedZ').value);
+  const B=parseFloat(document.getElementById('weirWidth').value);
+  const bx0=50-B/4,bx1=50+B/4;
+  const n=R.length,idxs=[0,Math.floor(n*.25),Math.floor(n*.5),Math.floor(n*.75),n-1].filter(i=>i<n);
+  const ds=[
+    {label:'堰体',data:[{x:bx0,y:bz},{x:bx0,y:cz},{x:bx1,y:cz},{x:bx1,y:bz},{x:bx0,y:bz}],borderColor:'#744210',backgroundColor:'#FEFCBF',fill:true,borderWidth:2,pointRadius:0,tension:0,order:1},
+    {label:'河床',data:[{x:bx0-20,y:bz},{x:bx0,y:bz},{x:bx1,y:bz},{x:bx1+20,y:bz}],borderColor:'#8B6914',borderWidth:2,pointRadius:0,tension:0,fill:false,order:2}
+  ];
+  idxs.forEach((i,ci)=>{const w=R[i].wse;
+    ds.push({label:`H=${w.toFixed(1)} Q=${R[i].discharge.toFixed(1)}`,data:[{x:bx0-15,y:w},{x:bx1+15,y:w}],borderColor:`rgba(30,100,200,${.3+ci*.15})`,borderWidth:1.5,borderDash:[6,3],pointRadius:0,fill:false,order:3});
+  });
+  mainChart=new Chart(ctx,{type:'line',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:'堰流示意图',font:{size:15,weight:'bold'},color:'#1a365d'},legend:{display:true,position:'top',labels:{font:{size:10},filter:i=>i.text==='堰体'||i.text==='河床'}}},scales:{x:{display:false},y:{title:{display:true,text:'高程 (m)'}}}}});
+}
+
+function drawCompoundSection(R){
+  const pts=parseSection('cSectionData');
+  const canvasId=currentSectionType==='compound'?'cMainChart':'mainChart';
+  const ctx=document.getElementById(canvasId).getContext('2d');if(mainChart)mainChart.destroy();
+  const r0=R[0];
+  const wx0=r0.wx0,wx1=r0.wx1,cz=r0.crestZ;
+  const xMin=pts[0].x,xMax=pts[pts.length-1].x;
+  const n=R.length,idxs=[0,Math.floor(n*.25),Math.floor(n*.5),Math.floor(n*.75),n-1].filter(i=>i<n);
+  const ds=[
+    {label:'天然断面',data:pts.map(p=>({x:p.x,y:p.z})),borderColor:'#2d3748',borderWidth:2.5,pointRadius:0,tension:.2,fill:false,order:1},
+    {label:`堰段 [${wx0}~${wx1}]`,data:[{x:wx0,y:cz},{x:wx1,y:cz}],borderColor:'#c53030',borderWidth:3.5,pointRadius:0,fill:false,order:2}
+  ];
+  // Zone fill
+  const zMin=Math.min(...pts.map(p=>p.z));
+  idxs.forEach((i,ci)=>{const w=R[i].wse;
+    ds.push({label:`H=${w.toFixed(1)} Q=${R[i].discharge.toFixed(1)}`,data:[{x:xMin,y:w},{x:xMax,y:w}],borderColor:`rgba(30,100,200,${.3+ci*.15})`,borderWidth:1.5,borderDash:[6,3],pointRadius:0,fill:false,order:3});
+    // Fill natural zones
+    const fdL=[],fdR=[];
+    for(let x=xMin;x<=wx0;x+=.5)fdL.push({x,y:Math.min(w,getZ(pts,x))});
+    for(let x=wx1;x<=xMax;x+=.5)fdR.push({x,y:Math.min(w,getZ(pts,x))});
+    if(fdL.length>1)ds.push({data:fdL,borderColor:'transparent',backgroundColor:'rgba(56,161,105,.15)',fill:'-1',pointRadius:0,order:4});
+    if(fdR.length>1)ds.push({data:fdR,borderColor:'transparent',backgroundColor:'rgba(214,158,46,.15)',fill:'-1',pointRadius:0,order:4});
+  });
+  // Zone labels
+  ds.push({label:'左天然',data:[{x:(xMin+wx0)/2,y:zMin-1}],borderColor:'transparent',pointRadius:0,order:5});
+  mainChart=new Chart(ctx,{type:'line',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:'控制堰+天然断面复合示意图',font:{size:15,weight:'bold'},color:'#1a365d'},legend:{display:true,position:'top',labels:{font:{size:10},filter:i=>i.text==='天然断面'||i.text.startsWith('堰段')}}},scales:{x:{type:'linear',title:{display:true,text:'桩号 (m)'}},y:{title:{display:true,text:'高程 (m)'}}}}});
+}
+
+function switchChart(type,el){document.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');drawMainChart(type);}
+
+/* ============================================================
+   INTERPOLATION
+   ============================================================ */
+function interpByH(h){
+  const R=currentResults;if(!R.length)return null;
+  if(h<=R[0].wse)return R[0];if(h>=R[R.length-1].wse)return R[R.length-1];
+  for(let i=0;i<R.length-1;i++){
+    if(h>=R[i].wse&&h<=R[i+1].wse){
+      const t=(h-R[i].wse)/(R[i+1].wse-R[i].wse);const l=(a,b)=>a+t*(b-a);
+      const o={wse:h,depth:l(R[i].depth,R[i+1].depth),area:l(R[i].area,R[i+1].area),wetPerimeter:l(R[i].wetPerimeter,R[i+1].wetPerimeter),hydraulicRadius:l(R[i].hydraulicRadius,R[i+1].hydraulicRadius),velocity:l(R[i].velocity,R[i+1].velocity),discharge:l(R[i].discharge,R[i+1].discharge),n:l(R[i].n,R[i+1].n)};
+      if(R[i].qWeir!==undefined){o.qWeir=l(R[i].qWeir,R[i+1].qWeir);o.qLeft=l(R[i].qLeft,R[i+1].qLeft);o.qRight=l(R[i].qRight,R[i+1].qRight);o.crestZ=R[i].crestZ;o.wx0=R[i].wx0;o.wx1=R[i].wx1;}
+      return o;
+    }
+  }
+  return R[R.length-1];
+}
+
+function interpByQ(q){
+  const R=currentResults;if(!R.length)return null;
+  if(q<=R[0].discharge)return R[0];if(q>=R[R.length-1].discharge)return R[R.length-1];
+  for(let i=0;i<R.length-1;i++){
+    if(q>=R[i].discharge&&q<=R[i+1].discharge){
+      const t=(q-R[i].discharge)/(R[i+1].discharge-R[i].discharge);const l=(a,b)=>a+t*(b-a);
+      const o={wse:l(R[i].wse,R[i+1].wse),depth:l(R[i].depth,R[i+1].depth),area:l(R[i].area,R[i+1].area),wetPerimeter:l(R[i].wetPerimeter,R[i+1].wetPerimeter),hydraulicRadius:l(R[i].hydraulicRadius,R[i+1].hydraulicRadius),velocity:l(R[i].velocity,R[i+1].velocity),discharge:q,n:l(R[i].n,R[i+1].n)};
+      if(R[i].qWeir!==undefined){o.qWeir=l(R[i].qWeir,R[i+1].qWeir);o.qLeft=l(R[i].qLeft,R[i+1].qLeft);o.qRight=l(R[i].qRight,R[i+1].qRight);o.crestZ=R[i].crestZ;o.wx0=R[i].wx0;o.wx1=R[i].wx1;}
+      return o;
+    }
+  }
+  return R[R.length-1];
+}
+
+/* ============================================================
+   QUERY
+   ============================================================ */
+function queryByH(){
+  if(!currentResults.length){showToast('请先计算','⚠️');return;}
+  const isC=currentSectionType==='compound';
+  const h=parseFloat(document.getElementById(isC?'cQueryH':'queryH').value);
+  const el=document.getElementById(isC?'cQueryHResult':'queryHResult');
+  if(isNaN(h)){el.style.display='none';return;}
+  const r=interpByH(h);if(!r){el.style.display='none';return;}
+  el.className='query-result qr-blue show';
+  let s=`水位 <strong>${r.wse.toFixed(3)} m</strong> →<br>流量 <strong style="color:#2b6cb0">${r.discharge.toFixed(2)} m³/s</strong><br>`;
+  if(r.qWeir!==undefined)s+=`堰 ${r.qWeir.toFixed(2)} + 左 ${r.qLeft.toFixed(2)} + 右 ${r.qRight.toFixed(2)} m³/s<br>`;
+  s+=`流速 ${r.velocity.toFixed(3)} m/s · 面积 ${r.area.toFixed(1)} m²`;
+  el.innerHTML=s;highlightOnChart(r);highlightTableRow(r);
+}
+
+function queryByQ(){
+  if(!currentResults.length){showToast('请先计算','⚠️');return;}
+  const isC=currentSectionType==='compound';
+  const q=parseFloat(document.getElementById(isC?'cQueryQ':'queryQ').value);
+  const el=document.getElementById(isC?'cQueryQResult':'queryQResult');
+  if(isNaN(q)){el.style.display='none';return;}
+  const r=interpByQ(q);if(!r){el.style.display='none';return;}
+  el.className='query-result qr-green show';
+  let s=`流量 <strong>${r.discharge.toFixed(2)} m³/s</strong> →<br>水位 <strong style="color:#276749">${r.wse.toFixed(3)} m</strong><br>`;
+  if(r.qWeir!==undefined)s+=`堰 ${r.qWeir.toFixed(2)} + 左 ${r.qLeft.toFixed(2)} + 右 ${r.qRight.toFixed(2)} m³/s<br>`;
+  s+=`流速 ${r.velocity.toFixed(3)} m/s · 面积 ${r.area.toFixed(1)} m²`;
+  el.innerHTML=s;highlightOnChart(r);highlightTableRow(r);
+}
+
+function highlightOnChart(r){
+  const canvasId=currentSectionType==='compound'?'cMainChart':'mainChart';
+  if(!mainChart||currentChartType==='section')return;
+  mainChart.data.datasets=mainChart.data.datasets.filter(ds=>!ds._isAnn);
+  let px,py;
+  switch(currentChartType){case'qh':px=r.discharge;py=r.wse;break;case'vh':px=r.velocity;py=r.wse;break;case'ah':px=r.area;py=r.wse;break;}
+  mainChart.data.datasets.push({label:'查询',data:[{x:px,y:py}],borderColor:'#e53e3e',backgroundColor:'#fc8181',pointRadius:8,pointStyle:'rectRot',pointBorderWidth:2.5,pointBorderColor:'#c53030',showLine:false,_isAnn:true,order:0,tooltip:{enabled:false}});
+  mainChart.update();
+}
+
+function highlightTableRow(r){
+  const tbId=currentSectionType==='compound'?'cResultsBody':'resultsBody';
+  document.querySelectorAll(`#${tbId} tr`).forEach(tr=>tr.classList.remove('highlight'));
+  let bi=0,bd=Infinity;currentResults.forEach((res,i)=>{const d=Math.abs(res.wse-r.wse);if(d<bd){bd=d;bi=i;}});
+  const row=document.getElementById(`row-${bi}`);if(row){row.classList.add('highlight');row.scrollIntoView({behavior:'smooth',block:'center'});}
+}
+
+document.getElementById('queryH').addEventListener('keydown',e=>{if(e.key==='Enter')queryByH();});
+document.getElementById('queryQ').addEventListener('keydown',e=>{if(e.key==='Enter')queryByQ();});
+document.getElementById('cQueryH').addEventListener('keydown',e=>{if(e.key==='Enter')queryByH();});
+document.getElementById('cQueryQ').addEventListener('keydown',e=>{if(e.key==='Enter')queryByQ();});
+
+/* ============================================================
+   EXPORT
+   ============================================================ */
+function exportCSV(){
+  const isC=currentSectionType==='compound';let csv;
+  if(isC){
+    csv='水位(m),总流量(m³/s),堰Q,左天然Q,右天然Q,总流速,堰流速,总面积(m²)\n';
+    currentResults.forEach(r=>{csv+=`${r.wse.toFixed(3)},${r.discharge.toFixed(3)},${r.qWeir.toFixed(3)},${r.qLeft.toFixed(3)},${r.qRight.toFixed(3)},${r.velocity.toFixed(4)},${r.vWeir.toFixed(4)},${r.area.toFixed(3)}\n`;});
+  }else{
+    csv='水位(m),水深(m),面积(m²),湿周(m),水力半径(m),流速(m/s),流量(m³/s),n\n';
+    currentResults.forEach(r=>{csv+=`${r.wse.toFixed(3)},${r.depth.toFixed(3)},${r.area.toFixed(3)},${r.wetPerimeter.toFixed(3)},${r.hydraulicRadius.toFixed(4)},${r.velocity.toFixed(4)},${r.discharge.toFixed(3)},${r.n.toFixed(5)}\n`;});
+  }
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download=`QH_${new Date().toISOString().slice(0,10)}.csv`;a.click();showToast('CSV 已下载','📥');
+}
+
+function exportIMG(){
+  const canvasId=currentSectionType==='compound'?'cMainChart':'mainChart';
+  const a=document.createElement('a');a.download=`QH_${new Date().toISOString().slice(0,10)}.png`;
+  a.href=document.getElementById(canvasId).toDataURL('image/png',1);a.click();showToast('图片已下载','📷');
+}
+
+function copyTable(){
+  const tbId=currentSectionType==='compound'?'cResultsBody':'resultsBody';
+  const thId=currentSectionType==='compound'?'cTableHead':'tableHead';
+  const rows=document.querySelectorAll(`#${tbId} tr`);
+  const hd=document.querySelectorAll(`#${thId} th`);
+  let t=Array.from(hd).map(h=>h.textContent).join('\t')+'\n';
+  rows.forEach(r=>{t+=Array.from(r.cells).map(c=>c.textContent).join('\t')+'\n';});
+  navigator.clipboard.writeText(t).then(()=>showToast('已复制至剪贴板','📋')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('已复制至剪贴板','📋');
+  });
+}
+
+function clearAll(){
+  currentResults=[];
+  [mainChart,previewChart,cPreviewChart].forEach(c=>{if(c)c.destroy();});
+  mainChart=previewChart=cPreviewChart=null;
+  ['resultsBody','cResultsBody'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
+  ['tableHead','cTableHead'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
+  ['resultsTableCard','cResultsTableCard','exportRow','cExportRow'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  ['queryHResult','queryQResult','cQueryHResult','cQueryQResult'].forEach(id=>{const el=document.getElementById(id);if(el)el.className='query-result';});
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+window.addEventListener('load',()=>{
+  loadPreset('compound','sectionData');
+  document.querySelectorAll('#panelNormal .preset-btn')[2].classList.add('active');
+  drawPreview();calcNormal();
+  updateWeirCoeffHelp();updateCWeirCoeffHelp();
+});
+</script>
+</body>
+</html>
