@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+  <circle cx="32" cy="32" r="28" fill="url(#g)" opacity="0.1"/>
+  <!-- rain cloud -->
+  <ellipse cx="30" cy="18" rx="14" ry="8" fill="url(#g)" opacity="0.2" stroke="url(#g)" stroke-width="1.5"/>
+  <ellipse cx="22" cy="18" rx="8" ry="6" fill="url(#g)" opacity="0.15"/>
+  <ellipse cx="38" cy="18" rx="8" ry="6" fill="url(#g)" opacity="0.15"/>
+  <!-- rain drops -->
+  <line x1="20" y1="28" x2="18" y2="36" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="28" y1="28" x2="26" y2="38" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="36" y1="28" x2="34" y2="36" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="42" y1="26" x2="40" y2="34" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- formula -->
+  <text x="14" y="50" font-size="7" fill="#2563eb" font-weight="600" font-family="serif" font-style="italic">q</text>
+  <text x="19" y="50" font-size="6" fill="#2563eb">=</text>
+  <line x1="23" y1="44" x2="46" y2="44" stroke="#2563eb" stroke-width="1"/>
+  <text x="26" y="42" font-size="5.5" fill="#2563eb" font-family="serif" font-style="italic">A</text>
+  <text x="24" y="54" font-size="5.5" fill="#2563eb" font-family="serif" font-style="italic">t</text>
+  <text x="30" y="54" font-size="5" fill="#2563eb">+</text>
+  <text x="35" y="54" font-size="5.5" fill="#2563eb" font-family="serif" font-style="italic">b</text>
+  <text x="49" y="50" font-size="5" fill="#2563eb">ⁿ</text>
+</svg>
