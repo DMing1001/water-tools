@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>桥梁壅水计算工具 | JTG C30 · TB 10017</title>
+<link rel="icon" type="image/svg+xml" href="../icons/favicon-backwater.svg">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--pri:#2563eb;--pri-l:#eff6ff;--pri-d:#1d4ed8;--pri-bg:#dbeafe;--bg:#f8fafc;--card:#fff;--bdr:#e2e8f0;--bdr2:#cbd5e1;--txt:#0f172a;--t2:#475569;--t3:#94a3b8;--ok:#059669;--ok-bg:#ecfdf5;--ok-bdr:#a7f3d0;--warn:#d97706;--warn-bg:#fffbeb;--input-bg:#f8fafc;--input-bdr:#cbd5e1;--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -2px rgba(0,0,0,.05)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--txt);line-height:1.6;font-size:14px;-webkit-font-smoothing:antialiased}
+.header{background:linear-gradient(135deg,#7c3aed 0%,#6d28d9 50%,#4f46e5 100%);color:#fff;padding:20px 0;text-align:center;position:relative}
+.header h1{font-size:20px;font-weight:700;letter-spacing:2px}.header p{font-size:12px;opacity:.75;margin-top:3px}
+.header .back{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid rgba(255,255,255,.2);border-radius:16px}
+.header .back:hover{color:#fff;border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.1)}
+.wrap{max-width:1280px;margin:14px auto;padding:0 14px}
+.card{background:var(--card);border-radius:10px;border:1px solid var(--bdr);padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card-title{font-size:14px;font-weight:600;color:var(--pri);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--pri-bg);display:flex;align-items:center;justify-content:space-between}
+.card-title .badge{font-size:11px;background:var(--pri-bg);color:var(--pri);padding:2px 8px;border-radius:12px;font-weight:500}
+.btn-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px 0}
+.btn{padding:9px 22px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:var(--pri);color:#fff;box-shadow:0 1px 3px rgba(37,99,235,.3)}.btn-p:hover{background:var(--pri-d);transform:translateY(-1px)}
+.btn-g{background:#f1f5f9;color:var(--t2);border:1px solid var(--bdr)}.btn-g:hover{background:#e2e8f0}
+.btn-ok{background:var(--ok);color:#fff}.btn-ok:hover{background:#047857;transform:translateY(-1px)}
+.sf-group{margin-bottom:12px}
+.sf-label{font-size:12.5px;font-weight:500;color:var(--t2);margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.sf-label .hint{font-size:11px;color:var(--t3);font-weight:400}
+.sf-label .sf-tip{display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;font-size:10px;font-weight:700;color:var(--t3);background:#e2e8f0;border-radius:50%;cursor:help;margin-left:3px;position:relative}
+.sf-label .sf-tip:hover::after{content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 8px);background:var(--txt);color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;white-space:pre-line;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,.15);font-weight:400;line-height:1.6;min-width:200px;max-width:320px;text-align:left}
+.sf-label .sf-tip:hover::before{content:'';position:absolute;left:8px;bottom:calc(100% + 2px);border:5px solid transparent;border-top-color:var(--txt);z-index:21}
+.sf-input{width:100%;padding:8px 11px;border:1.5px solid var(--input-bdr);border-radius:8px;font-size:13px;font-family:inherit;color:var(--txt);background:var(--input-bg);transition:all .2s;outline:none}
+.sf-input:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(37,99,235,.1);background:#fff}
+.sf-select{width:100%;padding:8px 11px;border:1.5px solid var(--input-bdr);border-radius:8px;font-size:13px;font-family:inherit;color:var(--txt);background:var(--input-bg);cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.sf-select:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.sf-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sf-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.sf-divider{height:1px;background:linear-gradient(90deg,transparent,var(--bdr),transparent);margin:14px 0}
+.sf-section{font-size:13px;font-weight:600;color:var(--pri);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.sf-section .dot{width:6px;height:6px;background:var(--pri);border-radius:50%}
+.single-layout{display:grid;grid-template-columns:420px 1fr;gap:14px;align-items:start}
+@media(max-width:920px){.single-layout{grid-template-columns:1fr}.sf-row-3{grid-template-columns:1fr 1fr}}
+.result-panel{background:var(--card);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;box-shadow:var(--shadow-md)}
+.rp-header{background:linear-gradient(135deg,#5b21b6,#7c3aed);color:#fff;padding:14px 18px;text-align:center}
+.rp-header h3{font-size:15px;font-weight:600}
+.rp-body{padding:18px}
+.crest-box{background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:2px solid #c4b5fd;border-radius:10px;padding:16px;text-align:center;margin:14px 0}
+.crest-box .cb-label{font-size:12px;color:var(--t2);margin-bottom:2px}
+.crest-box .cb-val{font-size:24px;font-weight:700;color:#7c3aed;font-family:'JetBrains Mono',monospace}
+.crest-box .cb-fm{font-size:11px;color:var(--t3);margin-top:4px;font-family:'JetBrains Mono',monospace}
+.attr-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin-bottom:12px}
+.attr{display:flex;align-items:baseline;gap:6px;font-size:12.5px}
+.attr .k{color:var(--t3);min-width:fit-content;white-space:nowrap}
+.attr .v{font-weight:600;color:var(--txt);font-family:'JetBrains Mono',monospace;font-size:12.5px;border-bottom:1.5px solid var(--bdr2);padding-bottom:1px;flex:1;text-align:right}
+.rp-table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+.rp-table th{background:var(--pri-l);color:var(--pri);font-weight:600;padding:7px 8px;border:1px solid var(--bdr);font-size:12px;white-space:nowrap}
+.rp-table td{padding:6px 8px;border:1px solid var(--bdr);text-align:center;font-size:12.5px}
+.rp-table .total td{background:#f5f3ff;font-weight:700;color:#7c3aed;border-color:#c4b5fd}
+.collapsible{border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:10px;background:var(--card)}
+.collapse-hd{padding:11px 16px;cursor:pointer;user-select:none;font-size:13px;font-weight:500;color:var(--t2);display:flex;align-items:center;gap:8px}
+.collapse-hd:hover{color:var(--pri);background:var(--pri-l)}
+.collapse-bd{display:none;padding:0 16px 16px}.collapse-bd.open{display:block}
+.fml{background:var(--pri-l);border:1px solid var(--pri-bg);border-radius:8px;padding:12px 14px;margin:8px 0;font-size:13px;line-height:1.9;overflow-x:auto}
+.fml b{color:var(--pri);font-weight:600;font-size:12px}
+.fml .sym{font-family:'JetBrains Mono',monospace;font-style:normal;font-size:12px;background:rgba(37,99,235,.08);padding:1px 4px;border-radius:3px}
+.modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:14px;width:92%;max-width:800px;max-height:85vh;overflow-y:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal h2{font-size:16px;margin-bottom:12px}
+.modal .close{float:right;font-size:20px;cursor:pointer;color:var(--t3);background:none;border:none}.modal .close:hover{color:var(--txt)}
+.report-box{background:#fafafa;border:1px solid var(--bdr);border-radius:8px;padding:16px;font-family:'Microsoft YaHei',sans-serif;font-size:13px;line-height:2;white-space:pre-wrap;word-break:break-all;max-height:55vh;overflow-y:auto;user-select:text}
+.footer{text-align:center;padding:16px;font-size:11px;color:var(--t3)}
+@media print{.header{background:#5b21b6!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.btn,.modal-bg{display:none!important}}
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back" href="../">← 工具集</a>
+  <h1>桥梁壅水计算工具</h1>
+  <p>JTG C30-2015 · TB 10017 · SL/T 808-2025</p>
+</div>
+<div class="wrap">
+
+<div class="single-layout">
+<div class="card" style="position:sticky;top:14px">
+  <div class="card-title">📐 参数输入</div>
+
+  <div class="sf-section"><span class="dot"></span>计算公式</div>
+  <div class="sf-group">
+    <div class="sf-label">公式选择<span class="sf-tip" data-tip="铁路公式（TB 10017）：\nΔZM = η×(VM²-V²)\n结构简单，参数少\n\n公路公式（JTG C30）：\nΔZ = K×(Vq²-Vch²)/(2g)\n含定床壅水系数KN\n和流态修正系数Kv\n精度更高">?</span></div>
+    <select class="sf-select" id="s_formula" onchange="onFormulaChange()">
+      <option value="railway" selected>铁路公式（TB 10017）</option>
+      <option value="highway">公路公式（JTG C30-2015）</option>
+    </select>
+  </div>
+
+  <div class="sf-divider"></div>
+  <div class="sf-section"><span class="dot"></span>基本参数</div>
+  <div class="sf-row">
+    <div class="sf-group">
+      <div class="sf-label">设计流量 QP <span class="hint">(m³/s)</span><span class="sf-tip" data-tip="设计洪峰流量">?</span></div>
+      <input class="sf-input" type="number" step="0.01" id="s_qp" placeholder="如 3680">
+    </div>
+    <div class="sf-group">
+      <div class="sf-label">设计水位 <span class="hint">(m)</span></div>
+      <input class="sf-input" type="number" step="0.01" id="s_wl" placeholder="如 52.50">
+    </div>
+  </div>
+
+  <div class="sf-divider"></div>
+  <div class="sf-section"><span class="dot"></span>断面与流速参数</div>
+  <div class="sf-row">
+    <div class="sf-group">
+      <div class="sf-label">天然断面平均流速 V <span class="hint">(m/s)</span><span class="sf-tip" data-tip="建桥前全河过水断面\n（含河滩）的平均流速\nV = QP / ω\nω = 全断面过水面积">?</span></div>
+      <input class="sf-input" type="number" step="0.01" id="s_V" placeholder="如 2.5">
+    </div>
+    <div class="sf-group">
+      <div class="sf-label">桥下平均流速 VM <span class="hint">(m/s)</span><span class="sf-tip" data-tip="建桥后桥下断面\n平均流速\n由土质和冲刷系数决定\n见规范表取值">?</span></div>
+      <input class="sf-input" type="number" step="0.01" id="s_VM" placeholder="如 3.8">
+    </div>
+  </div>
+
+  <!-- 铁路公式参数 -->
+  <div id="railwayParams">
+    <div class="sf-group">
+      <div class="sf-label">河流特征 η<span class="sf-tip" data-tip="η系数取值（TB 10017）：\n\n山区河流（河滩很小）：0.05\n半山区河流（河滩较小）：0.07\n平原河流（中等河滩）：0.10\n低洼区河流（河滩较大）：0.15\n\n依据：河滩路堤阻挡流量\n与设计流量的比值">?</span></div>
+      <select class="sf-select" id="s_eta">
+        <option value="0.05">山区河流 — 河滩很小（η=0.05）</option>
+        <option value="0.07">半山区河流 — 河滩较小（η=0.07）</option>
+        <option value="0.10" selected>平原河流 — 中等河滩（η=0.10）</option>
+        <option value="0.15">低洼区河流 — 河滩较大（η=0.15）</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 公路公式参数 -->
+  <div id="highwayParams" style="display:none">
+    <div class="sf-row">
+      <div class="sf-group">
+        <div class="sf-label">建桥前桥下流速 Vq <span class="hint">(m/s)</span><span class="sf-tip" data-tip="建桥前桥孔范围内\n的断面平均流速\n一般取河槽平均流速">?</span></div>
+        <input class="sf-input" type="number" step="0.01" id="s_Vq" placeholder="如 2.92">
+      </div>
+      <div class="sf-group">
+        <div class="sf-label">建桥前河槽流速 Vch <span class="hint">(m/s)</span><span class="sf-tip" data-tip="天然状态下河槽\n平均流速">?</span></div>
+        <input class="sf-input" type="number" step="0.01" id="s_Vch" placeholder="如 2.92">
+      </div>
+    </div>
+    <div class="sf-row">
+      <div class="sf-group">
+        <div class="sf-label">河床粒径 d <span class="hint">(mm)</span><span class="sf-tip" data-tip="河床质平均粒径\n用于计算粒径系数A\nA = 0.5×d^(-0.25)">?</span></div>
+        <input class="sf-input" type="number" step="0.01" id="s_d" placeholder="如 14.2">
+      </div>
+      <div class="sf-group">
+        <div class="sf-label">冲刷系数 P<span class="sf-tip" data-tip="冲刷系数 P = ωx/ωg\nωx: 桥下设计过水面积\nωg: 桥下实际过水面积\n一般取 1.0~2.0">?</span></div>
+        <input class="sf-input" type="number" step="0.01" id="s_P" value="1.2" placeholder="1.2">
+      </div>
+    </div>
+    <div class="sf-row">
+      <div class="sf-group">
+        <div class="sf-label">桥孔净宽 Lj <span class="hint">(m)</span></div>
+        <input class="sf-input" type="number" step="0.01" id="s_Lj" placeholder="如 363">
+      </div>
+      <div class="sf-group">
+        <div class="sf-label">水流与桥轴法线夹角 α <span class="hint">(°)</span></div>
+        <input class="sf-input" type="number" step="1" id="s_alpha" value="0" placeholder="0">
+      </div>
+    </div>
+    <div class="sf-group">
+      <div class="sf-label">河流特征<span class="sf-tip" data-tip="决定η系数\n用于壅水曲线长度计算">?</span></div>
+      <select class="sf-select" id="s_eta_hw">
+        <option value="0.05">山区河流</option>
+        <option value="0.07">半山区河流</option>
+        <option value="0.10" selected>平原河流</option>
+        <option value="0.15">低洼区河流</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="sf-divider"></div>
+  <div class="sf-section"><span class="dot"></span>壅水曲线</div>
+  <div class="sf-group">
+    <div class="sf-label">天然水面坡度 I0<span class="sf-tip" data-tip="河段天然水面坡度\n用于计算壅水曲线长度\nLY = 2×ΔZM / I0">?</span></div>
+    <input class="sf-input" type="number" step="0.0001" id="s_I0" placeholder="如 0.0005">
+  </div>
+
+  <div class="btn-row" style="margin-top:14px">
+    <button class="btn btn-p" onclick="calc()">🧮 计算</button>
+    <button class="btn btn-ok" onclick="exportReport()" id="btnReport" style="display:none">📄 计算书</button>
+  </div>
+</div>
+
+<div id="resultWrap" style="display:none">
+  <div class="result-panel" id="resultPanel"></div>
+</div>
+</div>
+
+<!-- 公式 -->
+<div class="collapsible">
+  <div class="collapse-hd" onclick="toggleCollapse(this)"><span class="arrow">▶</span> 计算公式</div>
+  <div class="collapse-bd">
+    <div class="fml"><b>铁路公式（TB 10017 / SL/T 808-2025）：</b><br>ΔZ<sub>M</sub> = η × (V<sub>M</sub><sup>2</sup> - V<sup>2</sup>)<br>L<sub>Y</sub> = 2 × ΔZ<sub>M</sub> / I<sub>0</sub></div>
+    <div class="fml"><b>公路公式（JTG C30-2015 铁科院陆浩公式）：</b><br>ΔZ = K × (V<sub>q</sub><sup>2</sup> - V<sub>ch</sub><sup>2</sup>) / (2g)<br><br>K = K<sub>N</sub> × K<sub>v</sub><br>K<sub>N</sub> = √(V<sub>q</sub>/V<sub>0q</sub>) - 1.0  （定床壅水系数）<br>K<sub>v</sub> = 0.5 × V<sub>q</sub>/√g - 0.1  （流态修正系数）<br>V<sub>0q</sub> = V<sub>q</sub> / P  （冲刷前桥下流速）<br>A = 0.5 × d<sup>-0.25</sup>  （河床粒径系数）<br>L<sub>Y</sub> = 2 × ΔZ / I<sub>0</sub></div>
+  </div>
+</div>
+
+<!-- 参考表 -->
+<div class="collapsible">
+  <div class="collapse-hd" onclick="toggleCollapse(this)"><span class="arrow">▶</span> 参考系数表</div>
+  <div class="collapse-bd">
+    <p style="font-size:12px;font-weight:600;color:var(--pri);margin:8px 0 4px">η 系数（TB 10017）</p>
+    <table class="rp-table"><tr><th>河流特征</th><th>河滩路堤阻挡流量/设计流量</th><th>η</th></tr>
+      <tr><td>山区河流（河滩很小）</td><td>≤10%</td><td>0.05</td></tr>
+      <tr><td>半山区河流（河滩较小）</td><td>11~30%</td><td>0.07</td></tr>
+      <tr><td>平原河流（中等河滩）</td><td>31~50%</td><td>0.10</td></tr>
+      <tr><td>低洼区河流（河滩较大）</td><td>>50%</td><td>0.15</td></tr></table>
+
+    <p style="font-size:12px;font-weight:600;color:var(--pri);margin:12px 0 4px">桥下平均流速 VM 取值参考（TB 10017）</p>
+    <table class="rp-table"><tr><th>土质</th><th>名称</th><th>粒径(mm)</th><th>VM</th></tr>
+      <tr><td>松软土</td><td>淤泥、细沙、中沙</td><td>≤1</td><td>VM=VP</td></tr>
+      <tr><td>中等土</td><td>沙砾、小卵石</td><td>1~25</td><td>VM=VP×2P/(P+1)</td></tr>
+      <tr><td>密实土</td><td>大卵石、漂石</td><td>>25</td><td>VM=P×VP</td></tr></table>
+    <p style="font-size:11px;color:var(--t3);margin-top:4px">VP=设计流速，P=冲刷系数</p>
+
+    <p style="font-size:12px;font-weight:600;color:var(--pri);margin:12px 0 4px">冲刷系数 P 参考值</p>
+    <table class="rp-table"><tr><th>河段类型</th><th>P</th></tr>
+      <tr><td>山区河段</td><td>1.0~1.2</td></tr>
+      <tr><td>山前区河段</td><td>1.2~1.5</td></tr>
+      <tr><td>平原河段</td><td>1.2~2.0</td></tr></table>
+  </div>
+</div>
+
+<div class="footer">依据 JTG C30-2015 · TB 10017 · SL/T 808-2025 · 仅供参考</div>
+</div>
+
+<!-- 弹窗 -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+<div class="modal">
+  <button class="close" onclick="closeModal()">✕</button>
+  <h2>📄 计算书</h2>
+  <p style="font-size:12px;color:var(--t3);margin-bottom:8px">Ctrl+A 全选 → Ctrl+C 复制</p>
+  <div class="report-box" id="reportBox"></div>
+  <div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center">
+    <button class="btn btn-p" onclick="copyReport()">📋 一键复制</button>
+    <button class="btn btn-g" onclick="closeModal()">关闭</button>
+  </div>
+</div>
+</div>
+
+<script>
+function onFormulaChange(){
+  const v=document.getElementById('s_formula').value;
+  document.getElementById('railwayParams').style.display=v==='railway'?'block':'none';
+  document.getElementById('highwayParams').style.display=v==='highway'?'block':'none';
+}
+
+function fv(v,d=2){return v==null?'—':Number(v).toFixed(d)}
+const g=9.81;
+
+let lastResult=null;
+
+function calc(){
+  const formula=document.getElementById('s_formula').value;
+  const qp=parseFloat(document.getElementById('s_qp').value);
+  const wl=parseFloat(document.getElementById('s_wl').value);
+  const V=parseFloat(document.getElementById('s_V').value);
+  const VM=parseFloat(document.getElementById('s_VM').value);
+  const I0=parseFloat(document.getElementById('s_I0').value);
+
+  if(isNaN(V)||isNaN(VM)){alert('请填写天然流速和桥下流速');return;}
+
+  let dZM,LY,details={};
+
+  if(formula==='railway'){
+    const eta=parseFloat(document.getElementById('s_eta').value);
+    dZM=eta*(VM*VM-V*V);
+    LY=(!isNaN(I0)&&I0>0)?2*dZM/I0:null;
+    details={formula:'铁路公式（TB 10017）',eta,V,VM,dZM,LY,I0};
+  }else{
+    const Vq=parseFloat(document.getElementById('s_Vq').value);
+    const Vch=parseFloat(document.getElementById('s_Vch').value);
+    const d=parseFloat(document.getElementById('s_d').value);
+    const P=parseFloat(document.getElementById('s_P').value);
+    const Lj=parseFloat(document.getElementById('s_Lj').value);
+    const alpha=parseFloat(document.getElementById('s_alpha').value)||0;
+    const eta_hw=parseFloat(document.getElementById('s_eta_hw').value);
+
+    if(isNaN(Vq)||isNaN(Vch)){alert('请填写建桥前后流速');return;}
+
+    // 粒径系数
+    const A=isNaN(d)?null:0.5*Math.pow(d,-0.25);
+
+    // 定床壅水系数 KN
+    const V0q=Vq/P; // 冲刷前桥下流速
+    const KN=Math.sqrt(Vq/V0q)-1.0;
+
+    // 流态修正系数 Kv
+    const Kv=0.5*Vq/Math.sqrt(g)-0.1;
+
+    // 壅水系数 K
+    const K=KN*Kv;
+
+    // 壅水高度
+    dZM=K*(Vq*Vq-Vch*Vch)/(2*g);
+
+    // 壅水曲线长度
+    LY=(!isNaN(I0)&&I0>0)?2*dZM/I0:null;
+
+    details={formula:'公路公式（JTG C30-2015）',Vq,Vch,d,P,Lj,alpha,A,V0q,KN,Kv,K,dZM,LY,I0,eta:eta_hw};
+  }
+
+  lastResult={qp,wl,V,VM,...details};
+  renderResult();
+}
+
+function renderResult(){
+  const r=lastResult; if(!r)return;
+  const el=document.getElementById('resultPanel');
+  const isRail=r.formula.includes('铁路');
+
+  let html=`
+    <div class="rp-header"><h3>壅水计算结果 — ${r.formula}</h3></div>
+    <div class="rp-body">
+      <div class="attr-grid">
+        <div class="attr"><span class="k">设计流量 QP</span><span class="v">${fv(r.qp,0)} m³/s</span></div>
+        <div class="attr"><span class="k">设计水位</span><span class="v">${fv(r.wl)} m</span></div>
+        <div class="attr"><span class="k">天然流速 V</span><span class="v">${fv(r.V,3)} m/s</span></div>
+        <div class="attr"><span class="k">桥下流速 VM</span><span class="v">${fv(r.VM,3)} m/s</span></div>
+      </div>
+
+      <div class="crest-box">
+        <div class="cb-label">最大壅水高度 ΔZM</div>
+        <div class="cb-val">${fv(r.dZM,4)} m</div>
+      </div>`;
+
+  if(isRail){
+    html+=`
+      <div style="font-size:13px;font-weight:600;color:var(--t2);margin:14px 0 8px">计算过程</div>
+      <table class="rp-table"><tr><th>项目</th><th>取值</th></tr>
+        <tr><td>η 系数</td><td>${fv(r.eta)}</td></tr>
+        <tr><td>VM² - V²</td><td>${fv(r.VM*r.VM,4)} - ${fv(r.V*r.V,4)} = ${fv(r.VM*r.VM-r.V*r.V,4)}</td></tr>
+        <tr><td>ΔZM = η×(VM²-V²)</td><td>${fv(r.eta)} × ${fv(r.VM*r.VM-r.V*r.V,4)} = ${fv(r.dZM,4)} m</td></tr>
+      </table>`;
+  }else{
+    html+=`
+      <div style="font-size:13px;font-weight:600;color:var(--t2);margin:14px 0 8px">计算过程</div>
+      <table class="rp-table"><tr><th>项目</th><th>公式</th><th>结果</th></tr>
+        <tr><td>冲刷系数 P</td><td>—</td><td>${fv(r.P)}</td></tr>
+        <tr><td>冲刷前桥下流速 V0q</td><td>Vq/P</td><td>${fv(r.Vq)}/${fv(r.P)} = ${fv(r.V0q,3)} m/s</td></tr>
+        <tr><td>定床壅水系数 KN</td><td>√(Vq/V0q)-1</td><td>${fv(r.KN,3)}</td></tr>
+        <tr><td>流态修正系数 Kv</td><td>0.5×Vq/√g - 0.1</td><td>${fv(r.Kv,3)}</td></tr>
+        <tr><td>壅水系数 K</td><td>KN×Kv</td><td>${fv(r.K,3)}</td></tr>
+        <tr><td>Vq² - Vch²</td><td>—</td><td>${fv(r.Vq*r.Vq,4)} - ${fv(r.Vch*r.Vch,4)} = ${fv(r.Vq*r.Vq-r.Vch*r.Vch,4)}</td></tr>
+        <tr class="total"><td>壅水高度 ΔZ</td><td>K×(Vq²-Vch²)/(2g)</td><td>${fv(r.dZM,4)} m</td></tr>
+      </table>`;
+  }
+
+  if(r.LY!==null){
+    html+=`
+      <div class="crest-box" style="border-color:#93c5fd;background:linear-gradient(135deg,#eff6ff,#dbeafe)">
+        <div class="cb-label">壅水曲线长度 LY = 2×ΔZM / I0</div>
+        <div class="cb-val" style="color:var(--pri)">${fv(r.LY,0)} m</div>
+        <div class="cb-fm">2 × ${fv(r.dZM,4)} / ${fv(r.I0,4)} = ${fv(r.LY,0)}</div>
+      </div>`;
+  }else{
+    html+=`<p style="font-size:12px;color:var(--t3);margin-top:10px">未填写水面坡度 I0，壅水曲线长度未计算</p>`;
+  }
+
+  html+=`</div>`;
+  el.innerHTML=html;
+  document.getElementById('resultWrap').style.display='block';
+  document.getElementById('btnReport').style.display='inline-flex';
+  document.getElementById('resultWrap').scrollIntoView({behavior:'smooth'});
+}
+
+function makeReport(r){
+  const W=56;
+  const hr=(c='=')=>c.repeat(W);
+  const pad=(s,w)=>{s=String(s);return s.length>=w?s:' '.repeat(w-s.length)+s};
+  const isRail=r.formula.includes('铁路');
+  let t='';
+  t+=hr()+'\n            桥 梁 壅 水 计 算 书\n\n';
+  t+='  公式: '+r.formula+'\n';
+  t+=hr()+'\n\n';
+  t+='  设计流量 QP   '+pad(fv(r.qp,0),10)+' m³/s\n';
+  t+='  设计水位      '+pad(fv(r.wl),10)+' m\n';
+  t+='  天然流速 V    '+pad(fv(r.V,3),10)+' m/s\n';
+  t+='  桥下流速 VM   '+pad(fv(r.VM,3),10)+' m/s\n\n';
+  t+=hr('-')+'\n';
+
+  if(isRail){
+    t+='  铁路公式: ΔZM = η × (VM² - V²)\n\n';
+    t+='    η = '+fv(r.eta)+'\n';
+    t+='    VM² - V² = '+fv(r.VM*r.VM,4)+' - '+fv(r.V*r.V,4)+' = '+fv(r.VM*r.VM-r.V*r.V,4)+'\n';
+    t+='    ΔZM = '+fv(r.eta)+' × '+fv(r.VM*r.VM-r.V*r.V,4)+' = '+fv(r.dZM,4)+' m\n\n';
+  }else{
+    t+='  公路公式: ΔZ = K × (Vq² - Vch²) / (2g)\n\n';
+    t+='    P = '+fv(r.P)+'\n';
+    t+='    V0q = Vq/P = '+fv(r.V0q,3)+' m/s\n';
+    t+='    KN = √(Vq/V0q) - 1 = '+fv(r.KN,3)+'\n';
+    t+='    Kv = 0.5×Vq/√g - 0.1 = '+fv(r.Kv,3)+'\n';
+    t+='    K = KN×Kv = '+fv(r.K,3)+'\n';
+    t+='    Vq² - Vch² = '+fv(r.Vq*r.Vq,4)+' - '+fv(r.Vch*r.Vch,4)+' = '+fv(r.Vq*r.Vq-r.Vch*r.Vch,4)+'\n';
+    t+='    ΔZ = '+fv(r.K,3)+' × '+fv(r.Vq*r.Vq-r.Vch*r.Vch,4)+' / (2×9.81)\n';
+    t+='       = '+fv(r.dZM,4)+' m\n\n';
+  }
+
+  t+='  +----------------------------------------------+\n';
+  t+='  |                                              |\n';
+  t+='  |  最大壅水高度        '+pad(fv(r.dZM,4),10)+' m            |\n';
+  if(r.LY!==null){
+  t+='  |  壅水曲线长度        '+pad(fv(r.LY,0),10)+' m            |\n';
+  }
+  t+='  |                                              |\n';
+  t+='  +----------------------------------------------+\n\n';
+  t+='  注: 本计算书仅供参考, 实际工程以规范原文为准.\n';
+  t+=hr()+'\n';
+  return t;
+}
+
+function exportReport(){
+  if(!lastResult){alert('请先计算');return;}
+  document.getElementById('reportBox').textContent=makeReport(lastResult);
+  document.getElementById('modalBg').classList.add('show');
+}
+function copyReport(){
+  const box=document.getElementById('reportBox');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(box.textContent).then(()=>alert('✅ 已复制'));}
+  else{const r=document.createRange();r.selectNodeContents(box);const s=window.getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy');s.removeAllRanges();alert('✅ 已复制');}
+}
+function closeModal(){document.getElementById('modalBg').classList.remove('show');}
+function toggleCollapse(el){const bd=el.nextElementSibling;const arr=el.querySelector('.arrow');bd.classList.toggle('open');arr.textContent=bd.classList.contains('open')?'▼':'▶';}
+</script>
+</body>
+</html>
