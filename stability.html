@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>堤防稳定分析工具 — 瑞典圆弧法 / 毕肖普法</title>
+<link rel="icon" type="image/svg+xml" href="icons/favicon-stability.svg">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:#f0f4f8;color:#2d3748;line-height:1.6}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+h1{text-align:center;color:#1a365d;margin-bottom:6px;font-size:1.7rem}
+.subtitle{text-align:center;color:#718096;margin-bottom:22px;font-size:0.92rem}
+.main-grid{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start}
+@media(max-width:1000px){.main-grid{grid-template-columns:1fr}}
+
+.card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);padding:18px 20px;margin-bottom:14px}
+.card-title{font-size:1rem;font-weight:600;color:#2d3748;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card-title .icon{font-size:1.15rem}
+
+.form-row{display:flex;gap:10px;margin-bottom:9px;align-items:center}
+.form-row label{min-width:90px;font-size:.86rem;color:#4a5568;text-align:right;flex-shrink:0}
+.form-row input,.form-row select{flex:1;padding:7px 10px;border:1px solid #cbd5e0;border-radius:6px;font-size:.88rem;transition:border-color .2s}
+.form-row input:focus,.form-row select:focus{outline:none;border-color:#4299e1;box-shadow:0 0 0 2px rgba(66,153,225,.2)}
+.form-row .unit{font-size:.78rem;color:#a0aec0;min-width:34px}
+
+.section-area{margin-bottom:10px}
+.section-area label{display:block;font-size:.86rem;color:#4a5568;margin-bottom:4px}
+.section-area textarea{width:100%;height:140px;padding:10px;border:1px solid #cbd5e0;border-radius:8px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:.84rem;resize:vertical;line-height:1.5}
+.section-area textarea:focus{outline:none;border-color:#4299e1;box-shadow:0 0 0 2px rgba(66,153,225,.2)}
+.section-area .hint{font-size:.76rem;color:#a0aec0;margin-top:4px}
+
+.btn-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.btn{padding:9px 20px;border:none;border-radius:8px;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,#4299e1,#3182ce);color:#fff}
+.btn-primary:hover{background:linear-gradient(135deg,#3182ce,#2b6cb0);transform:translateY(-1px);box-shadow:0 4px 12px rgba(49,130,206,.3)}
+.btn-secondary{background:#edf2f7;color:#4a5568}
+.btn-secondary:hover{background:#e2e8f0}
+.btn-sm{padding:5px 14px;font-size:.8rem;border-radius:6px}
+
+.chart-container{position:relative;width:100%;min-height:480px}
+.chart-tabs{display:flex;gap:0;margin-bottom:12px}
+.chart-tab{padding:7px 18px;font-size:.86rem;cursor:pointer;border:1px solid #cbd5e0;background:#f7fafc;color:#718096;font-weight:500;transition:all .2s}
+.chart-tab:first-child{border-radius:8px 0 0 8px}
+.chart-tab:last-child{border-radius:0 8px 8px 0}
+.chart-tab.active{background:#4299e1;color:#fff;border-color:#4299e1}
+.export-row{display:flex;gap:8px;justify-content:flex-end;margin-bottom:10px}
+
+.preview-canvas-wrap{width:100%;height:200px;margin-top:8px}
+.preview-canvas-wrap canvas{width:100%!important;height:100%!important}
+
+.preset-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.preset-row label{font-size:.84rem;color:#718096}
+.preset-btn{padding:4px 12px;font-size:.78rem;border:1px solid #cbd5e0;border-radius:16px;background:#fff;cursor:pointer;color:#4a5568;transition:all .15s}
+.preset-btn:hover{border-color:#4299e1;color:#4299e1}
+.preset-btn.active{background:#4299e1;color:#fff;border-color:#4299e1}
+
+.tooltip-note{background:#fffff0;border:1px solid #ecc94b;border-radius:6px;padding:8px 12px;font-size:.78rem;color:#744210;margin-bottom:10px;line-height:1.5}
+.tooltip-note.blue{background:#ebf8ff;border-color:#90cdf4;color:#2a4365}
+
+.loading{position:absolute;inset:0;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:12px;display:none}
+.loading.show{display:flex}
+.spinner{width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#4299e1;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-80px);background:#2d3748;color:#fff;padding:12px 28px;border-radius:10px;font-size:.9rem;font-weight:500;z-index:9999;opacity:0;transition:all .35s cubic-bezier(.4,0,.2,1);pointer-events:none;box-shadow:0 6px 24px rgba(0,0,0,.2)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.results-table-card{max-height:360px;overflow-y:auto}
+.results-table-card table{width:100%;border-collapse:collapse;font-size:.82rem}
+.results-table-card thead{position:sticky;top:0;z-index:1}
+.results-table-card th{background:#edf2f7;color:#4a5568;font-weight:600;padding:8px 6px;text-align:center;border-bottom:2px solid #cbd5e0;white-space:nowrap}
+.results-table-card td{padding:6px;text-align:center;border-bottom:1px solid #edf2f7}
+.results-table-card tr:hover td{background:#ebf8ff}
+
+/* Summary card */
+.summary-card{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}
+.summary-item{background:#f7fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;text-align:center}
+.summary-item .val{font-size:1.5rem;font-weight:700}
+.summary-item .lbl{font-size:.75rem;color:#a0aec0;margin-top:2px}
+.fs-safe{color:#059669}
+.fs-warning{color:#d97706}
+.fs-danger{color:#dc2626}
+
+/* Soil layer table */
+.soil-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:8px}
+.soil-table th,.soil-table td{padding:5px 6px;border:1px solid #e2e8f0;text-align:center}
+.soil-table th{background:#edf2f7;color:#4a5568;font-weight:600}
+.soil-table input{width:100%;padding:4px 6px;border:1px solid #cbd5e0;border-radius:4px;font-size:.82rem;text-align:center}
+.soil-table input:focus{outline:none;border-color:#4299e1}
+.soil-add-btn{font-size:.78rem;padding:3px 10px;border:1px dashed #cbd5e0;border-radius:6px;background:#fff;cursor:pointer;color:#718096}
+.soil-add-btn:hover{border-color:#4299e1;color:#4299e1}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="container">
+  <h1>🏗️ 堤防稳定分析</h1>
+  <p class="subtitle">瑞典圆弧法 · 毕肖普法 · 边坡稳定安全系数计算</p>
+
+  <div class="main-grid">
+    <!-- LEFT: Input -->
+    <div class="input-panel">
+      <!-- Section data -->
+      <div class="card">
+        <div class="card-title"><span class="icon">📐</span> 断面数据</div>
+        <div class="preset-row">
+          <label>示例：</label>
+          <button class="preset-btn" onclick="loadPreset('simple')">均质堤</button>
+          <button class="preset-btn" onclick="loadPreset('flood')">洪水期</button>
+          <button class="preset-btn" onclick="loadPreset('layered')">多层堤</button>
+        </div>
+        <div class="section-area">
+          <label>桩号-高程（每行：桩号 高程，左岸→右岸）</label>
+          <textarea id="sectionData" placeholder="例（均质堤）：&#10;0    18.0&#10;5    18.0&#10;15   10.0&#10;25   5.0&#10;35   5.0&#10;50   8.0&#10;60   18.0&#10;65   18.0"></textarea>
+          <div class="hint">💡 桩号单调递增，高程为绝对高程(m)。至少3个点。</div>
+        </div>
+        <div class="preview-canvas-wrap"><canvas id="previewChart"></canvas></div>
+      </div>
+
+      <!-- Soil parameters -->
+      <div class="card">
+        <div class="card-title"><span class="icon">🧪</span> 土层参数</div>
+        <div class="tooltip-note">💡 可定义多层土，每层指定上下边界高程。桩号范围外的区域不参与计算。</div>
+        <table class="soil-table" id="soilTable">
+          <thead><tr><th>土层</th><th>γ (kN/m³)</th><th>c (kPa)</th><th>φ (°)</th><th>下界(m)</th><th>上界(m)</th></tr></thead>
+          <tbody id="soilBody">
+            <tr><td>①</td><td><input type="number" value="18.5" step="0.1" id="soil0_g"></td><td><input type="number" value="15" step="0.5" id="soil0_c"></td><td><input type="number" value="20" step="0.5" id="soil0_phi"></td><td><input type="number" value="0" step="0.5" id="soil0_bot"></td><td><input type="number" value="20" step="0.5" id="soil0_top"></td></tr>
+          </tbody>
+        </table>
+        <button class="soil-add-btn" onclick="addSoilLayer()">+ 添加土层</button>
+      </div>
+
+      <!-- Calculation parameters -->
+      <div class="card">
+        <div class="card-title"><span class="icon">⚙️</span> 计算参数</div>
+        <div class="form-row"><label>计算方法</label>
+          <select id="method"><option value="bishop">毕肖普法（迭代）</option><option value="swedish">瑞典圆弧法</option></select>
+        </div>
+        <div class="form-row"><label>上游水位</label><input type="number" id="wseUp" value="15.0" step="any"><span class="unit">m</span></div>
+        <div class="form-row"><label>下游水位</label><input type="number" id="wseDown" value="5.0" step="any"><span class="unit">m</span></div>
+        <div class="form-row"><label>搜索范围Xmin</label><input type="number" id="searchXmin" value="" step="any" placeholder="自动"><span class="unit">m</span></div>
+        <div class="form-row"><label>搜索范围Xmax</label><input type="number" id="searchXmax" value="" step="any" placeholder="自动"><span class="unit">m</span></div>
+        <div class="form-row"><label>圆心X步长</label><input type="number" id="stepX" value="2" step="any" min="0.5"><span class="unit">m</span></div>
+        <div class="form-row"><label>圆心Y步长</label><input type="number" id="stepY" value="2" step="any" min="0.5"><span class="unit">m</span></div>
+        <div class="form-row"><label>半径步长</label><input type="number" id="stepR" value="1" step="any" min="0.2"><span class="unit">m</span></div>
+        <div class="tooltip-note blue">💡 计算速度取决于步长大小。步长越小精度越高但耗时越长。建议先用大步长粗搜，再用小步长精搜。</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="calculate()">🔄 计算稳定安全系数</button>
+        <button class="btn btn-secondary" onclick="clearAll()">清空</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: Results -->
+    <div class="results-panel">
+      <!-- Summary -->
+      <div class="card" id="summaryCard" style="display:none">
+        <div class="card-title"><span class="icon">📊</span> 计算结果</div>
+        <div class="summary-card" id="summaryBar"></div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card" style="position:relative">
+        <div class="chart-tabs">
+          <div class="chart-tab active" onclick="switchChart('slip',this)">最危险滑弧</div>
+          <div class="chart-tab" onclick="switchChart('slices',this)">土条受力</div>
+          <div class="chart-tab" onclick="switchChart('contour',this)">Fs 等值线</div>
+        </div>
+        <div class="chart-container"><canvas id="mainChart"></canvas></div>
+        <div class="export-row" id="exportRow" style="display:none">
+          <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📥 导出CSV</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportIMG()">📷 导出图片</button>
+        </div>
+        <div class="loading" id="loadingOverlay"><div class="spinner"></div></div>
+      </div>
+
+      <!-- Slice table -->
+      <div class="card" id="sliceTableCard" style="display:none">
+        <div class="card-title"><span class="icon">📋</span> 土条数据（最危险滑弧）</div>
+        <div class="results-table-card">
+          <table>
+            <thead><tr><th>条号</th><th>x (m)</th><th>α (°)</th><th>Wi (kN)</th><th>Wi·sinα</th><th>Wi·cosα</th><th>ci·li</th><th>Wi·cosα·tanφ</th></tr></thead>
+            <tbody id="sliceBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== STATE ===== */
+let mainChart=null, previewChart=null;
+let bestResult=null, allResults=[], soilLayers=[];
+
+/* ===== TOAST ===== */
+function showToast(msg,icon){
+  const t=document.getElementById('toast');t.innerHTML=(icon||'✅')+' '+msg;
+  t.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+/* ===== PRESETS ===== */
+const PRESETS={
+  simple:`0    18.0\n5    18.0\n15   10.0\n25   5.0\n35   5.0\n50   8.0\n60   18.0\n65   18.0`,
+  flood:`0    20.0\n3    20.0\n8    16.0\n13   12.0\n20   8.0\n28   5.0\n35   5.0\n38   5.0\n45   8.0\n55   15.0\n62   20.0\n65   20.0`,
+  layered:`0    22.0\n4    22.0\n10   16.0\n16   12.0\n22   8.0\n30   5.0\n40   5.0\n48   8.0\n56   14.0\n62   20.0\n68   22.0\n72   22.0`
+};
+
+function loadPreset(key){
+  document.getElementById('sectionData').value=PRESETS[key];
+  document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  drawPreview();
+}
+
+/* ===== SOIL LAYERS ===== */
+let soilCount=1;
+function addSoilLayer(){
+  const i=soilCount++;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td>${['①','②','③','④','⑤','⑥'][i]||i+1}</td>
+    <td><input type="number" value="19" step="0.1" id="soil${i}_g"></td>
+    <td><input type="number" value="10" step="0.5" id="soil${i}_c"></td>
+    <td><input type="number" value="18" step="0.5" id="soil${i}_phi"></td>
+    <td><input type="number" value="0" step="0.5" id="soil${i}_bot"></td>
+    <td><input type="number" value="20" step="0.5" id="soil${i}_top"></td>`;
+  document.getElementById('soilBody').appendChild(tr);
+}
+
+function readSoilLayers(){
+  const layers=[];
+  const rows=document.getElementById('soilBody').querySelectorAll('tr');
+  rows.forEach((row,i)=>{
+    const g=parseFloat(document.getElementById(`soil${i}_g`).value)||18.5;
+    const c=parseFloat(document.getElementById(`soil${i}_c`).value)||0;
+    const phi=parseFloat(document.getElementById(`soil${i}_phi`).value)||0;
+    const bot=parseFloat(document.getElementById(`soil${i}_bot`).value)||0;
+    const top=parseFloat(document.getElementById(`soil${i}_top`).value)||20;
+    layers.push({gamma:g,c,phi:phi*Math.PI/180,bot,top});
+  });
+  return layers;
+}
+
+/* ===== PARSE SECTION ===== */
+function parseSection(){
+  const raw=document.getElementById('sectionData').value.trim();
+  if(!raw)return[];
+  const lines=raw.split('\n').map(l=>l.trim()).filter(l=>l&&!l.startsWith('#'));
+  const pts=[];
+  for(const line of lines){
+    const parts=line.split(/[\s,;]+/).map(Number).filter(n=>!isNaN(n));
+    if(parts.length>=2)pts.push({x:parts[0],z:parts[1]});
+  }
+  pts.sort((a,b)=>a.x-b.x);
+  return pts;
+}
+
+function getZ(pts,x){
+  if(x<=pts[0].x)return pts[0].z;
+  if(x>=pts[pts.length-1].x)return pts[pts.length-1].z;
+  for(let i=0;i<pts.length-1;i++){
+    if(x>=pts[i].x&&x<=pts[i+1].x){
+      const t=(x-pts[i].x)/(pts[i+1].x-pts[i].x);
+      return pts[i].z+t*(pts[i+1].z-pts[i].z);
+    }
+  }
+  return pts[pts.length-1].z;
+}
+
+/* ===== PREVIEW ===== */
+function drawPreview(){
+  const pts=parseSection();if(pts.length<2)return;
+  const ctx=document.getElementById('previewChart').getContext('2d');
+  if(previewChart)previewChart.destroy();
+  previewChart=new Chart(ctx,{type:'line',
+    data:{labels:pts.map(p=>p.x),datasets:[{data:pts.map(p=>p.z),borderColor:'#4299e1',backgroundColor:'rgba(66,153,225,0.1)',fill:true,tension:0.2,pointRadius:3,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},title:{display:true,text:'断面预览',font:{size:13}}},scales:{x:{title:{display:true,text:'桩号 (m)'}},y:{title:{display:true,text:'高程 (m)'}}}}
+  });
+}
+
+document.getElementById('sectionData').addEventListener('input',()=>{clearTimeout(window._pv);window._pv=setTimeout(drawPreview,300)});
+
+/* ===== STABILITY CALCULATION ===== */
+function calcSliceWeight(xi,pts,layers,wseUp,wseDown){
+  // Get ground elevation at xi
+  const zg=getZ(pts,xi);
+  // Determine water levels (simplified: linear interpolation between up/down)
+  const xMin=pts[0].x,xMax=pts[pts.length-1].x;
+  const xMid=(xMin+xMax)/2;
+  let wse;
+  if(xi<=xMid) wse=wseUp; else wse=wseDown;
+  // For simplicity, use the higher of the two water levels on both sides for submerged weight
+  const wseMax=Math.max(wseUp,wseDown);
+
+  let W=0; // weight per unit length
+  let c_eff=0, phi_eff=0, gamma_eff=0;
+  let submerged=false;
+
+  // Find which soil layer contains this point
+  for(const layer of layers){
+    if(zg>=layer.bot && zg<=layer.top){
+      gamma_eff=layer.gamma;
+      c_eff=layer.c;
+      phi_eff=layer.phi;
+      break;
+    }
+  }
+
+  // Weight = gamma * area contribution (simplified as gamma * zg * dx)
+  // But we need to integrate through layers
+  W=gamma_eff*zg; // kN/m per unit width (simplified)
+
+  // If below water, subtract buoyancy
+  if(wseMax>0 && zg>wseMax){
+    // Part above water, part below
+    W=gamma_eff*wseMax+(gamma_eff-9.81)*(zg-wseMax);
+  } else if(wseMax>0){
+    W=(gamma_eff-9.81)*zg;
+  }
+
+  return{W,c:c_eff,phi:phi_eff,gamma:gamma_eff};
+}
+
+function analyzeSlipCircle(pts,cx,cy,R,layers,wseUp,wseDown,method){
+  const xMin=pts[0].x,xMax=pts[pts.length-1].x;
+  const dx=0.5; // slice width
+  const slices=[];
+  let sumWsin=0, sumWcos=0, sumCl=0, sumWcosTan=0;
+  let sumMresist=0, sumMslide=0;
+  let valid=true;
+
+  // Find intersection points of circle with ground surface
+  const intersections=[];
+  for(let x=xMin;x<=xMax;x+=0.1){
+    const zg=getZ(pts,x);
+    const dy=zg-cy;
+    const dx2=x-cx;
+    const dist=Math.sqrt(dx2*dx2+dy*dy);
+    if(Math.abs(dist-R)<0.3){
+      intersections.push(x);
+    }
+  }
+
+  // Determine the arc segment within the ground
+  // The slip surface is where the circle is below ground
+  let arcStart=null, arcEnd=null;
+  for(let x=xMin;x<=xMax;x+=0.1){
+    const zg=getZ(pts,x);
+    const yc=cy+Math.sqrt(Math.max(0,R*R-(x-cx)*(x-cx)));
+    if(yc<zg){
+      if(arcStart===null)arcStart=x;
+      arcEnd=x;
+    }
+  }
+
+  if(arcStart===null||arcEnd===null)return null;
+  if(arcEnd-arcStart<2)return null;
+
+  // Create slices within the arc
+  let nSlices=Math.ceil((arcEnd-arcStart)/dx);
+  if(nSlices<3)return null;
+  if(nSlices>200)return null;
+  dx=(arcEnd-arcStart)/nSlices;
+
+  const sliceData=[];
+  for(let i=0;i<nSlices;i++){
+    const xi=arcStart+(i+0.5)*dx;
+    const zg=getZ(pts,xi);
+    const yi_c=cy+Math.sqrt(Math.max(0,R*R-(xi-cx)*(xi-cx)));
+
+    // Check if circle is below ground at this point
+    if(yi_c>=zg)continue;
+
+    // Slice height = ground elevation - circle elevation
+    const h=zg-yi_c;
+    if(h<=0)continue;
+
+    // Angle from center to slice base
+    const sinA=(xi-cx)/R;
+    const cosA=(yi_c-cy)/R;
+    const alpha=Math.asin(Math.max(-1,Math.min(1,sinA)));
+
+    // Get soil properties at this slice
+    const soilInfo=calcSliceWeight(xi,pts,layers,wseUp,wseDown);
+    const W=soilInfo.gamma*h*dx; // weight of slice
+
+    // Components
+    const Wsin=W*Math.sin(alpha);
+    const Wcos=W*Math.cos(alpha);
+    const c_l=soilInfo.c*dx/Math.cos(alpha); // cohesion along slip surface
+    const WcosTan=Wcos*Math.tan(soilInfo.phi);
+
+    sumWsin+=Wsin;
+    sumWcos+=Wcos;
+    sumCl+=c_l;
+    sumWcosTan+=WcosTan;
+
+    // Moments
+    sumMresist+=(c_l+WcosTan)*R;
+    sumMslide+=Wsin*R;
+
+    sliceData.push({i:sliceData.length+1,x:xi,alpha:alpha*180/Math.PI,W,Wsin,Wcos,c_l,WcosTan});
+  }
+
+  if(sliceData.length<3)return null;
+
+  let Fs;
+  if(method==='bishop'){
+    // Bishop's method (iterative)
+    Fs=sumMresist/sumMslide; // initial guess from Swedish
+    for(let iter=0;iter<30;iter++){
+      let sumNum=0,sumDen=0;
+      for(const s of sliceData){
+        const mA=Math.cos(s.alpha*Math.PI/180)+Math.sin(s.alpha*Math.PI/180)*Math.tan(s.phi)/Fs;
+        if(mA<=0.001){valid=false;break;}
+        sumNum+=(s.c_l+s.WcosTan/Fs)/mA; // Wait, need to recalculate
+        // Bishop: Fs = Σ[c'b + (W-ub)tanφ'] / [Σ W sinα]
+        // Simplified: Fs = Σ[c'b + (W-ub)tanφ'] / mα] / Σ W sinα
+        sumNum+=(s.c_l+s.WcosTan)/mA;
+        sumDen+=s.Wsin;
+      }
+      if(!valid)break;
+      const FsNew=sumNum/sumDen;
+      if(Math.abs(FsNew-Fs)<0.001){Fs=FsNew;break;}
+      Fs=FsNew;
+    }
+  } else {
+    // Swedish circle method
+    Fs=(sumCl+sumWcosTan)/Math.abs(sumWsin);
+  }
+
+  if(!isFinite(Fs)||Fs<=0)return null;
+
+  return{cx,cy,R,Fs,slices:sliceData,sumWsin,sumWcos,sumCl,sumWcosTan,arcStart,arcEnd};
+}
+
+/* ===== MAIN CALCULATION ===== */
+function calculate(){
+  const pts=parseSection();
+  if(pts.length<3){alert('请至少输入3个断面数据点');return;}
+  const layers=readSoilLayers();
+  const method=document.getElementById('method').value;
+  const wseUp=parseFloat(document.getElementById('wseUp').value)||0;
+  const wseDown=parseFloat(document.getElementById('wseDown').value)||0;
+
+  const xMin=parseFloat(document.getElementById('searchXmin').value)||pts[0].x;
+  const xMax=parseFloat(document.getElementById('searchXmax').value)||pts[pts.length-1].x;
+  const stepX=parseFloat(document.getElementById('stepX').value)||2;
+  const stepY=parseFloat(document.getElementById('stepY').value)||2;
+  const stepR=parseFloat(document.getElementById('stepR').value)||1;
+
+  // Find approximate center of slope
+  const zMax=Math.max(...pts.map(p=>p.z));
+  const zMin=Math.min(...pts.map(p=>p.z));
+  const xMid=(xMin+xMax)/2;
+
+  // Search grid
+  const cxMin=xMin+5, cxMax=xMax-5;
+  const cyMin=zMin+2, cyMax=zMax+zMax*0.5;
+  const rMin=Math.max(5,(xMax-xMin)*0.15);
+  const rMax=Math.sqrt((xMax-xMin)*(xMax-xMin)+(zMax-zMin)*(zMax-zMin))*0.8;
+
+  document.getElementById('loadingOverlay').classList.add('show');
+
+  setTimeout(()=>{
+    bestResult=null;
+    allResults=[];
+    let bestFs=Infinity;
+
+    const totalCx=Math.ceil((cxMax-cxMin)/stepX);
+    const totalCy=Math.ceil((cyMax-cyMin)/stepY);
+    let count=0;
+
+    for(let cx=cxMin;cx<=cxMax;cx+=stepX){
+      for(let cy=cyMin;cy<=cyMax;cy+=stepY){
+        for(let R=rMin;R<=rMax;R+=stepR){
+          const r=analyzeSlipCircle(pts,cx,cy,R,layers,wseUp,wseDown,method);
+          count++;
+          if(r&&r.Fs>0.1&&r.Fs<10){
+            allResults.push(r);
+            if(r.Fs<bestFs){
+              bestFs=r.Fs;
+              bestResult=r;
+            }
+          }
+        }
+      }
+    }
+
+    document.getElementById('loadingOverlay').classList.remove('show');
+
+    if(!bestResult){
+      alert('未找到有效滑弧，请检查断面数据和参数');
+      return;
+    }
+
+    // Show summary
+    const fsColor=bestFs>=1.3?'fs-safe':bestFs>=1.0?'fs-warning':'fs-danger';
+    const fsLabel=bestFs>=1.3?'稳定':bestFs>=1.0?'临界':'不稳定';
+    document.getElementById('summaryCard').style.display='block';
+    document.getElementById('summaryBar').innerHTML=`
+      <div class="summary-item"><div class="val ${fsColor}">${bestFs.toFixed(3)}</div><div class="lbl">安全系数 Fs</div></div>
+      <div class="summary-item"><div class="val ${fsColor}">${fsLabel}</div><div class="lbl">稳定评价</div></div>
+      <div class="summary-item"><div class="val">${bestResult.cx.toFixed(1)}</div><div class="lbl">滑弧圆心 X</div></div>
+      <div class="summary-item"><div class="val">${bestResult.cy.toFixed(1)}</div><div class="lbl">滑弧圆心 Y</div></div>
+      <div class="summary-item"><div class="val">${bestResult.R.toFixed(1)}</div><div class="lbl">滑弧半径 R</div></div>
+      <div class="summary-item"><div class="val">${bestResult.slices.length}</div><div class="lbl">土条数</div></div>
+      <div class="summary-item"><div class="val">${allResults.length}</div><div class="lbl">搜索滑弧数</div></div>
+    `;
+
+    // Draw chart
+    drawChart('slip');
+
+    // Show slice table
+    drawSliceTable();
+
+    document.getElementById('exportRow').style.display='flex';
+    document.getElementById('sliceTableCard').style.display='block';
+  },50);
+}
+
+/* ===== CHARTS ===== */
+function drawChart(type){
+  const pts=parseSection();
+  const ctx=document.getElementById('mainChart').getContext('2d');
+  if(mainChart)mainChart.destroy();
+
+  if(type==='slip'){
+    drawSlipChart(pts,ctx);
+  } else if(type==='slices'){
+    drawSliceChart(ctx);
+  } else if(type==='contour'){
+    drawContourChart(ctx);
+  }
+}
+
+function drawSlipChart(pts,ctx){
+  const r=bestResult;
+  const datasets=[
+    // Ground surface
+    {label:'断面',data:pts.map(p=>({x:p.x,y:p.z})),borderColor:'#2d3748',backgroundColor:'rgba(45,55,72,0.05)',fill:true,borderWidth:2.5,pointRadius:0,tension:0.2,order:2},
+    // Slip circle
+    {label:`滑弧 Fs=${r.Fs.toFixed(3)}`,data:generateArc(r),borderColor:'#dc2626',borderWidth:3,pointRadius:0,fill:false,order:1},
+    // Circle center
+    {label:'圆心',data:[{x:r.cx,y:r.cy}],borderColor:'#dc2626',backgroundColor:'#dc2626',pointRadius:5,pointStyle:'cross',showLine:false,order:0},
+    // Water levels
+    {label:'上游水位',data:[{x:pts[0].x,y:parseFloat(document.getElementById('wseUp').value)},{x:pts[pts.length-1].x,y:parseFloat(document.getElementById('wseUp').value)}],borderColor:'#3b82f6',borderWidth:1.5,borderDash:[6,3],pointRadius:0,fill:false,order:3},
+    {label:'下游水位',data:[{x:pts[0].x,y:parseFloat(document.getElementById('wseDown').value)},{x:pts[pts.length-1].x,y:parseFloat(document.getElementById('wseDown').value)}],borderColor:'#06b6d4',borderWidth:1.5,borderDash:[6,3],pointRadius:0,fill:false,order:3}
+  ];
+
+  mainChart=new Chart(ctx,{type:'line',data:{datasets},
+    options:{responsive:true,maintainAspectRatio:false,aspectRatio:1.2,
+      plugins:{title:{display:true,text:`最危险滑弧 — ${document.getElementById('method').value==='bishop'?'毕肖普法':'瑞典圆弧法'}  Fs = ${r.Fs.toFixed(4)}`,font:{size:15,weight:'bold'},color:r.Fs>=1.3?'#059669':r.Fs>=1.0?'#d97706':'#dc2626'},
+        legend:{display:true,position:'top',labels:{font:{size:10},filter:i=>i.text==='断面'||i.text.includes('Fs')||i.text.includes('水位')}},
+        tooltip:{mode:'index',intersect:false}},
+      scales:{x:{type:'linear',title:{display:true,text:'桩号 (m)'},min:pts[0].x-2,max:pts[pts.length-1].x+2},y:{title:{display:true,text:'高程 (m)'},aspectRatio:1}}}
+  });
+}
+
+function generateArc(r){
+  const pts=[];
+  const n=80;
+  for(let i=0;i<=n;i++){
+    const x=r.arcStart+(r.arcEnd-r.arcStart)*i/n;
+    const dx2=(x-r.cx)*(x-r.cx);
+    const dy2=r.R*r.R-dx2;
+    if(dy2<0)continue;
+    const y=r.cy-Math.sqrt(dy2); // lower half of circle
+    pts.push({x,y});
+  }
+  return pts;
+}
+
+function drawSliceChart(ctx){
+  const r=bestResult;
+  const labels=r.slices.map(s=>s.i);
+  mainChart=new Chart(ctx,{type:'bar',
+    data:{labels,
+      datasets:[
+        {label:'Wi·sinα (下滑力)',data:r.slices.map(s=>s.Wsin),backgroundColor:'rgba(220,38,38,0.6)',borderColor:'#dc2626',borderWidth:1},
+        {label:'Wi·cosα·tanφ (抗滑力)',data:r.slices.map(s=>s.WcosTan),backgroundColor:'rgba(5,150,105,0.6)',borderColor:'#059669',borderWidth:1},
+        {label:'ci·li (粘聚力)',data:r.slices.map(s=>s.c_l),backgroundColor:'rgba(37,99,235,0.6)',borderColor:'#2563eb',borderWidth:1}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{title:{display:true,text:'土条受力分析',font:{size:15,weight:'bold'},color:'#1a365d'},legend:{display:true,position:'top'}},
+      scales:{x:{title:{display:true,text:'土条号'}},y:{title:{display:true,text:'力 (kN/m)'}}}
+    }
+  });
+}
+
+function drawContourChart(ctx){
+  // Show Fs as a function of circle center position (for fixed radius)
+  const R=bestResult.R;
+  const pts=parseSection();
+  const layers=readSoilLayers();
+  const method=document.getElementById('method').value;
+  const wseUp=parseFloat(document.getElementById('wseUp').value)||0;
+  const wseDown=parseFloat(document.getElementById('wseDown').value)||0;
+
+  // Collect results with similar radius
+  const nearby=allResults.filter(r=>Math.abs(r.R-R)<2);
+  if(nearby.length<3){
+    // Fallback: show all results scatter
+    mainChart=new Chart(ctx,{type:'scatter',
+      data:{datasets:[{label:'搜索结果',data:allResults.map(r=>({x:r.cx,y:r.cy,r:r.Fs})),backgroundColor:allResults.map(r=>r.Fs<1?'#dc2626':r.Fs<1.3?'#d97706':'#059669'),pointRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:'Fs 等值线（圆心分布）',font:{size:15,weight:'bold'},color:'#1a365d'}},scales:{x:{title:{display:true,text:'圆心 X'}},y:{title:{display:true,text:'圆心 Y'}}}}
+    });
+    return;
+  }
+
+  // Group by cx, cy and find min Fs
+  const grid={};
+  for(const r of nearby){
+    const key=`${r.cx.toFixed(1)},${r.cy.toFixed(1)}`;
+    if(!grid[key]||r.Fs<grid[key].Fs)grid[key]=r;
+  }
+  const points=Object.values(grid).map(r=>({x:r.cx,y:r.cy,fs:r.Fs}));
+
+  mainChart=new Chart(ctx,{type:'scatter',
+    data:{datasets:[
+      {label:'Fs<1.0 (不稳定)',data:points.filter(p=>p.fs<1).map(p=>({x:p.x,y:p.y})),backgroundColor:'#dc2626',pointRadius:6},
+      {label:'1.0≤Fs<1.3 (临界)',data:points.filter(p=>p.fs>=1&&p.fs<1.3).map(p=>({x:p.x,y:p.y})),backgroundColor:'#d97706',pointRadius:6},
+      {label:'Fs≥1.3 (稳定)',data:points.filter(p=>p.fs>=1.3).map(p=>({x:p.x,y:p.y})),backgroundColor:'#059669',pointRadius:6},
+      {label:'最危险',data:[{x:bestResult.cx,y:bestResult.cy}],backgroundColor:'#dc2626',pointRadius:10,pointStyle:'star'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{title:{display:true,text:`Fs 等值线（R≈${R.toFixed(0)}m, ${allResults.length}个滑弧）`,font:{size:15,weight:'bold'},color:'#1a365d'},
+        tooltip:{callbacks:{label:function(ctx2){const p=points.find(pp=>pp.x===ctx2.parsed.x&&pp.y===ctx2.parsed.y);return p?`Fs=${p.fs.toFixed(3)}`:'';}}}},
+      scales:{x:{title:{display:true,text:'圆心 X (m)'}},y:{title:{display:true,text:'圆心 Y (m)'}}}
+    }
+  });
+}
+
+function switchChart(type,el){
+  document.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  drawChart(type);
+}
+
+/* ===== SLICE TABLE ===== */
+function drawSliceTable(){
+  const tbody=document.getElementById('sliceBody');tbody.innerHTML='';
+  bestResult.slices.forEach(s=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${s.i}</td><td>${s.x.toFixed(2)}</td><td>${s.alpha.toFixed(1)}</td><td>${s.W.toFixed(1)}</td><td>${s.Wsin.toFixed(1)}</td><td>${s.Wcos.toFixed(1)}</td><td>${s.c_l.toFixed(2)}</td><td>${s.WcosTan.toFixed(2)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ===== EXPORT ===== */
+function exportCSV(){
+  const r=bestResult;
+  let csv=`堤防稳定分析结果\n`;
+  csv+=`方法,${document.getElementById('method').value==='bishop'?'毕肖普法':'瑞典圆弧法'}\n`;
+  csv+=`安全系数Fs,${r.Fs.toFixed(4)}\n`;
+  csv+=`圆心,(${r.cx.toFixed(2)}, ${r.cy.toFixed(2)})\n`;
+  csv+=`半径R,${r.R.toFixed(2)}\n`;
+  csv+=`\n条号,x(m),α(°),Wi(kN),Wi·sinα,Wi·cosα,ci·li,Wi·cosα·tanφ\n`;
+  r.slices.forEach(s=>{csv+=`${s.i},${s.x.toFixed(2)},${s.alpha.toFixed(1)},${s.W.toFixed(1)},${s.Wsin.toFixed(1)},${s.Wcos.toFixed(1)},${s.c_l.toFixed(2)},${s.WcosTan.toFixed(2)}\n`;});
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download=`stability_${new Date().toISOString().slice(0,10)}.csv`;a.click();showToast('CSV 已下载','📥');
+}
+
+function exportIMG(){
+  const a=document.createElement('a');a.download=`stability_${new Date().toISOString().slice(0,10)}.png`;
+  a.href=document.getElementById('mainChart').toDataURL('image/png',1);a.click();showToast('图片已下载','📷');
+}
+
+function clearAll(){
+  bestResult=null;allResults=[];
+  if(mainChart){mainChart.destroy();mainChart=null;}
+  if(previewChart){previewChart.destroy();previewChart=null;}
+  ['summaryCard','sliceTableCard','exportRow'].forEach(id=>document.getElementById(id).style.display='none');
+}
+
+/* ===== INIT ===== */
+window.addEventListener('load',()=>{
+  loadPreset('simple');
+  document.querySelectorAll('.preset-btn')[0].classList.add('active');
+  drawPreview();
+});
+</script>
+</body>
+</html>
