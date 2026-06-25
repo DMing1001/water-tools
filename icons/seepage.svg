@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+  <circle cx="32" cy="32" r="28" fill="url(#g)" opacity="0.1"/>
+  <!-- dike body -->
+  <path d="M8 44 L20 18 L44 18 L56 44 Z" fill="url(#g)" opacity="0.15" stroke="url(#g)" stroke-width="1.5"/>
+  <!-- seepage line -->
+  <path d="M22 20 Q28 28 30 36 Q32 40 38 44" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 2" fill="none"/>
+  <!-- seepage dots -->
+  <circle cx="38" cy="44" r="1.5" fill="#06b6d4"/>
+  <circle cx="40" cy="44" r="1" fill="#06b6d4"/>
+  <circle cx="42" cy="44" r="1.5" fill="#06b6d4"/>
+  <!-- water on left -->
+  <path d="M4 36 Q8 33 12 36 Q16 39 20 36" stroke="#06b6d4" stroke-width="1.5" fill="none"/>
+  <!-- arrows showing flow path -->
+  <path d="M26 24 L28 28" stroke="#dc2626" stroke-width="1" stroke-linecap="round"/>
+  <path d="M28 30 L30 34" stroke="#dc2626" stroke-width="1" stroke-linecap="round"/>
+</svg>
