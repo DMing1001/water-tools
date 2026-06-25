@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+  <circle cx="32" cy="32" r="28" fill="url(#g)" opacity="0.1"/>
+  <!-- channel bed -->
+  <path d="M4 46 L24 46 L26 30 L56 30" stroke="url(#g)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- upstream supercritical flow -->
+  <line x1="6" y1="38" x2="22" y2="38" stroke="#06b6d4" stroke-width="2"/>
+  <!-- roller / jump -->
+  <path d="M24 38 Q28 24 32 30 Q36 36 40 30" stroke="#dc2626" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- downstream subcritical flow -->
+  <line x1="40" y1="34" x2="56" y2="34" stroke="#06b6d4" stroke-width="2"/>
+  <!-- depth labels -->
+  <line x1="16" y1="38" x2="16" y2="46" stroke="#2563eb" stroke-width="1" stroke-dasharray="2 2"/>
+  <text x="12" y="44" font-size="6" fill="#2563eb" font-weight="bold">y₁</text>
+  <line x1="48" y1="34" x2="48" y2="46" stroke="#2563eb" stroke-width="1" stroke-dasharray="2 2"/>
+  <text x="50" y="42" font-size="6" fill="#2563eb" font-weight="bold">y₂</text>
+  <!-- flow arrow -->
+  <path d="M10 50 L22 50" stroke="#06b6d4" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M19 48 L22 50 L19 52" stroke="#06b6d4" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+</svg>
