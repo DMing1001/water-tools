@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+  <circle cx="32" cy="32" r="28" fill="url(#g)" opacity="0.1"/>
+  <!-- river cross section -->
+  <path d="M8 40 L14 28 L22 22 L30 20 L38 22 L46 28 L56 40" stroke="url(#g)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="url(#g)" fill-opacity="0.1"/>
+  <!-- water level -->
+  <line x1="10" y1="30" x2="54" y2="30" stroke="#06b6d4" stroke-width="2" stroke-dasharray="5 3" stroke-linecap="round"/>
+  <!-- water fill -->
+  <path d="M12 30 L14 28 L22 22 L30 20 L38 22 L46 28 L52 30 Z" fill="#06b6d4" opacity="0.15"/>
+  <!-- Q-H curve -->
+  <path d="M16 52 Q22 48 28 44 Q34 40 40 36 Q46 32 52 28" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <!-- axes -->
+  <line x1="14" y1="54" x2="14" y2="26" stroke="#64748b" stroke-width="1.2"/>
+  <line x1="14" y1="54" x2="54" y2="54" stroke="#64748b" stroke-width="1.2"/>
+  <text x="8" y="30" font-size="6" fill="#64748b">H</text>
+  <text x="50" y="58" font-size="6" fill="#64748b">Q</text>
+  <!-- dot on curve -->
+  <circle cx="36" cy="38" r="2.5" fill="#2563eb"/>
+</svg>
