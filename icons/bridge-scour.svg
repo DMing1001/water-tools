@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+  <circle cx="32" cy="32" r="28" fill="url(#g)" opacity="0.1"/>
+  <!-- bridge deck -->
+  <rect x="8" y="18" width="48" height="6" rx="2" fill="url(#g)" opacity="0.3" stroke="url(#g)" stroke-width="1.5"/>
+  <!-- piers -->
+  <rect x="18" y="24" width="5" height="20" rx="1" fill="url(#g)" opacity="0.25" stroke="url(#g)" stroke-width="1.5"/>
+  <rect x="41" y="24" width="5" height="20" rx="1" fill="url(#g)" opacity="0.25" stroke="url(#g)" stroke-width="1.5"/>
+  <!-- scour holes -->
+  <path d="M14 44 Q18 38 22 44 Q26 50 30 44" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <path d="M34 44 Q38 38 42 44 Q46 50 50 44" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+  <!-- water surface -->
+  <path d="M4 30 Q10 27 16 30 Q22 33 28 30 Q34 27 40 30 Q46 33 52 30 Q56 28 60 30" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  <!-- flow arrows -->
+  <path d="M8 36 L14 36" stroke="#06b6d4" stroke-width="1.2" stroke-linecap="round" marker-end="none"/>
+  <path d="M50 36 L56 36" stroke="#06b6d4" stroke-width="1.2" stroke-linecap="round"/>
+</svg>
