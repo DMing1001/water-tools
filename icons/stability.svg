@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+  <circle cx="32" cy="32" r="28" fill="url(#g)" opacity="0.1"/>
+  <!-- slope with slip circle -->
+  <path d="M8 48 L24 20 L56 48 Z" fill="url(#g)" opacity="0.1" stroke="url(#g)" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- slip circle -->
+  <circle cx="34" cy="36" r="14" stroke="#dc2626" stroke-width="2" stroke-dasharray="5 3" fill="none"/>
+  <!-- center marker -->
+  <circle cx="34" cy="36" r="2" fill="#dc2626"/>
+  <!-- force arrows -->
+  <line x1="34" y1="36" x2="34" y2="50" stroke="#2563eb" stroke-width="1.5"/>
+  <path d="M34 50 L32 46 L36 46 Z" fill="#2563eb"/>
+  <text x="28" y="56" font-size="6" fill="#2563eb" font-weight="bold">W</text>
+  <!-- resisting force -->
+  <path d="M40 44 L48 40" stroke="#059669" stroke-width="1.5"/>
+  <path d="M46 38 L48 40 L46 42" stroke="#059669" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+  <text x="44" y="37" font-size="5" fill="#059669">R</text>
+</svg>
