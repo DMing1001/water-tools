@@ -160,8 +160,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 
       <!-- Formula reference -->
       <div class="card">
-        <div class="card-title"><span class="icon">📖</span> 计算原理</div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px">
+        <div class="card-title" style="cursor:pointer" onclick="toggleFormula()"><span class="icon">📖</span> 计算原理 <span id="formulaArrow" style="font-size:.8rem;color:#a0aec0;margin-left:auto;transition:transform .2s">▼</span></div>
+        <div id="formulaContent" style="display:none">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px">
           <div class="formula-card">
             <h4>瑞典圆弧法</h4>
             <div class="eq">Fs = Σ [cᵢlᵢ + Wᵢcosαᵢ·tanφᵢ] / Σ Wᵢsinαᵢ</div>
@@ -183,6 +184,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
             <p><b style="color:#059669">Fs≥1.3</b> 稳定 · <b style="color:#d97706">1.0~1.3</b> 临界 · <b style="color:#dc2626"><1.0</b> 不稳定</p>
             <div class="note">正常运用条件 Fs≥1.30</div>
           </div>
+        </div>
         </div>
       </div>
 
@@ -601,6 +603,13 @@ function clearAll(){
   if(mainChart){mainChart.destroy();mainChart=null;}
   if(previewChart){previewChart.destroy();previewChart=null;}
   ['summaryCard','sliceTableCard','exportRow'].forEach(id=>document.getElementById(id).style.display='none');
+}
+
+function toggleFormula(){
+  const el=document.getElementById('formulaContent');
+  const arrow=document.getElementById('formulaArrow');
+  if(el.style.display==='none'){el.style.display='block';arrow.style.transform='rotate(180deg)';}
+  else{el.style.display='none';arrow.style.transform='rotate(0deg)';}
 }
 
 window.addEventListener('load',()=>{
