@@ -161,31 +161,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
       <!-- Formula reference -->
       <div class="card">
         <div class="card-title"><span class="icon">📖</span> 计算原理</div>
-        <div class="formula-card">
-          <h4>一、瑞典圆弧法（Ordinary Method of Slices）</h4>
-          <div class="eq">Fs = Σ [cᵢ·lᵢ + Wᵢ·cosαᵢ·tanφᵢ] / Σ [Wᵢ·sinαᵢ]</div>
-          <p>其中：cᵢ — 第i条土条底面粘聚力；lᵢ — 底面弧长；Wᵢ — 土条重力；αᵢ — 底面倾角；φᵢ — 内摩擦角</p>
-          <div class="note">假设条间力为零，偏保守。适用于均质土坡的初步评估。</div>
-        </div>
-        <div class="formula-card">
-          <h4>二、毕肖普法（Bishop's Simplified Method）</h4>
-          <div class="eq">Fs = Σ [(cᵢ·bᵢ + (Wᵢ - uᵢ·bᵢ)·tanφᵢ) / mαᵢ] / Σ [Wᵢ·sinαᵢ]</div>
-          <div class="eq">mαᵢ = cosαᵢ + (sinαᵢ·tanφᵢ) / Fs</div>
-          <p>其中：bᵢ — 土条宽度；uᵢ — 孔隙水压力；mαᵢ — 与Fs有关，需迭代求解</p>
-          <div class="note">考虑条间力，精度更高。迭代收敛条件 |Fs_new - Fs_old| < 0.001。工程中最常用。</div>
-        </div>
-        <div class="formula-card">
-          <h4>三、土条重力计算</h4>
-          <div class="eq">Wᵢ = γ·hᵢ·bᵢ（水上部分）</div>
-          <div class="eq">Wᵢ = γ'·hᵢ·bᵢ（水下部分，γ' = γ - γw）</div>
-          <p>水下部分采用浮重度，γw = 9.81 kN/m³。水位线以上用天然重度。</p>
-        </div>
-        <div class="formula-card">
-          <h4>四、稳定判据</h4>
-          <p><b>Fs ≥ 1.3</b> — 稳定（满足规范要求）</p>
-          <p><b>1.0 ≤ Fs < 1.3</b> — 临界状态（需加固）</p>
-          <p><b>Fs < 1.0</b> — 不稳定（可能发生滑坡）</p>
-          <div class="note">依据 GB 50286-2013《堤防工程设计规范》，正常运用条件下 Fs ≥ 1.30。</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px">
+          <div class="formula-card">
+            <h4>瑞典圆弧法</h4>
+            <div class="eq">Fs = Σ [cᵢlᵢ + Wᵢcosαᵢ·tanφᵢ] / Σ Wᵢsinαᵢ</div>
+            <div class="note">假设条间力为零，偏保守</div>
+          </div>
+          <div class="formula-card">
+            <h4>毕肖普法（迭代）</h4>
+            <div class="eq">Fs = Σ [(cᵢbᵢ + Wᵢtanφᵢ) / mαᵢ] / Σ Wᵢsinαᵢ</div>
+            <div class="eq" style="font-size:.85rem">mαᵢ = cosαᵢ + sinαᵢ·tanφᵢ/Fs</div>
+            <div class="note">考虑条间力，工程最常用</div>
+          </div>
+          <div class="formula-card">
+            <h4>土条重力</h4>
+            <div class="eq">W = γ·h·b（水上）<br>W = γ'·h·b（水下，γ'=γ-γw）</div>
+            <div class="note">水下用浮重度，γw=9.81 kN/m³</div>
+          </div>
+          <div class="formula-card">
+            <h4>稳定判据（GB 50286）</h4>
+            <p><b style="color:#059669">Fs≥1.3</b> 稳定 · <b style="color:#d97706">1.0~1.3</b> 临界 · <b style="color:#dc2626"><1.0</b> 不稳定</p>
+            <div class="note">正常运用条件 Fs≥1.30</div>
+          </div>
         </div>
       </div>
 
