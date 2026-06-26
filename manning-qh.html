@@ -30,6 +30,10 @@ h1 .logo-icon{width:36px;height:36px;vertical-align:middle;margin-right:10px;bac
 .mode-compound .results-panel{display:none!important}
 .compound-hide{display:none}
 .mode-compound .compound-hide{display:block}
+.formula-card{background:#f7fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;font-size:.82rem;line-height:1.8}
+.formula-card h4{font-size:.86rem;color:#2d3748;margin-bottom:4px}
+.formula-card .eq{font-family:'Cambria Math','Times New Roman',serif;font-size:.92rem;color:#1a365d;margin:4px 0;padding:6px 10px;background:#fff;border-radius:6px;border:1px solid #e2e8f0}
+.formula-card .note{font-size:.76rem;color:#718096;margin-top:4px}
 
 /* Cards */
 .card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);padding:18px 20px;margin-bottom:14px}
@@ -379,6 +383,19 @@ h1 .logo-icon{width:36px;height:36px;vertical-align:middle;margin-right:10px;bac
             <div class="results-table-card">
               <table><thead><tr id="cTableHead"></tr></thead><tbody id="cResultsBody"></tbody></table>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formula (collapsible) -->
+      <div class="card">
+        <div class="card-title" style="cursor:pointer" onclick="toggleFormula()"><span class="icon">📖</span> 计算原理 <span id="fArrow" style="font-size:.8rem;color:#a0aec0;margin-left:auto;transition:transform .2s">▼</span></div>
+        <div id="fContent" style="display:none">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px">
+            <div class="formula-card"><h4>Manning 公式</h4><div class="eq">Q = (1/n) × A × R<sup>2/3</sup> × S<sup>1/2</sup></div><div class="note">A=过水面积, R=水力半径(A/P), S=比降, n=糙率</div></div>
+            <div class="formula-card"><h4>堰流公式</h4><div class="eq">Q = m × B × √(2g) × H<sup>3/2</sup></div><div class="note">m=流量系数, B=堰宽, H=堰上水头, g=9.81m/s²</div></div>
+            <div class="formula-card"><h4>分区糙率</h4><div class="eq">n_eff = Σ(Ai × ni) / Σ(Ai)</div><div class="note">按面积加权计算综合糙率（左滩/主槽/右滩）</div></div>
+            <div class="formula-card"><h4>复合断面叠加</h4><div class="eq">Q_total = Q_左天然 + Q_堰段 + Q_右天然</div><div class="note">左天然Manning + 堰段堰流 + 右天然Manning</div></div>
           </div>
         </div>
       </div>
@@ -1131,6 +1148,11 @@ function copyTable(){
   navigator.clipboard.writeText(t).then(()=>showToast('已复制至剪贴板','📋')).catch(()=>{
     const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('已复制至剪贴板','📋');
   });
+}
+
+function toggleFormula(){
+  const el=document.getElementById('fContent'),ar=document.getElementById('fArrow');
+  el.style.display=el.style.display==='none'?'block':'none';ar.style.transform=el.style.display==='none'?'':'rotate(180deg)';
 }
 
 function clearAll(){
