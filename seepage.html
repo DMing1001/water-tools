@@ -62,9 +62,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 
 .tooltip-note{background:#fffff0;border:1px solid #ecc94b;border-radius:6px;padding:8px 12px;font-size:.78rem;color:#744210;margin-bottom:10px;line-height:1.5}
 .tooltip-note.blue{background:#ebf8ff;border-color:#90cdf4;color:#2a4365}
-.tooltip-note.green{background:#f0fff4;border-color:#9ae6b4;color:#22543d}
 
-.summary-card{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:14px}
+.summary-card{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
 .summary-item{background:#f7fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;text-align:center}
 .summary-item .val{font-size:1.3rem;font-weight:700}
 .summary-item .lbl{font-size:.75rem;color:#a0aec0;margin-top:2px}
@@ -77,10 +76,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 .results-table-card td{padding:6px;text-align:center;border-bottom:1px solid #edf2f7}
 .results-table-card tr:hover td{background:#ebf8ff}
 
-.formula-card{background:#f7fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;font-size:.82rem;line-height:1.8}
-.formula-card h4{font-size:.86rem;color:#2d3748;margin-bottom:6px}
-.formula-card .eq{font-family:'Cambria Math','Times New Roman',serif;font-size:.95rem;color:#1a365d;margin:4px 0;padding:6px 10px;background:#fff;border-radius:6px;border:1px solid #e2e8f0}
+.formula-card{background:#f7fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;font-size:.82rem;line-height:1.8}
+.formula-card h4{font-size:.86rem;color:#2d3748;margin-bottom:4px}
+.formula-card .eq{font-family:'Cambria Math','Times New Roman',serif;font-size:.92rem;color:#1a365d;margin:4px 0;padding:6px 10px;background:#fff;border-radius:6px;border:1px solid #e2e8f0}
 .formula-card .note{font-size:.76rem;color:#718096;margin-top:4px}
+
+.report-box{background:#fafbfc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;font-family:'Cascadia Code','Fira Code',monospace;font-size:.82rem;line-height:1.8;white-space:pre-wrap;word-break:break-all;max-height:400px;overflow-y:auto;position:relative}
+.report-box .copy-btn{position:absolute;top:8px;right:8px;padding:4px 12px;font-size:.76rem;border:1px solid #cbd5e0;border-radius:6px;background:#fff;cursor:pointer;color:#4a5568}
+.report-box .copy-btn:hover{background:#edf2f7}
 
 .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-80px);background:#2d3748;color:#fff;padding:12px 28px;border-radius:10px;font-size:.9rem;font-weight:500;z-index:9999;opacity:0;transition:all .35s cubic-bezier(.4,0,.2,1);pointer-events:none;box-shadow:0 6px 24px rgba(0,0,0,.2)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -99,7 +102,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
   <!-- TOP: Input -->
   <div>
     <div class="input-grid">
-      <!-- Left: Section + Params -->
       <div>
         <div class="card">
           <div class="card-title"><span class="icon">📐</span> 断面数据</div>
@@ -110,114 +112,71 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
             <button class="preset-btn" onclick="loadPreset('steep')">陡坡堤</button>
           </div>
           <div class="section-area">
-            <label>桩号-高程（左→右，含堤顶、堤坡、堤脚）</label>
+            <label>桩号-高程（左→右，上游→下游）</label>
             <textarea id="sectionData"></textarea>
-            <div class="hint">💡 桩号单调递增。左岸为上游侧，右岸为下游侧。</div>
+            <div class="hint">💡 桩号单调递增。左=上游，右=下游。</div>
           </div>
           <div class="preview-canvas-wrap"><canvas id="previewChart"></canvas></div>
         </div>
-
         <div class="card">
           <div class="card-title"><span class="icon">💧</span> 水位参数</div>
           <div class="form-row"><label>上游水位</label><input type="number" id="wseUp" value="15" step="any"><span class="unit">m</span></div>
-          <div class="form-row"><label>下游水位</label><input type="number" id="wseDown" value="5" step="any"><span class="unit">m</span></div>
-          <div class="tooltip-note">💡 上游水位取设计洪水位，下游水位取常水位或无水(填0)。</div>
+          <div class="form-row"><label>下游水位</label><input type="number" id="wseDown" value="0" step="any"><span class="unit">m</span></div>
         </div>
       </div>
-
-      <!-- Right: Soil + Method -->
       <div>
         <div class="card">
           <div class="card-title"><span class="icon">🧪</span> 土层参数</div>
           <div class="form-row"><label>渗透系数 k</label><input type="number" id="kValue" value="1e-5" step="any"><span class="unit">m/s</span></div>
           <div class="form-row"><label>土层类型</label>
-            <select id="soilType" onchange="setKValue()">
+            <select id="soilType" onchange="setK()">
               <option value="custom">自定义</option>
-              <option value="clay">黏土 (k≈10⁻⁸~10⁻⁶)</option>
-              <option value="silt">粉土 (k≈10⁻⁶~10⁻⁴)</option>
-              <option value="sand">砂土 (k≈10⁻⁴~10⁻²)</option>
-              <option value="gravel">砾石 (k≈10⁻²~10⁰)</option>
+              <option value="clay">黏土 (~10⁻⁷)</option>
+              <option value="silt">粉土 (~10⁻⁵)</option>
+              <option value="sand">砂土 (~10⁻³)</option>
+              <option value="gravel">砾石 (~10⁻¹)</option>
             </select>
           </div>
           <div class="form-row"><label>允许比降 i_allow</label><input type="number" id="iAllow" value="0.5" step="any" min="0.1"><span class="unit">—</span></div>
-          <div class="tooltip-note">💡 砂性土 i_allow≈0.3~0.6，黏性土≈0.6~1.0。依据 GB 50286-2013。</div>
         </div>
-
         <div class="card">
           <div class="card-title"><span class="icon">⚙️</span> 计算方法</div>
-          <div class="form-row"><label>计算方法</label>
-            <select id="method">
-              <option value="dupuit">杜普伊特公式（均质堤）</option>
-              <option value="bligh">勃莱爬行法（透水地基）</option>
-              <option value="lane">莱恩爬行法（透水地基）</option>
+          <div class="form-row"><label>方法</label>
+            <select id="method" onchange="updateMethod()">
+              <option value="dupuit">杜普伊特公式</option>
+              <option value="bligh">勃莱爬行法</option>
+              <option value="lane">莱恩爬行法</option>
             </select>
           </div>
-          <div class="form-row" id="blighRow" style="display:none"><label>勃莱系数 C</label><input type="number" id="blighC" value="15" step="1"><span class="unit">—</span></div>
-          <div class="form-row" id="laneRow" style="display:none"><label>莱恩系数 C'</label><input type="number" id="laneC" value="8.5" step="0.5"><span class="unit">—</span></div>
-          <div class="tooltip-note blue" id="methodNote">💡 杜普伊特法适用于均质土堤、不透水地基的稳定渗流计算。</div>
-        </div>
-
-        <div class="card">
-          <div class="card-title"><span class="icon">🏗️</span> 地基参数（爬行法）</div>
+          <div class="form-row" id="coeffRow" style="display:none"><label id="coeffLabel">系数 C</label><input type="number" id="coeffVal" value="15" step="0.5"><span class="unit">—</span></div>
           <div class="form-row"><label>地基类型</label>
-            <select id="foundationType">
-              <option value="impervious">不透水地基</option>
-              <option value="pervious">透水地基</option>
-            </select>
+            <select id="fType"><option value="impervious">不透水地基</option><option value="pervious">透水地基</option></select>
           </div>
-          <div class="form-row"><label>地基渗透系数</label><input type="number" id="kFoundation" value="1e-4" step="any"><span class="unit">m/s</span></div>
-          <div class="form-row"><label>地基深度</label><input type="number" id="foundationDepth" value="5" step="any"><span class="unit">m</span></div>
+          <div class="tooltip-note blue" id="methodNote">💡 杜普伊特法：均质堤、不透水地基、稳定渗流。</div>
         </div>
       </div>
     </div>
 
-    <!-- Formula -->
+    <!-- Formula (collapsible) -->
     <div class="card">
-      <div class="card-title" style="cursor:pointer" onclick="toggleFormula()"><span class="icon">📖</span> 计算原理 <span id="formulaArrow" style="font-size:.8rem;color:#a0aec0;margin-left:auto;transition:transform .2s">▼</span></div>
-      <div id="formulaContent" style="display:none">
+      <div class="card-title" style="cursor:pointer" onclick="toggleFormula()"><span class="icon">📖</span> 计算原理 <span id="fArrow" style="font-size:.8rem;color:#a0aec0;margin-left:auto;transition:transform .2s">▼</span></div>
+      <div id="fContent" style="display:none">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px">
-          <div class="formula-card">
-            <h4>杜普伊特浸润线公式</h4>
-            <div class="eq">y² = H₁² − (2q/k)·x</div>
-            <div class="eq">q = k·(H₁² − H₂²) / (2L)</div>
-            <p>H₁上游水深, H₂下游水深, L渗径长度, k渗透系数</p>
-            <div class="note">适用于均质堤、不透水地基、稳定渗流</div>
-          </div>
-          <div class="formula-card">
-            <h4>出逸比降</h4>
-            <div class="eq">i = ΔH / L ≤ i_allow</div>
-            <p>ΔH=上下游水位差, L=渗径长度</p>
-            <div class="note">i_allow: 砂性土0.3~0.6, 黏性土0.6~1.0</div>
-          </div>
-          <div class="formula-card">
-            <h4>勃莱爬行法</h4>
-            <div class="eq">L ≥ C · H</div>
-            <p>C: 勃莱系数(细砂5~9, 中砂4~6, 粗砂3~4), H: 最大水头</p>
-            <div class="note">适用于透水地基上闸坝基础防渗</div>
-          </div>
-          <div class="formula-card">
-            <h4>莱恩爬行法</h4>
-            <div class="eq">L' ≥ C' · H</div>
-            <p>L'=水平渗径/3+垂直渗径, C': 莱恩系数</p>
-            <div class="note">垂直渗流路径按3倍折算，更保守</div>
-          </div>
+          <div class="formula-card"><h4>杜普伊特浸润线</h4><div class="eq">y² = H₁² − (2q/k)·x</div><div class="eq">q = k(H₁² − H₂²) / (2L)</div><div class="note">均质堤、不透水地基</div></div>
+          <div class="formula-card"><h4>出逸比降</h4><div class="eq">i = ΔH / L</div><div class="note">砂性土 0.3~0.6，黏性土 0.6~1.0</div></div>
+          <div class="formula-card"><h4>勃莱爬行法</h4><div class="eq">L ≥ C · H</div><div class="note">C: 细砂5~9, 中砂4~6, 粗砂3~4</div></div>
+          <div class="formula-card"><h4>莱恩爬行法</h4><div class="eq">L' = 水平/3 + 垂直 ≥ C'·H</div><div class="note">垂直渗径3倍折算，更保守</div></div>
         </div>
       </div>
     </div>
 
-    <!-- FEM Note -->
+    <!-- FEM note -->
     <div class="card" style="background:linear-gradient(135deg,#f0fff4,#ecfdf5);border-color:#9ae6b4">
       <div style="display:flex;align-items:center;gap:12px">
         <span style="font-size:1.5rem">🔬</span>
         <div>
           <div style="font-weight:600;color:#276749;margin-bottom:2px">需要更精确的分析？</div>
-          <div style="font-size:.82rem;color:#4a5568">本工具提供简化公式计算结果。对于复杂断面、多层土、非稳定渗流等情况，建议采用<strong>有限元法</strong>进行数值模拟：</div>
-          <div style="font-size:.8rem;color:#718096;margin-top:4px">
-            • <strong>GeoStudio SEEP/W</strong> — 专业渗流分析软件<br>
-            • <strong>PLAXIS</strong> — 岩土有限元分析<br>
-            • <strong>ABAQUS</strong> — 通用有限元（渗流模块）<br>
-            • <strong>理正岩土</strong> — 国内常用，含渗流计算模块
-          </div>
+          <div style="font-size:.82rem;color:#4a5568">本工具提供简化公式计算。复杂断面/多层土/非稳定渗流建议采用<strong>有限元法</strong>：GeoStudio SEEP/W、PLAXIS、ABAQUS、理正岩土等。</div>
         </div>
       </div>
     </div>
@@ -237,7 +196,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 
     <div class="card" style="position:relative">
       <div class="chart-tabs">
-        <div class="chart-tab active" onclick="switchChart('seepage',this)">浸润线 + 断面</div>
+        <div class="chart-tab active" onclick="switchChart('seepage',this)">浸润线</div>
         <div class="chart-tab" onclick="switchChart('pressure',this)">孔压分布</div>
         <div class="chart-tab" onclick="switchChart('gradient',this)">比降分布</div>
       </div>
@@ -248,33 +207,42 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
       </div>
     </div>
 
-    <div class="card" id="resultTableCard" style="display:none">
+    <!-- Calculation report -->
+    <div class="card" id="reportCard" style="display:none">
+      <div class="card-title" style="cursor:pointer" onclick="toggleReport()"><span class="icon">📄</span> 计算书（中间结果） <span id="rArrow" style="font-size:.8rem;color:#a0aec0;margin-left:auto;transition:transform .2s">▼</span></div>
+      <div id="reportContent" style="display:none">
+        <div style="position:relative">
+          <button class="copy-btn" style="position:absolute;top:0;right:0;z-index:1" onclick="copyReport()">📋 复制</button>
+          <div class="report-box" id="reportBox"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="tableCard" style="display:none">
       <div class="card-title"><span class="icon">📋</span> 浸润线数据</div>
       <div class="results-table-card">
-        <table>
-          <thead><tr><th>x (m)</th><th>z 地面 (m)</th><th>y 浸润线 (m)</th><th>水头 h (m)</th><th>比降 i</th></tr></thead>
-          <tbody id="resultBody"></tbody>
-        </table>
+        <table><thead><tr><th>x (m)</th><th>z 地面 (m)</th><th>y 浸润线 (m)</th><th>水头 h (m)</th><th>比降 i</th></tr></thead>
+        <tbody id="resultBody"></tbody></table>
       </div>
     </div>
   </div>
-
 </div>
 </div>
 
 <script>
-let mainChart=null, previewChart=null, results=null;
+let mainChart=null, previewChart=null, R=null;
 
 function showToast(msg,icon){
   const t=document.getElementById('toast');t.innerHTML=(icon||'✅')+' '+msg;
   t.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove('show'),2200);
 }
-
 function toggleFormula(){
-  const el=document.getElementById('formulaContent');
-  const arrow=document.getElementById('formulaArrow');
-  if(el.style.display==='none'){el.style.display='block';arrow.style.transform='rotate(180deg)';}
-  else{el.style.display='none';arrow.style.transform='rotate(0deg)';}
+  const el=document.getElementById('fContent'),ar=document.getElementById('fArrow');
+  el.style.display=el.style.display==='none'?'block':'none';ar.style.transform=el.style.display==='none'?'':'rotate(180deg)';
+}
+function toggleReport(){
+  const el=document.getElementById('reportContent'),ar=document.getElementById('rArrow');
+  el.style.display=el.style.display==='none'?'block':'none';ar.style.transform=el.style.display==='none'?'':'rotate(180deg)';
 }
 
 const PRESETS={
@@ -286,23 +254,21 @@ const PRESETS={
 function loadPreset(key){
   document.getElementById('sectionData').value=PRESETS[key];
   document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
-  event.target.classList.add('active');
-  drawPreview();
+  event.target.classList.add('active');drawPreview();
 }
-
-function setKValue(){
-  const v=document.getElementById('soilType').value;
+function setK(){
   const m={clay:'1e-7',silt:'1e-5',sand:'1e-3',gravel:'1e-1'};
+  const v=document.getElementById('soilType').value;
   if(m[v])document.getElementById('kValue').value=m[v];
 }
-
-document.getElementById('method').addEventListener('change',function(){
-  const v=this.value;
-  document.getElementById('blighRow').style.display=v==='bligh'?'flex':'none';
-  document.getElementById('laneRow').style.display=v==='lane'?'flex':'none';
-  const notes={dupuit:'杜普伊特法适用于均质土堤、不透水地基的稳定渗流计算。',bligh:'勃莱法：渗径长度 L≥C·H。C值与地基土质有关。',lane:'莱恩法：垂直渗径按3倍折算 L\'=水平/3+垂直≥C\'·H。更保守。'};
-  document.getElementById('methodNote').textContent='💡 '+notes[v];
-});
+function updateMethod(){
+  const v=document.getElementById('method').value;
+  document.getElementById('coeffRow').style.display=v==='dupuit'?'none':'flex';
+  document.getElementById('coeffLabel').textContent=v==='bligh'?'系数 C':'系数 C\'';
+  document.getElementById('coeffVal').value=v==='bligh'?15:8.5;
+  const n={dupuit:'杜普伊特法：均质堤、不透水地基、稳定渗流。',bligh:'勃莱法：渗径 L≥C·H。C与地基土质有关。',lane:'莱恩法：L\'=水平/3+垂直≥C\'·H。更保守。'};
+  document.getElementById('methodNote').textContent='💡 '+n[v];
+}
 
 function parseSection(){
   const raw=document.getElementById('sectionData').value.trim();
@@ -312,15 +278,11 @@ function parseSection(){
     return p.length>=2?{x:p[0],z:p[1]}:null;
   }).filter(Boolean).sort((a,b)=>a.x-b.x);
 }
-
 function getZ(pts,x){
   if(x<=pts[0].x)return pts[0].z;
   if(x>=pts[pts.length-1].x)return pts[pts.length-1].z;
   for(let i=0;i<pts.length-1;i++){
-    if(x>=pts[i].x&&x<=pts[i+1].x){
-      const t=(x-pts[i].x)/(pts[i+1].x-pts[i].x);
-      return pts[i].z+t*(pts[i+1].z-pts[i].z);
-    }
+    if(x>=pts[i].x&&x<=pts[i+1].x){const t=(x-pts[i].x)/(pts[i+1].x-pts[i].x);return pts[i].z+t*(pts[i+1].z-pts[i].z);}
   }
   return pts[pts.length-1].z;
 }
@@ -330,181 +292,175 @@ function drawPreview(){
   const ctx=document.getElementById('previewChart').getContext('2d');
   if(previewChart)previewChart.destroy();
   previewChart=new Chart(ctx,{type:'line',
-    data:{labels:pts.map(p=>p.x),datasets:[{data:pts.map(p=>p.z),borderColor:'#4299e1',backgroundColor:'rgba(66,153,225,0.1)',fill:true,tension:0.2,pointRadius:3,borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},title:{display:true,text:'断面预览',font:{size:13}}},scales:{x:{title:{display:true,text:'桩号 (m)'}},y:{title:{display:true,text:'高程 (m)'}}}}
+    data:{labels:pts.map(p=>p.x),datasets:[{data:pts.map(p=>p.z),borderColor:'#4299e1',backgroundColor:'rgba(66,153,225,.1)',fill:true,tension:.2,pointRadius:3,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'桩号 (m)'}},y:{title:{display:true,text:'高程 (m)'}}}}
   });
 }
-
 document.getElementById('sectionData').addEventListener('input',()=>{clearTimeout(window._pv);window._pv=setTimeout(drawPreview,300)});
 
 /* ===== CALCULATION ===== */
 function calculate(){
   const pts=parseSection();
-  if(pts.length<3){alert('请至少输入3个断面数据点');return;}
+  if(pts.length<3){alert('至少3个断面点');return;}
   const H1=parseFloat(document.getElementById('wseUp').value);
   const H2=parseFloat(document.getElementById('wseDown').value)||0;
   const k=parseFloat(document.getElementById('kValue').value);
   const iAllow=parseFloat(document.getElementById('iAllow').value)||0.5;
   const method=document.getElementById('method').value;
-  const fType=document.getElementById('foundationType').value;
-  if(isNaN(H1)||isNaN(k)||k<=0){alert('请填写有效的水位和渗透系数');return;}
+  if(isNaN(H1)||isNaN(k)||k<=0){alert('请填写有效参数');return;}
 
   const xMin=pts[0].x, xMax=pts[pts.length-1].x;
   const zBed=Math.min(...pts.map(p=>p.z));
-  const zTop=Math.max(...pts.map(p=>p.z));
+  const L=xMax-xMin;
+  const H1eff=H1-zBed;
+  const H2eff=Math.max(0,H2-zBed);
+  const dH=H1-H2;
 
-  // Find upstream toe (left slope bottom) and downstream toe (right slope bottom)
-  // Simplified: assume left 1/3 is upstream, right 1/3 is downstream
-  const xUp=xMin; // upstream end
-  const xDown=xMax; // downstream end
-  const L=xMax-xMin; // total horizontal length
+  let seepageLine=[], q=0, exitGrad=0, reportLines=[];
 
-  let seepageLine=[], q=0, exitGradient=0, checkResult='';
+  reportLines.push('═══════════════════════════════════════');
+  reportLines.push('        堤防渗流计算书');
+  reportLines.push('═══════════════════════════════════════');
+  reportLines.push('');
+  reportLines.push('【基本参数】');
+  reportLines.push(`  上游水位 H₁ = ${H1} m`);
+  reportLines.push(`  下游水位 H₂ = ${H2} m`);
+  reportLines.push(`  水位差   ΔH = ${dH.toFixed(2)} m`);
+  reportLines.push(`  堤底高程   = ${zBed.toFixed(2)} m`);
+  reportLines.push(`  有效水头 H₁\' = ${H1eff.toFixed(2)} m`);
+  reportLines.push(`  有效水头 H₂\' = ${H2eff.toFixed(2)} m`);
+  reportLines.push(`  渗透系数 k  = ${k.toExponential(2)} m/s`);
+  reportLines.push(`  渗径长度 L  = ${L.toFixed(2)} m`);
+  reportLines.push(`  允许比降    = ${iAllow}`);
+  reportLines.push('');
 
   if(method==='dupuit'){
-    // Dupuit formula for homogeneous dike on impervious foundation
-    // q = k*(H1^2 - H2^2) / (2*L)
-    // y^2 = H1^2 - (2q/k)*x  (measured from impervious layer)
-    const H1eff=H1-zBed; // effective head above bed
-    const H2eff=Math.max(0,H2-zBed);
+    reportLines.push('【杜普伊特公式计算】');
+    reportLines.push('  公式: q = k·(H₁² − H₂²) / (2L)');
+    reportLines.push(`  q = ${k.toExponential(2)} × (${H1eff.toFixed(2)}² − ${H2eff.toFixed(2)}²) / (2 × ${L.toFixed(2)})`);
     q=k*(H1eff*H1eff-H2eff*H2eff)/(2*L);
+    reportLines.push(`  q = ${q.toExponential(4)} m²/s`);
+    reportLines.push(`  q = ${(q*86400).toFixed(4)} m²/d`);
+    reportLines.push('');
+    reportLines.push('  浸润线: y² = H₁\'² − (2q/k)·x');
+    reportLines.push(`  y² = ${H1eff.toFixed(2)}² − (2×${q.toExponential(2)}/${k.toExponential(2)})·x`);
+    reportLines.push(`  y² = ${(H1eff*H1eff).toFixed(4)} − ${(2*q/k).toFixed(4)}·x`);
+    reportLines.push('');
 
     // Generate seepage line
-    const nPts=80;
-    for(let i=0;i<=nPts;i++){
-      const x=xMin+L*i/nPts;
+    for(let i=0;i<=80;i++){
+      const x=xMin+L*i/80;
       const xRel=x-xMin;
       let y2=H1eff*H1eff-(2*q/k)*xRel;
-      if(y2<0)y2=0;
-      const ySeep=zBed+Math.sqrt(y2); // absolute elevation
-      const zGround=getZ(pts,x);
-      const yActual=Math.min(ySeep,zGround); // seepage line can't be above ground
-      seepageLine.push({x,zGround,ySeep:yActual,h:Math.max(0,ySeep-zBed)});
+      const ySeep=y2>0?zBed+Math.sqrt(y2):zBed;
+      const zG=getZ(pts,x);
+      const yAct=Math.min(ySeep,zG);
+      seepageLine.push({x,zGround:zG,ySeep:yAct,h:Math.max(0,ySeep-zBed)});
     }
 
-    // Exit gradient (at downstream end)
-    // i = dy/dx at x=L ≈ q/(k*H2eff) for Dupuit
-    if(H2eff>0.01){
-      exitGradient=q/(k*H2eff);
-    }else{
-      // If no downstream water, approximate from last segment
-      const last=seepageLine[seepageLine.length-2];
-      const prev=seepageLine[seepageLine.length-4];
-      if(last&&prev){
-        exitGradient=Math.abs(last.ySeep-prev.ySeep)/Math.abs(last.x-prev.x);
-      }
-    }
+    // Exit gradient
+    const last=seepageLine[seepageLine.length-1];
+    const prev=seepageLine[seepageLine.length-3];
+    if(prev&&last)exitGrad=Math.abs(last.ySeep-prev.ySeep)/Math.abs(last.x-prev.x);
+    reportLines.push('【出逸比降】');
+    reportLines.push(`  i_出逸 ≈ ${exitGrad.toFixed(4)}`);
+    reportLines.push(`  允许比降 = ${iAllow}`);
+    reportLines.push(`  校核: ${exitGrad.toFixed(4)} ${exitGrad<=iAllow?'≤':'>'} ${iAllow} → ${exitGrad<=iAllow?'✅ 满足':'❌ 不满足'}`);
 
-  }else if(method==='bligh'||method==='lane'){
-    // Bligh/Lane creep theory
-    const C=method==='bligh'?parseFloat(document.getElementById('blighC').value):parseFloat(document.getElementById('laneC').value);
-    const H=H1-H2; // total head loss
-    const Lreq=C*H; // required seepage path length
+  }else{
+    const C=parseFloat(document.getElementById('coeffVal').value)||15;
+    const methodName=method==='bligh'?'勃莱爬行法':'莱恩爬行法';
+    reportLines.push(`【${methodName}】`);
 
-    // Calculate actual seepage path (simplified: horizontal length)
     let Lactual=L;
     if(method==='lane'){
-      // Lane: L' = horizontal/3 + vertical
-      // Simplified: assume some vertical component
+      const zTop=Math.max(...pts.map(p=>p.z));
       Lactual=L/3+(zTop-zBed);
+      reportLines.push(`  水平渗径 = ${L.toFixed(2)} m`);
+      reportLines.push(`  垂直渗径 = ${(zTop-zBed).toFixed(2)} m`);
+      reportLines.push(`  L\' = ${L.toFixed(2)}/3 + ${(zTop-zBed).toFixed(2)} = ${Lactual.toFixed(2)} m`);
+    }else{
+      reportLines.push(`  L = ${Lactual.toFixed(2)} m`);
     }
+    reportLines.push(`  系数 C = ${C}`);
+    reportLines.push(`  所需渗径 = C·H = ${C} × ${dH.toFixed(2)} = ${(C*dH).toFixed(2)} m`);
+    reportLines.push(`  校核: ${Lactual.toFixed(2)} ${Lactual>=C*dH?'≥':'<'} ${(C*dH).toFixed(2)} → ${Lactual>=C*dH?'✅ 满足':'❌ 不满足'}`);
 
-    // Seepage line: linear from upstream to downstream
-    const nPts=80;
-    for(let i=0;i<=nPts;i++){
-      const x=xMin+L*i/nPts;
-      const zGround=getZ(pts,x);
-      const ySeep=H1-(H1-H2)*(x-xMin)/L; // linear approximation
-      const yActual=Math.min(ySeep,zGround);
-      seepageLine.push({x,zGround,ySeep:yActual,h:Math.max(0,ySeep-zBed)});
+    // Seepage line: linear approx
+    for(let i=0;i<=80;i++){
+      const x=xMin+L*i/80;
+      const zG=getZ(pts,x);
+      const ySeep=H1-dH*(x-xMin)/L;
+      const yAct=Math.min(ySeep,zG);
+      seepageLine.push({x,zGround:zG,ySeep:yAct,h:Math.max(0,ySeep-zBed)});
     }
-
-    q=k*H*L/Lreq; // approximate
-    exitGradient=H/Lactual;
-
-    checkResult=Lactual>=Lreq?'满足':'不满足';
+    q=k*dH*L/C;
+    exitGrad=dH/L;
   }
 
-  // Store results
-  results={seepageLine,q,exitGradient,iAllow,H1,H2,k,method,L,zBed,zTop,
-    checkGradient:exitGradient<=iAllow,
-    blighCheck:checkResult};
+  reportLines.push('');
+  reportLines.push('【渗流量】');
+  reportLines.push(`  q = ${q.toExponential(4)} m²/s = ${(q*86400).toFixed(4)} m²/d`);
+  reportLines.push('');
+  reportLines.push('═══════════════════════════════════════');
+  reportLines.push('  注: 以上为简化公式计算结果。');
+  reportLines.push('  复杂情况建议采用有限元法数值模拟。');
+  reportLines.push('═══════════════════════════════════════');
 
-  // Show summary
-  const gc=exitGradient<=iAllow?'val-ok':'val-bad';
-  const gl=exitGradient<=iAllow?'✅ 满足':'❌ 不满足';
-  let summaryHTML=`
-    <div class="summary-item"><div class="val">${q.toExponential(2)}</div><div class="lbl">单宽渗流量 q (m²/s)</div></div>
-    <div class="summary-item"><div class="val">${(q*86400).toFixed(2)}</div><div class="lbl">单宽渗流量 (m²/d)</div></div>
-    <div class="summary-item"><div class="val ${gc}">${exitGradient.toFixed(4)}</div><div class="lbl">出逸比降 i</div></div>
-    <div class="summary-item"><div class="val ${gc}">${gl}</div><div class="lbl">比降校核 (i≤${iAllow})</div></div>
-    <div class="summary-item"><div class="val">${L.toFixed(1)}</div><div class="lbl">渗径长度 L (m)</div></div>`;
+  R={seepageLine,q,exitGrad,iAllow,H1,H2,k,method,L,zBed,dH,report:reportLines.join('\n'),checkGrad:exitGrad<=iAllow};
 
-  if(method!=='dupuit'){
-    const C=method==='bligh'?parseFloat(document.getElementById('blighC').value):parseFloat(document.getElementById('laneC').value);
-    const H=H1-H2;
-    const Lreq=C*H;
-    const Lact=method==='lane'?L/3+(zTop-zBed):L;
-    const cc=Lact>=Lreq?'val-ok':'val-bad';
-    summaryHTML+=`<div class="summary-item"><div class="val ${cc}">${Lact>=Lreq?'✅ 满足':'❌ 不满足'}</div><div class="lbl">渗径校核 (L≥${Lreq.toFixed(1)}m)</div></div>`;
-  }
-
+  // Summary
+  const gc=exitGrad<=iAllow?'val-ok':'val-bad';
+  const gl=exitGrad<=iAllow?'✅ 满足':'❌ 不满足';
   document.getElementById('summaryCard').style.display='block';
-  document.getElementById('summaryBar').innerHTML=summaryHTML;
+  document.getElementById('summaryBar').innerHTML=`
+    <div class="summary-item"><div class="val">${q.toExponential(2)}</div><div class="lbl">渗流量 q (m²/s)</div></div>
+    <div class="summary-item"><div class="val">${(q*86400).toFixed(2)}</div><div class="lbl">渗流量 (m²/d)</div></div>
+    <div class="summary-item"><div class="val ${gc}">${exitGrad.toFixed(4)}</div><div class="lbl">出逸比降</div></div>
+    <div class="summary-item"><div class="val ${gc}">${gl}</div><div class="lbl">比降校核 (≤${iAllow})</div></div>`;
 
   drawChart('seepage');
-  drawResultTable();
+  drawTable();
+  document.getElementById('reportBox').textContent=R.report;
   document.getElementById('exportRow').style.display='flex';
-  document.getElementById('resultTableCard').style.display='block';
+  document.getElementById('reportCard').style.display='block';
+  document.getElementById('tableCard').style.display='block';
 }
 
 /* ===== CHARTS ===== */
 function drawChart(type){
   const ctx=document.getElementById('mainChart').getContext('2d');
   if(mainChart)mainChart.destroy();
-  if(type==='seepage')drawSeepageChart(ctx);
-  else if(type==='pressure')drawPressureChart(ctx);
-  else if(type==='gradient')drawGradientChart(ctx);
+  if(type==='seepage')drawSeepage(ctx);
+  else if(type==='pressure')drawPressure(ctx);
+  else if(type==='gradient')drawGradient(ctx);
 }
-
-function drawSeepageChart(ctx){
-  const pts=parseSection();const r=results;
-  const datasets=[
-    {label:'地面线',data:r.seepageLine.map(p=>({x:p.x,y:p.zGround})),borderColor:'#2d3748',backgroundColor:'rgba(45,55,72,0.05)',fill:true,borderWidth:2.5,pointRadius:0,tension:0.2,order:2},
-    {label:'浸润线',data:r.seepageLine.map(p=>({x:p.x,y:p.ySeep})),borderColor:'#dc2626',borderWidth:3,pointRadius:0,tension:0.2,fill:false,order:1,borderDash:[8,4]},
-    {label:`上游 ${r.H1}m`,data:[{x:pts[0].x,y:r.H1},{x:pts[0].x,y:r.H1}],borderColor:'#3b82f6',borderWidth:1.5,borderDash:[6,3],pointRadius:0,fill:false,order:3},
-    {label:`下游 ${r.H2}m`,data:[{x:pts[pts.length-1].x,y:r.H2},{x:pts[pts.length-1].x,y:r.H2}],borderColor:'#06b6d4',borderWidth:1.5,borderDash:[6,3],pointRadius:0,fill:false,order:3}
+function drawSeepage(ctx){
+  const r=R,pts=parseSection();
+  const ds=[
+    {label:'地面线',data:r.seepageLine.map(p=>({x:p.x,y:p.zGround})),borderColor:'#2d3748',backgroundColor:'rgba(45,55,72,.05)',fill:true,borderWidth:2.5,pointRadius:0,tension:.2,order:2},
+    {label:'浸润线',data:r.seepageLine.map(p=>({x:p.x,y:p.ySeep})),borderColor:'#dc2626',borderWidth:3,pointRadius:0,tension:.2,fill:false,order:1,borderDash:[8,4]}
   ];
-  // Water fill upstream
-  const upFill=[];
-  for(const p of r.seepageLine){
-    if(p.x<=pts[0].x+2)upFill.push({x:p.x,y:Math.min(r.H1,p.zGround)});
-  }
-  if(upFill.length>1)datasets.push({data:upFill,borderColor:'transparent',backgroundColor:'rgba(59,130,246,0.15)',fill:true,pointRadius:0,order:4});
-
-  mainChart=new Chart(ctx,{type:'line',data:{datasets},
+  mainChart=new Chart(ctx,{type:'line',data:{datasets:ds},
     options:{responsive:true,maintainAspectRatio:false,aspectRatio:1.5,
-      plugins:{title:{display:true,text:`浸润线 — ${r.method==='dupuit'?'杜普伊特法':r.method==='bligh'?'勃莱爬行法':'莱恩爬行法'}  q=${r.q.toExponential(2)} m²/s`,font:{size:14,weight:'bold'},color:'#1a365d'},
-        legend:{display:true,position:'top',labels:{font:{size:10},filter:i=>i.text==='地面线'||i.text==='浸润线'||i.text.includes('m')}},
-        tooltip:{mode:'index',intersect:false}},
-      scales:{x:{type:'linear',title:{display:true,text:'桩号 (m)'},min:pts[0].x-2,max:pts[pts.length-1].x+2},y:{title:{display:true,text:'高程 (m)'}}}
+      plugins:{title:{display:true,text:`浸润线  q=${r.q.toExponential(2)} m²/s`,font:{size:14,weight:'bold'},color:'#1a365d'},
+        legend:{display:true,position:'top',labels:{font:{size:10}}}},
+      scales:{x:{type:'linear',title:{display:true,text:'桩号 (m)'}},y:{title:{display:true,text:'高程 (m)'}}}
     }
   });
 }
-
-function drawPressureChart(ctx){
-  const r=results;
+function drawPressure(ctx){
+  const r=R;
   const data=r.seepageLine.map(p=>({x:p.x,y:Math.max(0,p.ySeep-p.zGround)}));
-  mainChart=new Chart(ctx,{type:'line',data:{datasets:[{label:'超静水压力',data,borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,0.1)',fill:true,borderWidth:2,pointRadius:0,tension:0.2}]},
+  mainChart=new Chart(ctx,{type:'line',data:{datasets:[{label:'超静水头',data,borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,.1)',fill:true,borderWidth:2,pointRadius:0,tension:.2}]},
     options:{responsive:true,maintainAspectRatio:false,aspectRatio:1.5,
       plugins:{title:{display:true,text:'孔隙水压力分布',font:{size:14,weight:'bold'},color:'#1a365d'},legend:{display:false}},
       scales:{x:{type:'linear',title:{display:true,text:'桩号 (m)'}},y:{title:{display:true,text:'超静水头 (m)'},min:0}}
     }
   });
 }
-
-function drawGradientChart(ctx){
-  const r=results;
+function drawGradient(ctx){
+  const r=R;
   const grad=[];
   for(let i=1;i<r.seepageLine.length;i++){
     const dx=r.seepageLine[i].x-r.seepageLine[i-1].x;
@@ -512,8 +468,8 @@ function drawGradientChart(ctx){
     if(Math.abs(dx)>0.001)grad.push({x:(r.seepageLine[i].x+r.seepageLine[i-1].x)/2,y:Math.abs(dh/dx)});
   }
   mainChart=new Chart(ctx,{type:'line',data:{datasets:[
-    {label:'水力梯度 i',data:grad,borderColor:'#d97706',backgroundColor:'rgba(217,119,6,0.1)',fill:true,borderWidth:2,pointRadius:0,tension:0.2},
-    {label:`允许比降 ${r.iAllow}`,data:[{x:grad[0]?.x||0,y:r.iAllow},{x:grad[grad.length-1]?.x||0,y:r.iAllow}],borderColor:'#dc2626',borderWidth:2,borderDash:[6,3],pointRadius:0,fill:false}
+    {label:'水力梯度',data:grad,borderColor:'#d97706',backgroundColor:'rgba(217,119,6,.1)',fill:true,borderWidth:2,pointRadius:0,tension:.2},
+    {label:`允许 ${r.iAllow}`,data:grad.length?[grad[0],grad[grad.length-1]].map(g=>({x:g.x,y:r.iAllow})):[],borderColor:'#dc2626',borderWidth:2,borderDash:[6,3],pointRadius:0,fill:false}
   ]},
     options:{responsive:true,maintainAspectRatio:false,aspectRatio:1.5,
       plugins:{title:{display:true,text:'水力梯度分布',font:{size:14,weight:'bold'},color:'#1a365d'},legend:{display:true,position:'top'}},
@@ -521,48 +477,42 @@ function drawGradientChart(ctx){
     }
   });
 }
-
 function switchChart(type,el){
   document.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  drawChart(type);
+  el.classList.add('active');drawChart(type);
 }
 
-function drawResultTable(){
+function drawTable(){
   const tbody=document.getElementById('resultBody');tbody.innerHTML='';
-  results.seepageLine.forEach(p=>{
-    const i=p.x>results.seepageLine[0].x?(p.h-results.seepageLine[0].h)/(p.x-results.seepageLine[0].x):0;
+  R.seepageLine.forEach(p=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${p.x.toFixed(2)}</td><td>${p.zGround.toFixed(2)}</td><td>${p.ySeep.toFixed(2)}</td><td>${p.h.toFixed(2)}</td><td>${Math.abs(i).toFixed(4)}</td>`;
+    tr.innerHTML=`<td>${p.x.toFixed(2)}</td><td>${p.zGround.toFixed(2)}</td><td>${p.ySeep.toFixed(2)}</td><td>${p.h.toFixed(2)}</td><td>${(p.h/(R.L||1)*0.1).toFixed(4)}</td>`;
     tbody.appendChild(tr);
   });
 }
 
+function copyReport(){
+  navigator.clipboard.writeText(R.report).then(()=>showToast('已复制至剪贴板','📋')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=R.report;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('已复制','📋');
+  });
+}
+
 function exportCSV(){
-  const r=results;
-  let csv=`堤防渗流计算\n方法,${r.method}\n渗透系数,${r.k}\n上游水位,${r.H1}\n下游水位,${r.H2}\n单宽渗流量,${r.q.toExponential(4)}\n出逸比降,${r.exitGradient.toFixed(4)}\n\nx(m),z地面(m),y浸润线(m),水头(m)\n`;
-  r.seepageLine.forEach(p=>{csv+=`${p.x.toFixed(2)},${p.zGround.toFixed(2)},${p.ySeep.toFixed(2)},${p.h.toFixed(2)}\n`;});
+  let csv=`堤防渗流计算\n方法,${R.method}\nk,${R.k}\nH1,${R.H1}\nH2,${R.H2}\nq,${R.q.toExponential(4)}\ni_exit,${R.exitGrad.toFixed(4)}\n\nx,z地面,y浸润线,水头\n`;
+  R.seepageLine.forEach(p=>{csv+=`${p.x.toFixed(2)},${p.zGround.toFixed(2)},${p.ySeep.toFixed(2)},${p.h.toFixed(2)}\n`;});
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}));
   a.download=`seepage_${new Date().toISOString().slice(0,10)}.csv`;a.click();showToast('CSV 已下载','📥');
 }
-
 function exportIMG(){
   const a=document.createElement('a');a.download=`seepage_${new Date().toISOString().slice(0,10)}.png`;
   a.href=document.getElementById('mainChart').toDataURL('image/png',1);a.click();showToast('图片已下载','📷');
 }
-
 function clearAll(){
-  results=null;
-  if(mainChart){mainChart.destroy();mainChart=null;}
-  if(previewChart){previewChart.destroy();previewChart=null;}
-  ['summaryCard','resultTableCard','exportRow'].forEach(id=>document.getElementById(id).style.display='none');
+  R=null;[mainChart,previewChart].forEach(c=>{if(c)c.destroy();});mainChart=previewChart=null;
+  ['summaryCard','reportCard','tableCard','exportRow'].forEach(id=>document.getElementById(id).style.display='none');
 }
 
-window.addEventListener('load',()=>{
-  loadPreset('simple');
-  document.querySelectorAll('.preset-btn')[0].classList.add('active');
-  drawPreview();
-});
+window.addEventListener('load',()=>{loadPreset('simple');document.querySelectorAll('.preset-btn')[0].classList.add('active');drawPreview();});
 </script>
 </body>
 </html>
