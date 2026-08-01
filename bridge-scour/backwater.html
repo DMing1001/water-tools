@@ -151,17 +151,40 @@ body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"Segoe UI",sans
       </div>
       <div class="sf-row">
         <div class="sf-group">
-          <div class="sf-label">设计流速 VP <span class="hint">(m/s)</span><span class="sf-tip" data-tip="通过设计流量时\n河槽（含边滩）的\n天然平均流速">?</span></div>
-          <input class="sf-input" type="number" step="0.01" id="s_VP" placeholder="如 2.5">
+          <div class="sf-label">设计流速 VP <span class="hint">(m/s)</span><span class="sf-tip" data-tip="通过设计流量时\n河槽（含边滩）的\n天然平均流速\n\nVP = QP / ω">?</span></div>
+          <input class="sf-input" type="number" step="0.01" id="s_VP" placeholder="如 2.97">
         </div>
         <div class="sf-group">
-          <div class="sf-label">冲刷系数 P<span class="sf-tip" data-tip="P = ωX / ωg\nωX: 桥下设计过水面积\nωg: 桥下实际过水面积\n\n参考值：\n山区河段 1.0~1.2\n山前区河段 1.2~1.5\n平原河段 1.2~2.0">?</span></div>
-          <input class="sf-input" type="number" step="0.01" id="s_P_rail" value="1.2" placeholder="1.2">
+          <div class="sf-label">水流与桥轴法线夹角 α <span class="hint">(°)</span><span class="sf-tip" data-tip="水流方向与桥梁轴线\n法线间的交角\n用于计算设计过水面积\nωX = QP/(VP×cosα)">?</span></div>
+          <input class="sf-input" type="number" step="1" id="s_alpha_rail" value="0" placeholder="0">
         </div>
       </div>
+      <div class="sf-divider"></div>
+      <div class="sf-section"><span class="dot"></span>冲刷系数 P 计算</div>
       <div class="sf-group">
-        <div class="sf-label">水流与桥轴法线夹角 α <span class="hint">(°)</span><span class="sf-tip" data-tip="水流方向与桥梁轴线\n法线间的交角\n用于计算设计过水面积\nωX = QP/(VP×cosα)">?</span></div>
-        <input class="sf-input" type="number" step="1" id="s_alpha_rail" value="0" placeholder="0">
+        <div class="sf-label">P 取值方式<span class="sf-tip" data-tip="自动计算：\n  填写断面面积后自动算 P=ωX/ωg\n\n手动输入：\n  直接填写经验值">?</span></div>
+        <select class="sf-select" id="s_Pmode" onchange="togglePmode()">
+          <option value="auto" selected>自动计算（ωX/ωg）</option>
+          <option value="manual">手动输入</option>
+        </select>
+      </div>
+      <div id="pAutoParams">
+        <div class="sf-row">
+          <div class="sf-group">
+            <div class="sf-label">天然过水面积 ω <span class="hint">(m²)</span><span class="sf-tip" data-tip="无桥状态下\n设计水位时的\n河道过水断面面积">?</span></div>
+            <input class="sf-input" type="number" step="0.01" id="s_omega" placeholder="如 169.36">
+          </div>
+          <div class="sf-group">
+            <div class="sf-label">桥墩阻水面积 <span class="hint">(m²)</span><span class="sf-tip" data-tip="桥墩在设计水位以下\n占用的过水面积之和">?</span></div>
+            <input class="sf-input" type="number" step="0.01" id="s_pierArea" placeholder="如 2.10">
+          </div>
+        </div>
+      </div>
+      <div id="pManualParams" style="display:none">
+        <div class="sf-group">
+          <div class="sf-label">冲刷系数 P<span class="sf-tip" data-tip="P = ωX / ωg\n\n参考值：\n山区河段 1.0~1.2\n山前区河段 1.2~1.5\n平原河段 1.2~2.0">?</span></div>
+          <input class="sf-input" type="number" step="0.01" id="s_P_rail" value="1.2" placeholder="1.2">
+        </div>
       </div>
     </div>
   </div>
@@ -296,12 +319,16 @@ function onFormulaChange(){
 function toggleVmAuto(){
   const auto=document.getElementById('s_vmAuto').checked;
   document.getElementById('vmAutoParams').style.display=auto?'block':'none';
-  // 手动模式时显示 VM 输入框（在基本参数区）
   document.getElementById('s_VM').closest('.sf-group').style.display=auto?'none':'block';
 }
 
-// 初始化：隐藏手动 VM 输入框
-window.addEventListener('DOMContentLoaded',()=>{toggleVmAuto();});
+function togglePmode(){
+  const m=document.getElementById('s_Pmode').value;
+  document.getElementById('pAutoParams').style.display=m==='auto'?'block':'none';
+  document.getElementById('pManualParams').style.display=m==='manual'?'block':'none';
+}
+
+window.addEventListener('DOMContentLoaded',()=>{toggleVmAuto();togglePmode();});
 
 function fv(v,d=2){return v==null?'—':Number(v).toFixed(d)}
 const g=9.81;
@@ -329,15 +356,33 @@ function calc(){
       if(isNaN(VMcalc)){alert('请填写桥下平均流速 VM');return;}
     }
     let soil='',VP=null,P_rail=null,alpha_rail=0;
+    let omega=null,pierArea=null,omegaX=null,omegaG=null,Psource='';
 
     if(vmAuto){
       VP=parseFloat(document.getElementById('s_VP').value);
-      P_rail=parseFloat(document.getElementById('s_P_rail').value);
       alpha_rail=parseFloat(document.getElementById('s_alpha_rail').value)||0;
       const soilType=document.getElementById('s_soil').value;
+      const Pmode=document.getElementById('s_Pmode').value;
 
-      if(isNaN(VP)||isNaN(P_rail)){alert('自动计算VM需要填写设计流速VP和冲刷系数P');return;}
+      if(isNaN(VP)){alert('请填写设计流速 VP');return;}
 
+      // 冲刷系数 P
+      if(Pmode==='auto'){
+        omega=parseFloat(document.getElementById('s_omega').value);
+        pierArea=parseFloat(document.getElementById('s_pierArea').value);
+        if(isNaN(omega)||isNaN(pierArea)){alert('自动计算P需要填写天然过水面积和桥墩阻水面积');return;}
+        omegaX=QP/(VP*Math.cos(alpha_rail*Math.PI/180));
+        omegaG=omega-pierArea;
+        P_rail=omegaX/omegaG;
+        Psource='auto';
+      }else{
+        P_rail=parseFloat(document.getElementById('s_P_rail').value);
+        if(isNaN(P_rail)){alert('请填写冲刷系数 P');return;}
+        omegaX=QP/(VP*Math.cos(alpha_rail*Math.PI/180));
+        Psource='manual';
+      }
+
+      // VM 计算
       if(soilType==='soft'){VMcalc=VP;soil='松软土';}
       else if(soilType==='medium'){VMcalc=VP*2*P_rail/(P_rail+1);soil='中等土';}
       else{VMcalc=P_rail*VP;soil='密实土';}
@@ -346,12 +391,8 @@ function calc(){
     dZM=eta*(VMcalc*VMcalc-V*V);
     LY=(!isNaN(I0)&&I0>0)?2*dZM/I0:null;
 
-    // 冲刷系数反算设计过水面积
-    const omegaX=(vmAuto&&!isNaN(parseFloat(document.getElementById('s_qp').value)))?
-      parseFloat(document.getElementById('s_qp').value)/(VP*Math.cos(alpha_rail*Math.PI/180)):null;
-
     details={formula:'铁路公式（TB 10017 / SL/T 808-2025）',eta,V,VM:VMcalc,dZM,LY,I0,
-      vmAuto,soil,VP,P_rail,alpha_rail,omegaX};
+      vmAuto,soil,VP,P_rail,alpha_rail,omegaX,omegaG,omega,pierArea,Psource};
   }else{
     const Vq=parseFloat(document.getElementById('s_Vq').value);
     const Vch=parseFloat(document.getElementById('s_Vch').value);
@@ -412,24 +453,48 @@ function renderResult(){
   if(isRail){
     html+=`
       <div style="font-size:13px;font-weight:600;color:var(--t2);margin:14px 0 8px">计算过程</div>
-      <table class="rp-table"><tr><th>项目</th><th>取值</th></tr>
-        <tr><td>η 系数</td><td>${fv(r.eta)}</td></tr>`;
+      <table class="rp-table"><tr><th>步骤</th><th>项目</th><th>公式/取值</th><th>结果</th></tr>`;
 
+    // ① 冲刷系数 P
     if(r.vmAuto){
       html+=`
-        <tr><td>土质类型</td><td>${r.soil}</td></tr>
-        <tr><td>设计流速 VP</td><td>${fv(r.VP,3)} m/s</td></tr>
-        <tr><td>冲刷系数 P</td><td>${fv(r.P_rail)}</td></tr>`;
-      if(r.soil==='松软土') html+=`<tr><td>VM = VP</td><td>${fv(r.VM,3)} m/s</td></tr>`;
-      else if(r.soil==='中等土') html+=`<tr><td>VM = VP×2P/(P+1)</td><td>${fv(r.VP,3)}×2×${fv(r.P_rail)}/(${fv(r.P_rail)}+1) = ${fv(r.VM,3)} m/s</td></tr>`;
-      else html+=`<tr><td>VM = P×VP</td><td>${fv(r.P_rail)}×${fv(r.VP,3)} = ${fv(r.VM,3)} m/s</td></tr>`;
-      if(r.omegaX!==null) html+=`<tr><td>设计过水面积 ωX</td><td>QP/(VP·cosα) = ${fv(r.omegaX,2)} m²</td></tr>`;
+        <tr><td rowspan="2">①</td><td>设计过水面积 ωX</td><td>QP/(VP·cosα)</td><td>${fv(r.qp,0)}/(${fv(r.VP,3)}×cos${fv(r.alpha_rail,0)}°) = ${fv(r.omegaX,2)} m²</td></tr>`;
+      if(r.Psource==='auto' && r.omegaG!==null){
+        html+=`
+          <tr><td>实际过水面积 ωg</td><td>ω−墩阻水</td><td>${fv(r.omega,2)}−${fv(r.pierArea,2)} = ${fv(r.omegaG,2)} m²</td></tr>
+          <tr><td></td><td>冲刷系数 P</td><td>ωX/ωg</td><td>${fv(r.omegaX,2)}/${fv(r.omegaG,2)} = <b>${fv(r.P_rail,4)}</b></td></tr>`;
+      }else{
+        html+=`
+          <tr><td>冲刷系数 P</td><td>手动输入</td><td><b>${fv(r.P_rail,4)}</b></td></tr>`;
+      }
     }
 
+    // ② 桥下平均流速 VM
+    if(r.vmAuto){
+      html+=`
+        <tr><td>②</td><td>土质类型</td><td>—</td><td>${r.soil}</td></tr>`;
+      if(r.soil==='松软土') html+=`
+        <tr><td></td><td>VM</td><td>= VP</td><td><b>${fv(r.VM,3)} m/s</b></td></tr>`;
+      else if(r.soil==='中等土') html+=`
+        <tr><td></td><td>VM</td><td>VP×2P/(P+1)</td><td>${fv(r.VP,3)}×2×${fv(r.P_rail,4)}/(${fv(r.P_rail,4)}+1) = <b>${fv(r.VM,3)} m/s</b></td></tr>`;
+      else html+=`
+        <tr><td></td><td>VM</td><td>P×VP</td><td>${fv(r.P_rail,4)}×${fv(r.VP,3)} = <b>${fv(r.VM,3)} m/s</b></td></tr>`;
+    }
+
+    // ③ 壅水高度
+    const vm2=r.VM*r.VM, v2=r.V*r.V;
     html+=`
-        <tr><td>VM² - V²</td><td>${fv(r.VM*r.VM,4)} - ${fv(r.V*r.V,4)} = ${fv(r.VM*r.VM-r.V*r.V,4)}</td></tr>
-        <tr><td>ΔZM = η×(VM²-V²)</td><td>${fv(r.eta)} × ${fv(r.VM*r.VM-r.V*r.V,4)} = ${fv(r.dZM,4)} m</td></tr>
-      </table>`;
+      <tr><td>${r.vmAuto?'③':'①'}</td><td>η 系数</td><td>河流特征</td><td>${fv(r.eta)}</td></tr>
+      <tr><td></td><td>VM² − V²</td><td>—</td><td>${fv(vm2,4)} − ${fv(v2,4)} = ${fv(vm2-v2,4)}</td></tr>
+      <tr class="total"><td></td><td>最大壅水高度 ΔZM</td><td>η×(VM²−V²)</td><td>${fv(r.eta)} × ${fv(vm2-v2,4)} = <b>${fv(r.dZM,4)} m</b></td></tr>`;
+
+    // ④ 壅水曲线长度
+    if(r.LY!==null){
+      html+=`
+        <tr><td>${r.vmAuto?'④':'②'}</td><td>壅水曲线长度 LY</td><td>2×ΔZM/I0</td><td>2×${fv(r.dZM,4)}/${fv(r.I0,4)} = <b>${fv(r.LY,0)} m</b></td></tr>`;
+    }
+
+    html+=`</table>`;
   }else{
     html+=`
       <div style="font-size:13px;font-weight:600;color:var(--t2);margin:14px 0 8px">计算过程</div>
@@ -479,18 +544,50 @@ function makeReport(r){
 
   if(isRail){
     t+='  铁路公式: ΔZM = η × (VM² - V²)\n\n';
-    t+='    η = '+fv(r.eta)+'\n';
     if(r.vmAuto){
-      t+='    土质类型: '+r.soil+'\n';
-      t+='    设计流速 VP = '+fv(r.VP,3)+' m/s\n';
-      t+='    冲刷系数 P = '+fv(r.P_rail)+'\n';
-      if(r.soil==='松软土') t+='    VM = VP = '+fv(r.VM,3)+' m/s\n';
-      else if(r.soil==='中等土') t+='    VM = VP×2P/(P+1) = '+fv(r.VP,3)+'×2×'+fv(r.P_rail)+'/('+fv(r.P_rail)+'+1) = '+fv(r.VM,3)+' m/s\n';
-      else t+='    VM = P×VP = '+fv(r.P_rail)+'×'+fv(r.VP,3)+' = '+fv(r.VM,3)+' m/s\n';
-      if(r.omegaX!==null) t+='    设计过水面积 ωX = QP/(VP·cosα) = '+fv(r.omegaX,2)+' m²\n';
+      let step=1;
+      t+='  步骤'+(step++)+': 冲刷系数 P\n';
+      t+='    设计过水面积 ωX = QP/(VP·cosα)\n';
+      t+='              = '+fv(r.qp,0)+'/('+fv(r.VP,3)+'×cos'+fv(r.alpha_rail,0)+'°)\n';
+      t+='              = '+fv(r.omegaX,2)+' m²\n';
+      if(r.Psource==='auto'&&r.omegaG!==null){
+        t+='    实际过水面积 ωg = ω − 桥墩阻水\n';
+        t+='              = '+fv(r.omega,2)+' − '+fv(r.pierArea,2)+'\n';
+        t+='              = '+fv(r.omegaG,2)+' m²\n';
+        t+='    冲刷系数 P = ωX/ωg\n';
+        t+='              = '+fv(r.omegaX,2)+'/'+fv(r.omegaG,2)+'\n';
+        t+='              = '+fv(r.P_rail,4)+'\n\n';
+      }else{
+        t+='    冲刷系数 P = '+fv(r.P_rail,4)+' (手动输入)\n\n';
+      }
+      t+='  步骤'+(step++)+': 桥下平均流速 VM ('+r.soil+')\n';
+      if(r.soil==='松软土') t+='    VM = VP = '+fv(r.VM,3)+' m/s\n\n';
+      else if(r.soil==='中等土'){
+        t+='    VM = VP × 2P/(P+1)\n';
+        t+='       = '+fv(r.VP,3)+' × 2×'+fv(r.P_rail,4)+'/('+fv(r.P_rail,4)+'+1)\n';
+        t+='       = '+fv(r.VM,3)+' m/s\n\n';
+      }else{
+        t+='    VM = P × VP\n';
+        t+='       = '+fv(r.P_rail,4)+' × '+fv(r.VP,3)+'\n';
+        t+='       = '+fv(r.VM,3)+' m/s\n\n';
+      }
+      t+='  步骤'+(step++)+': 最大壅水高度 ΔZM\n';
+      t+='    η = '+fv(r.eta)+' ('+r.soil+')\n';
+      t+='    VM² − V² = '+fv(r.VM*r.VM,4)+' − '+fv(r.V*r.V,4)+' = '+fv(r.VM*r.VM-r.V*r.V,4)+'\n';
+      t+='    ΔZM = η × (VM² − V²)\n';
+      t+='        = '+fv(r.eta)+' × '+fv(r.VM*r.VM-r.V*r.V,4)+'\n';
+      t+='        = '+fv(r.dZM,4)+' m\n\n';
+      if(r.LY!==null){
+        t+='  步骤'+(step++)+': 壅水曲线长度 LY\n';
+        t+='    LY = 2 × ΔZM / I0\n';
+        t+='       = 2 × '+fv(r.dZM,4)+' / '+fv(r.I0,4)+'\n';
+        t+='       = '+fv(r.LY,0)+' m\n\n';
+      }
+    }else{
+      t+='    η = '+fv(r.eta)+'\n';
+      t+='    VM² - V² = '+fv(r.VM*r.VM,4)+' - '+fv(r.V*r.V,4)+' = '+fv(r.VM*r.VM-r.V*r.V,4)+'\n';
+      t+='    ΔZM = '+fv(r.eta)+' × '+fv(r.VM*r.VM-r.V*r.V,4)+' = '+fv(r.dZM,4)+' m\n\n';
     }
-    t+='    VM² - V² = '+fv(r.VM*r.VM,4)+' - '+fv(r.V*r.V,4)+' = '+fv(r.VM*r.VM-r.V*r.V,4)+'\n';
-    t+='    ΔZM = '+fv(r.eta)+' × '+fv(r.VM*r.VM-r.V*r.V,4)+' = '+fv(r.dZM,4)+' m\n\n';
   }else{
     t+='  公路公式: ΔZ = K × (Vq² - Vch²) / (2g)\n\n';
     t+='    P = '+fv(r.P)+'\n';
