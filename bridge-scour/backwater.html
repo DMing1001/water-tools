@@ -313,17 +313,21 @@ function calc(){
   const qp=parseFloat(document.getElementById('s_qp').value);
   const wl=parseFloat(document.getElementById('s_wl').value);
   const V=parseFloat(document.getElementById('s_V').value);
-  const VM=parseFloat(document.getElementById('s_VM').value);
   const I0=parseFloat(document.getElementById('s_I0').value);
 
-  if(isNaN(V)||isNaN(VM)){alert('请填写天然流速和桥下流速');return;}
+  if(isNaN(V)){alert('请填写天然断面平均流速 V');return;}
 
   let dZM,LY,details={};
 
   if(formula==='railway'){
     const eta=parseFloat(document.getElementById('s_eta').value);
     const vmAuto=document.getElementById('s_vmAuto').checked;
-    let VMcalc=VM;
+    let VMcalc=NaN;
+
+    if(!vmAuto){
+      VMcalc=parseFloat(document.getElementById('s_VM').value);
+      if(isNaN(VMcalc)){alert('请填写桥下平均流速 VM');return;}
+    }
     let soil='',VP=null,P_rail=null,alpha_rail=0;
 
     if(vmAuto){
