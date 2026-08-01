@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>桥梁壅水计算工具 | JTG C30 · TB 10017</title>
+<title>桥梁壅水计算工具 | TB 10017 · JTG C30 · SL/T 808-2025</title>
 <link rel="icon" type="image/svg+xml" href="../icons/favicon-backwater.svg">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -123,13 +123,46 @@ body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"Segoe UI",sans
   <!-- 铁路公式参数 -->
   <div id="railwayParams">
     <div class="sf-group">
-      <div class="sf-label">河流特征 η<span class="sf-tip" data-tip="η系数取值（TB 10017）：\n\n山区河流（河滩很小）：0.05\n半山区河流（河滩较小）：0.07\n平原河流（中等河滩）：0.10\n低洼区河流（河滩较大）：0.15\n\n依据：河滩路堤阻挡流量\n与设计流量的比值">?</span></div>
+      <div class="sf-label">河流特征 η<span class="sf-tip" data-tip="η系数取值（TB 10017 / SL/T 808-2025）：\n\n山区河流（河滩很小）：0.05\n半山区河流（河滩较小）：0.07\n平原河流（中等河滩）：0.10\n低洼区河流（河滩较大）：0.15\n\n依据：河滩路堤阻挡流量\n与设计流量的比值">?</span></div>
       <select class="sf-select" id="s_eta">
         <option value="0.05">山区河流 — 河滩很小（η=0.05）</option>
         <option value="0.07">半山区河流 — 河滩较小（η=0.07）</option>
         <option value="0.10" selected>平原河流 — 中等河滩（η=0.10）</option>
         <option value="0.15">低洼区河流 — 河滩较大（η=0.15）</option>
       </select>
+    </div>
+
+    <div class="sf-divider"></div>
+    <div class="sf-section"><span class="dot"></span>桥下流速 VM 自动计算 <span class="hint">（SL/T 808-2025 附录A）</span></div>
+    <div class="sf-group">
+      <div class="sf-label">自动计算 VM<span class="sf-tip" data-tip="勾选后根据土质类型、\n设计流速VP和冲刷系数P\n自动计算桥下平均流速VM\n\n松软土：VM=VP\n中等土：VM=VP×2P/(P+1)\n密实土：VM=P×VP">?</span></div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:6px 0">
+        <input type="checkbox" id="s_vmAuto" onchange="toggleVmAuto()" checked> 根据土质自动计算 VM
+      </label>
+    </div>
+    <div id="vmAutoParams">
+      <div class="sf-group">
+        <div class="sf-label">河床土质类型<span class="sf-tip" data-tip="松软土（淤泥、细沙、中沙，d≤1mm）：\n  VM = VP\n\n中等土（沙砾、小卵石，d=1~25mm）：\n  VM = VP × 2P/(P+1)\n\n密实土（大卵石、漂石，d>25mm）：\n  VM = P × VP\n\n注：逐年淤积或含沙量大、\n洪峰涨落迅速的河流，\n比照密实土办理">?</span></div>
+        <select class="sf-select" id="s_soil">
+          <option value="soft">松软土 — d≤1mm（淤泥、细沙、中沙）</option>
+          <option value="medium" selected>中等土 — d=1~25mm（沙砾、小卵石）</option>
+          <option value="dense">密实土 — d>25mm（大卵石、漂石）</option>
+        </select>
+      </div>
+      <div class="sf-row">
+        <div class="sf-group">
+          <div class="sf-label">设计流速 VP <span class="hint">(m/s)</span><span class="sf-tip" data-tip="通过设计流量时\n河槽（含边滩）的\n天然平均流速">?</span></div>
+          <input class="sf-input" type="number" step="0.01" id="s_VP" placeholder="如 2.5">
+        </div>
+        <div class="sf-group">
+          <div class="sf-label">冲刷系数 P<span class="sf-tip" data-tip="P = ωX / ωg\nωX: 桥下设计过水面积\nωg: 桥下实际过水面积\n\n参考值：\n山区河段 1.0~1.2\n山前区河段 1.2~1.5\n平原河段 1.2~2.0">?</span></div>
+          <input class="sf-input" type="number" step="0.01" id="s_P_rail" value="1.2" placeholder="1.2">
+        </div>
+      </div>
+      <div class="sf-group">
+        <div class="sf-label">水流与桥轴法线夹角 α <span class="hint">(°)</span><span class="sf-tip" data-tip="水流方向与桥梁轴线\n法线间的交角\n用于计算设计过水面积\nωX = QP/(VP×cosα)">?</span></div>
+        <input class="sf-input" type="number" step="1" id="s_alpha_rail" value="0" placeholder="0">
+      </div>
     </div>
   </div>
 
@@ -198,7 +231,7 @@ body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"Segoe UI",sans
 <div class="collapsible">
   <div class="collapse-hd" onclick="toggleCollapse(this)"><span class="arrow">▶</span> 计算公式</div>
   <div class="collapse-bd">
-    <div class="fml"><b>铁路公式（TB 10017 / SL/T 808-2025）：</b><br>ΔZ<sub>M</sub> = η × (V<sub>M</sub><sup>2</sup> - V<sup>2</sup>)<br>L<sub>Y</sub> = 2 × ΔZ<sub>M</sub> / I<sub>0</sub></div>
+    <div class="fml"><b>铁路公式（TB 10017 / SL/T 808-2025）：</b><br>ΔZ<sub>M</sub> = η × (V<sub>M</sub><sup>2</sup> - V<sup>2</sup>)<br><br><b>桥下平均流速 V<sub>M</sub> 取值（SL/T 808-2025 表A.2.3-2）：</b><br>松软土（d≤1mm）：V<sub>M</sub> = V<sub>P</sub><br>中等土（d=1~25mm）：V<sub>M</sub> = V<sub>P</sub> × 2P/(P+1)<br>密实土（d>25mm）：V<sub>M</sub> = P × V<sub>P</sub><br><br><b>冲刷系数 P：</b><br>P = ω<sub>X</sub> / ω<sub>g</sub><br>ω<sub>X</sub> = Q<sub>P</sub> / (V<sub>P</sub> × cosα)<br><br><b>壅水曲线长度：</b><br>L<sub>Y</sub> = 2 × ΔZ<sub>M</sub> / I<sub>0</sub></div>
     <div class="fml"><b>公路公式（JTG C30-2015 铁科院陆浩公式）：</b><br>ΔZ = K × (V<sub>q</sub><sup>2</sup> - V<sub>ch</sub><sup>2</sup>) / (2g)<br><br>K = K<sub>N</sub> × K<sub>v</sub><br>K<sub>N</sub> = √(V<sub>q</sub>/V<sub>0q</sub>) - 1.0  （定床壅水系数）<br>K<sub>v</sub> = 0.5 × V<sub>q</sub>/√g - 0.1  （流态修正系数）<br>V<sub>0q</sub> = V<sub>q</sub> / P  （冲刷前桥下流速）<br>A = 0.5 × d<sup>-0.25</sup>  （河床粒径系数）<br>L<sub>Y</sub> = 2 × ΔZ / I<sub>0</sub></div>
   </div>
 </div>
@@ -214,12 +247,19 @@ body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"Segoe UI",sans
       <tr><td>平原河流（中等河滩）</td><td>31~50%</td><td>0.10</td></tr>
       <tr><td>低洼区河流（河滩较大）</td><td>>50%</td><td>0.15</td></tr></table>
 
-    <p style="font-size:12px;font-weight:600;color:var(--pri);margin:12px 0 4px">桥下平均流速 VM 取值参考（TB 10017）</p>
+    <p style="font-size:12px;font-weight:600;color:var(--pri);margin:12px 0 4px">桥下平均流速 VM 取值（TB 10017 / SL/T 808-2025 表A.2.3-2）</p>
     <table class="rp-table"><tr><th>土质</th><th>名称</th><th>粒径(mm)</th><th>VM</th></tr>
       <tr><td>松软土</td><td>淤泥、细沙、中沙</td><td>≤1</td><td>VM=VP</td></tr>
       <tr><td>中等土</td><td>沙砾、小卵石</td><td>1~25</td><td>VM=VP×2P/(P+1)</td></tr>
       <tr><td>密实土</td><td>大卵石、漂石</td><td>>25</td><td>VM=P×VP</td></tr></table>
-    <p style="font-size:11px;color:var(--t3);margin-top:4px">VP=设计流速，P=冲刷系数</p>
+    <p style="font-size:11px;color:var(--t3);margin-top:4px">VP=设计流速，P=冲刷系数。逐年淤积或含沙量大、洪峰涨落迅速的河流，比照密实土。</p>
+
+    <p style="font-size:12px;font-weight:600;color:var(--pri);margin:12px 0 4px">冲刷系数 P = ω<sub>X</sub> / ω<sub>g</sub>（SL/T 808-2025 公式A.2.3-2）</p>
+    <table class="rp-table"><tr><th>符号</th><th>含义</th><th>计算</th></tr>
+      <tr><td>ω<sub>X</sub></td><td>桥下设计过水断面面积</td><td>Q<sub>P</sub> / (V<sub>P</sub>×cosα)</td></tr>
+      <tr><td>ω<sub>g</sub></td><td>桥下实际过水断面面积</td><td>实测</td></tr>
+      <tr><td>Q<sub>P</sub></td><td>设计流量 (m³/s)</td><td>—</td></tr>
+      <tr><td>α</td><td>水流与桥轴法线夹角 (°)</td><td>—</td></tr></table>
 
     <p style="font-size:12px;font-weight:600;color:var(--pri);margin:12px 0 4px">冲刷系数 P 参考值</p>
     <table class="rp-table"><tr><th>河段类型</th><th>P</th></tr>
@@ -253,6 +293,16 @@ function onFormulaChange(){
   document.getElementById('highwayParams').style.display=v==='highway'?'block':'none';
 }
 
+function toggleVmAuto(){
+  const auto=document.getElementById('s_vmAuto').checked;
+  document.getElementById('vmAutoParams').style.display=auto?'block':'none';
+  // 手动模式时显示 VM 输入框（在基本参数区）
+  document.getElementById('s_VM').closest('.sf-group').style.display=auto?'none':'block';
+}
+
+// 初始化：隐藏手动 VM 输入框
+window.addEventListener('DOMContentLoaded',()=>{toggleVmAuto();});
+
 function fv(v,d=2){return v==null?'—':Number(v).toFixed(d)}
 const g=9.81;
 
@@ -272,9 +322,32 @@ function calc(){
 
   if(formula==='railway'){
     const eta=parseFloat(document.getElementById('s_eta').value);
-    dZM=eta*(VM*VM-V*V);
+    const vmAuto=document.getElementById('s_vmAuto').checked;
+    let VMcalc=VM;
+    let soil='',VP=null,P_rail=null,alpha_rail=0;
+
+    if(vmAuto){
+      VP=parseFloat(document.getElementById('s_VP').value);
+      P_rail=parseFloat(document.getElementById('s_P_rail').value);
+      alpha_rail=parseFloat(document.getElementById('s_alpha_rail').value)||0;
+      const soilType=document.getElementById('s_soil').value;
+
+      if(isNaN(VP)||isNaN(P_rail)){alert('自动计算VM需要填写设计流速VP和冲刷系数P');return;}
+
+      if(soilType==='soft'){VMcalc=VP;soil='松软土';}
+      else if(soilType==='medium'){VMcalc=VP*2*P_rail/(P_rail+1);soil='中等土';}
+      else{VMcalc=P_rail*VP;soil='密实土';}
+    }
+
+    dZM=eta*(VMcalc*VMcalc-V*V);
     LY=(!isNaN(I0)&&I0>0)?2*dZM/I0:null;
-    details={formula:'铁路公式（TB 10017）',eta,V,VM,dZM,LY,I0};
+
+    // 冲刷系数反算设计过水面积
+    const omegaX=(vmAuto&&!isNaN(parseFloat(document.getElementById('s_qp').value)))?
+      parseFloat(document.getElementById('s_qp').value)/(VP*Math.cos(alpha_rail*Math.PI/180)):null;
+
+    details={formula:'铁路公式（TB 10017 / SL/T 808-2025）',eta,V,VM:VMcalc,dZM,LY,I0,
+      vmAuto,soil,VP,P_rail,alpha_rail,omegaX};
   }else{
     const Vq=parseFloat(document.getElementById('s_Vq').value);
     const Vch=parseFloat(document.getElementById('s_Vch').value);
@@ -336,7 +409,20 @@ function renderResult(){
     html+=`
       <div style="font-size:13px;font-weight:600;color:var(--t2);margin:14px 0 8px">计算过程</div>
       <table class="rp-table"><tr><th>项目</th><th>取值</th></tr>
-        <tr><td>η 系数</td><td>${fv(r.eta)}</td></tr>
+        <tr><td>η 系数</td><td>${fv(r.eta)}</td></tr>`;
+
+    if(r.vmAuto){
+      html+=`
+        <tr><td>土质类型</td><td>${r.soil}</td></tr>
+        <tr><td>设计流速 VP</td><td>${fv(r.VP,3)} m/s</td></tr>
+        <tr><td>冲刷系数 P</td><td>${fv(r.P_rail)}</td></tr>`;
+      if(r.soil==='松软土') html+=`<tr><td>VM = VP</td><td>${fv(r.VM,3)} m/s</td></tr>`;
+      else if(r.soil==='中等土') html+=`<tr><td>VM = VP×2P/(P+1)</td><td>${fv(r.VP,3)}×2×${fv(r.P_rail)}/(${fv(r.P_rail)}+1) = ${fv(r.VM,3)} m/s</td></tr>`;
+      else html+=`<tr><td>VM = P×VP</td><td>${fv(r.P_rail)}×${fv(r.VP,3)} = ${fv(r.VM,3)} m/s</td></tr>`;
+      if(r.omegaX!==null) html+=`<tr><td>设计过水面积 ωX</td><td>QP/(VP·cosα) = ${fv(r.omegaX,2)} m²</td></tr>`;
+    }
+
+    html+=`
         <tr><td>VM² - V²</td><td>${fv(r.VM*r.VM,4)} - ${fv(r.V*r.V,4)} = ${fv(r.VM*r.VM-r.V*r.V,4)}</td></tr>
         <tr><td>ΔZM = η×(VM²-V²)</td><td>${fv(r.eta)} × ${fv(r.VM*r.VM-r.V*r.V,4)} = ${fv(r.dZM,4)} m</td></tr>
       </table>`;
@@ -390,6 +476,15 @@ function makeReport(r){
   if(isRail){
     t+='  铁路公式: ΔZM = η × (VM² - V²)\n\n';
     t+='    η = '+fv(r.eta)+'\n';
+    if(r.vmAuto){
+      t+='    土质类型: '+r.soil+'\n';
+      t+='    设计流速 VP = '+fv(r.VP,3)+' m/s\n';
+      t+='    冲刷系数 P = '+fv(r.P_rail)+'\n';
+      if(r.soil==='松软土') t+='    VM = VP = '+fv(r.VM,3)+' m/s\n';
+      else if(r.soil==='中等土') t+='    VM = VP×2P/(P+1) = '+fv(r.VP,3)+'×2×'+fv(r.P_rail)+'/('+fv(r.P_rail)+'+1) = '+fv(r.VM,3)+' m/s\n';
+      else t+='    VM = P×VP = '+fv(r.P_rail)+'×'+fv(r.VP,3)+' = '+fv(r.VM,3)+' m/s\n';
+      if(r.omegaX!==null) t+='    设计过水面积 ωX = QP/(VP·cosα) = '+fv(r.omegaX,2)+' m²\n';
+    }
     t+='    VM² - V² = '+fv(r.VM*r.VM,4)+' - '+fv(r.V*r.V,4)+' = '+fv(r.VM*r.VM-r.V*r.V,4)+'\n';
     t+='    ΔZM = '+fv(r.eta)+' × '+fv(r.VM*r.VM-r.V*r.V,4)+' = '+fv(r.dZM,4)+' m\n\n';
   }else{
