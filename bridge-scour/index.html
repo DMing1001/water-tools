@@ -125,12 +125,12 @@ body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"Segoe UI",sans
   <div class="sf-divider"></div>
   <div class="sf-section"><span class="dot"></span>一般冲刷</div>
   <div class="sf-group">
-    <div class="sf-label">公式选择<span class="sf-tip" data-tip="包尔达可夫：均匀土质估算\n64-1：非黏性土河槽（推荐）\n64-2：非黏性土沙质河槽\n黏性土公式：黏性土河床">?</span></div>
+    <div class="sf-label">公式选择<span class="sf-tip" data-tip="包尔达可夫（TB 10017）：\n  均匀土质估算\n  hp = P × hmax\n\n64-1（A.3.5-1 推荐）：\n  非黏性土河槽冲止流速法\n\n64-2（A.3.5-1）：\n  非黏性土沙质河槽输沙平衡\n\n黏性土（A.3.5-6）：\n  黏性土河床">?</span></div>
     <select class="sf-select" id="s_genFormula" onchange="onGenFormulaChange()">
-      <option value="bao">包尔达可夫（均匀土质）</option>
-      <option value="64-1" selected>64-1 冲止流速（推荐）</option>
-      <option value="64-2">64-2 输沙平衡</option>
-      <option value="cohesive">黏性土公式</option>
+      <option value="bao">包尔达可夫（TB 10017）</option>
+      <option value="64-1" selected>64-1 冲止流速（A.3.5-1 推荐）</option>
+      <option value="64-2">64-2 输沙平衡（A.3.5-1）</option>
+      <option value="cohesive">黏性土公式（A.3.5-6）</option>
     </select>
   </div>
   <div id="baoInputs" style="display:none">
@@ -182,11 +182,11 @@ body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"Segoe UI",sans
   <div class="sf-divider"></div>
   <div class="sf-section"><span class="dot"></span>局部冲刷</div>
   <div class="sf-group">
-    <div class="sf-label">公式选择<span class="sf-tip" data-tip="65-1：非黏性土（推荐）\n65-2：非黏性土\n黏性土：黏性土河床">?</span></div>
+    <div class="sf-label">公式选择<span class="sf-tip" data-tip="65-1（A.3.5-8 推荐）：\n  非黏性土桥墩局部冲刷修正式\n  清水冲刷 / 动床冲刷\n\n65-2（TB 10017）：\n  非黏性土局部冲刷\n\n黏性土（A.3.5-13）：\n  黏性土河床局部冲刷">?</span></div>
     <select class="sf-select" id="s_locFormula" onchange="onLocFormulaChange()">
-      <option value="65-1" selected>65-1 修正式（推荐）</option>
-      <option value="65-2">65-2 公式</option>
-      <option value="cohesive">黏性土公式</option>
+      <option value="65-1" selected>65-1 修正式（A.3.5-8 推荐）</option>
+      <option value="65-2">65-2 公式（TB 10017）</option>
+      <option value="cohesive">黏性土公式（A.3.5-13）</option>
     </select>
   </div>
   <div id="locNoncohesive">
@@ -259,18 +259,29 @@ body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"Segoe UI",sans
 
 <!-- 公式 -->
 <div class="collapsible">
-  <div class="collapse-hd" onclick="toggleCollapse(this)"><span class="arrow">▶</span> 计算公式</div>
+  <div class="collapse-hd" onclick="toggleCollapse(this)"><span class="arrow">▶</span> 计算公式（SL/T 808-2025 附录 A.3.5）</div>
   <div class="collapse-bd">
-    <div class="fml"><b>包尔达可夫：</b> <span class="sym">hp</span> = P × h<sub>max</sub></div>
-    <div class="fml"><b>64-1 河槽：</b> <span class="sym">hp</span> = [ A·Q<sub>c</sub> / (B<sub>c</sub>·(h<sub>mc</sub>/h<sub>c</sub>)<sup>5/3</sup>·E·d<sub>c</sub><sup>1/6</sup>) ]<sup>3/5</sup></div>
-    <div class="fml"><b>64-1 河滩：</b> <span class="sym">hp</span> = [ A<sub>t</sub>·Q<sub>t</sub> / (B<sub>t</sub>·(h<sub>mt</sub>/h<sub>t</sub>)<sup>5/3</sup>·V<sub>H1</sub>) ]<sup>5/6</sup></div>
-    <div class="fml"><b>64-2 河槽：</b> <span class="sym">hp</span> = [ A·Q<sub>c</sub> / (B<sub>c</sub>·(h<sub>mc</sub>/h<sub>c</sub>)<sup>5/3</sup>·E·d<sub>c</sub><sup>1/6</sup>) ]<sup>3/5</sup> × (h<sub>mc</sub>/h<sub>c</sub>)</div>
-    <div class="fml"><b>黏性土 河槽：</b> <span class="sym">hp</span> = [ A·Q<sub>c</sub> / (B<sub>c</sub>·(h<sub>mc</sub>/h<sub>c</sub>)<sup>5/3</sup>·0.33/I<sub>L</sub>) ]<sup>5/8</sup></div>
-    <div class="fml"><b>65-1 清水：</b> h<sub>b</sub> = K<sub>ξ</sub>·K<sub>η</sub>·B<sub>1</sub><sup>0.6</sup>·(v-v'<sub>0</sub>)</div>
-    <div class="fml"><b>65-1 动床：</b> h<sub>b</sub> = K<sub>ξ</sub>·K<sub>η</sub>·B<sub>1</sub><sup>0.6</sup>·(v-v'<sub>0</sub>)·((v-v'<sub>0</sub>)/(v<sub>0</sub>-v'<sub>0</sub>))<sup>n</sup></div>
-    <div class="fml"><b>65-2 清水：</b> h<sub>b</sub> = K<sub>ξ</sub>·K<sub>η2</sub>·B<sub>1</sub><sup>0.6</sup>·h<sub>p</sub><sup>0.15</sup>·(v/v<sub>0</sub>-v'<sub>0</sub>/v<sub>0</sub>)</div>
-    <div class="fml"><b>黏性土局部：</b> h<sub>b</sub> = 0.83·K<sub>ξ</sub>·B<sub>1</sub><sup>0.6</sup>·I<sub>L</sub><sup>1.25</sup>·v （h<sub>p</sub>/B<sub>1</sub>≥2.5）</div>
+    <p style="font-size:11px;color:var(--t3);margin-bottom:8px">依据 SL/T 808-2025 第 A.3.5 条："桥梁(或渡槽等)下的一般冲刷及局部冲刷计算，应根据河床的土性，参照 TB 10017 和 JTG C30 计算"</p>
 
+    <p style="font-size:12px;font-weight:600;color:var(--pri);margin:10px 0 4px">一、非黏性土河床 一般冲刷</p>
+    <div class="fml"><b>64-1 河槽（A.3.5-1）：</b> <span class="sym">hp</span> = [ A·Q<sub>c</sub> / (B<sub>c</sub>·(h<sub>mc</sub>/h<sub>c</sub>)<sup>5/3</sup>·E·d<sub>c</sub><sup>1/6</sup>) ]<sup>3/5</sup></div>
+    <div class="fml"><b>64-1 河滩（A.3.5-4）：</b> <span class="sym">hp</span> = [ A<sub>t</sub>·Q<sub>t</sub> / (B<sub>t</sub>·(h<sub>mt</sub>/h<sub>t</sub>)<sup>5/3</sup>·V<sub>H1</sub>) ]<sup>5/6</sup></div>
+    <div class="fml"><b>64-2 河槽（A.3.5-1 变体）：</b> <span class="sym">hp</span> = [ A·Q<sub>c</sub> / (B<sub>c</sub>·(h<sub>mc</sub>/h<sub>c</sub>)<sup>5/3</sup>·E·d<sub>c</sub><sup>1/6</sup>) ]<sup>3/5</sup> × (h<sub>mc</sub>/h<sub>c</sub>)</div>
+
+    <p style="font-size:12px;font-weight:600;color:var(--pri);margin:10px 0 4px">二、黏性土河床 一般冲刷</p>
+    <div class="fml"><b>黏性土 河槽（A.3.5-6）：</b> <span class="sym">hp</span> = [ A·Q<sub>c</sub> / (B<sub>c</sub>·(h<sub>mc</sub>/h<sub>c</sub>)<sup>5/3</sup>·0.33/I<sub>L</sub>) ]<sup>5/8</sup></div>
+
+    <p style="font-size:12px;font-weight:600;color:var(--pri);margin:10px 0 4px">三、非黏性土河床 局部冲刷</p>
+    <div class="fml"><b>65-1 清水（A.3.5-8）：</b> h<sub>b</sub> = K<sub>ξ</sub>·K<sub>η</sub>·B<sub>1</sub><sup>0.6</sup>·(v-v'<sub>0</sub>)　（v≤v<sub>0</sub>）</div>
+    <div class="fml"><b>65-1 动床（A.3.5-9）：</b> h<sub>b</sub> = K<sub>ξ</sub>·K<sub>η</sub>·B<sub>1</sub><sup>0.6</sup>·(v-v'<sub>0</sub>)·((v-v'<sub>0</sub>)/(v<sub>0</sub>-v'<sub>0</sub>))<sup>n</sup>　（v>v<sub>0</sub>）</div>
+    <div class="fml" style="font-size:11px;color:var(--t3)">v<sub>0</sub>=0.0246(h<sub>p</sub>/d)<sup>0.14</sup>√(332d+10+(h<sub>p</sub>/d)<sup>0.72</sup>)　（A.3.5-10）<br>K<sub>η</sub>=0.8(1/d<sup>0.45</sup>+1/d<sup>0.15</sup>)　（A.3.5-11）<br>v'<sub>0</sub>=0.462(d/B<sub>1</sub>)<sup>0.06</sup>·v<sub>0</sub>　（A.3.5-12）<br>n=(v<sub>0</sub>/v)<sup>0.25</sup>·d<sup>-0.19</sup></div>
+    <div class="fml"><b>65-2（TB 10017）：</b> h<sub>b</sub> = K<sub>ξ</sub>·K<sub>η2</sub>·B<sub>1</sub><sup>0.6</sup>·h<sub>p</sub><sup>0.15</sup>·(v/v<sub>0</sub>-v'<sub>0</sub>/v<sub>0</sub>)　（v≤v<sub>0</sub>）</div>
+
+    <p style="font-size:12px;font-weight:600;color:var(--pri);margin:10px 0 4px">四、黏性土河床 局部冲刷</p>
+    <div class="fml"><b>黏性土（A.3.5-13）：</b> h<sub>b</sub> = 0.83·K<sub>ξ</sub>·B<sub>1</sub><sup>0.6</sup>·I<sub>L</sub><sup>1.25</sup>·v　（h<sub>p</sub>/B<sub>1</sub>≥2.5）</div>
+    <div class="fml"><b>黏性土（A.3.5-14）：</b> h<sub>b</sub> = 0.55·K<sub>ξ</sub>·B<sub>1</sub><sup>0.6</sup>·h<sub>p</sub><sup>0.1</sup>·I<sub>L</sub>·v　（h<sub>p</sub>/B<sub>1</sub><2.5）</div>
+
+    <p style="font-size:11px;color:var(--t3);margin:10px 0 4px">注：包尔达可夫公式（hp=P·h<sub>max</sub>）源自 TB 10017，SL/T 808-2025 未直接收录，供参考。</p>
   </div>
 </div>
 
@@ -372,7 +383,7 @@ function calcGeneralScour(){
     const P=parseFloat(document.getElementById('s_P').value);
     if(isNaN(hmax)||isNaN(P))return null;
     hp=P*hmax;
-    details={formula:'包尔达可夫',hmax,P,hp};
+    details={formula:'包尔达可夫（TB 10017）',hmax,P,hp};
   }
   else if(formula==='64-1'){
     const hmc=parseFloat(document.getElementById('s_hmc').value);
@@ -386,7 +397,7 @@ function calcGeneralScour(){
     const ratio=Math.pow(hmc/hc,5/3);
     const inner=A*Qc/(Bc*ratio*E*Math.pow(dc,1/6));
     hp=Math.pow(inner,3/5);
-    details={formula:'64-1 冲止流速',hmc,hc,Bc,Qc,E,dc,A,ratio,hp};
+    details={formula:'64-1 冲止流速（A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,hp};
   }
   else if(formula==='64-2'){
     const hmc=parseFloat(document.getElementById('s_hmc').value);
@@ -400,7 +411,7 @@ function calcGeneralScour(){
     const ratio=Math.pow(hmc/hc,5/3);
     const inner=A*Qc/(Bc*ratio*E*Math.pow(dc,1/6));
     hp=Math.pow(inner,3/5)*(hmc/hc);
-    details={formula:'64-2 输沙平衡',hmc,hc,Bc,Qc,E,dc,A,ratio,hp};
+    details={formula:'64-2 输沙平衡（A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,hp};
   }
   else if(formula==='cohesive'){
     const hmc=parseFloat(document.getElementById('s_hmc_c').value);
@@ -413,7 +424,7 @@ function calcGeneralScour(){
     const ratio=Math.pow(hmc/hc,5/3);
     const inner=A*Qc/(Bc*ratio*0.33/IL);
     hp=Math.pow(inner,5/8);
-    details={formula:'黏性土',hmc,hc,Bc,Qc,IL,A,ratio,hp};
+    details={formula:'黏性土（A.3.5-6）',hmc,hc,Bc,Qc,IL,A,ratio,hp};
   }
   return{hp,...details};
 }
@@ -451,7 +462,7 @@ function calcLocalScour(hp_val){
       }else{
         hb=Kxi*Keta*Math.pow(B1,0.6)*(v-v0p)*Math.pow((v-v0p)/(v0-v0p),n);
       }
-      details={formula:'65-1 修正式',B1,Kxi,d,v,v0,Keta,v0p,n,hb,type:v<=v0?'清水':'动床'};
+      details={formula:'65-1 修正式（A.3.5-8~12）',B1,Kxi,d,v,v0,Keta,v0p,n,hb,type:v<=v0?'清水':'动床'};
     }else{
       const v0=0.0246*Math.pow(hp_val/d,0.14)*Math.sqrt(332*d+10+Math.pow(hp_val/d,0.72));
       const Keta2=0.0023/Math.pow(d,2.2)+0.375/Math.pow(d,0.5);
@@ -462,7 +473,7 @@ function calcLocalScour(hp_val){
       }else{
         hb=Kxi*Keta2*Math.pow(B1,0.6)*Math.pow(hp_val,0.15)*Math.pow((v-v0p)/(v0-v0p),n2);
       }
-      details={formula:'65-2',B1,Kxi,d,v,v0,Keta2,v0p,n2,hb,type:v<=v0?'清水':'动床'};
+      details={formula:'65-2（TB 10017）',B1,Kxi,d,v,v0,Keta2,v0p,n2,hb,type:v<=v0?'清水':'动床'};
     }
     hb=Math.max(hb,0);
     details.v=v;details.hp=hp_val;
@@ -480,7 +491,7 @@ function calcLocalScour(hp_val){
     }else{
       hb=0.55*Kxi*Math.pow(B1,0.6)*Math.pow(hp_val,0.1)*IL*v;
     }
-    details={formula:'黏性土局部冲刷',B1,Kxi,IL,v,hp:hp_val,hb,type:hp_val/B1>=2.5?'hp/B1≥2.5':'hp/B1<2.5'};
+    details={formula:'黏性土（A.3.5-13/14）',B1,Kxi,IL,v,hp:hp_val,hb,type:hp_val/B1>=2.5?'hp/B1≥2.5':'hp/B1<2.5'};
     hb=Math.max(hb,0);
   }
   return{hb,...details};
