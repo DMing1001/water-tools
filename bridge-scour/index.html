@@ -378,8 +378,6 @@ function fv(v,d=2){return v==null?'—':Number(v).toFixed(d)}
 
 function calcGeneralScour(){
   const formula=document.getElementById('s_genFormula').value;
-  const wl=parseFloat(document.getElementById('s_wl').value);
-  const qp=parseFloat(document.getElementById('s_qp').value);
   let hp, details={};
 
   if(formula==='bao'){
@@ -387,24 +385,9 @@ function calcGeneralScour(){
     const P=parseFloat(document.getElementById('s_P').value);
     if(isNaN(hmax)||isNaN(P))return null;
     hp=P*hmax;
-    details={formula:'包尔达可夫（TB 10017）',hmax,P,hp};
+    details={formula:'包尔达可夫（TB 10017）',hmax,P,hp,hpTotal:hp,genScourDepth:0};
   }
-  else if(formula==='64-1'){
-    const hmc=parseFloat(document.getElementById('s_hmc').value);
-    const hc=parseFloat(document.getElementById('s_hc').value);
-    const Bc=parseFloat(document.getElementById('s_Bc').value);
-    const Qc=parseFloat(document.getElementById('s_Qc').value);
-    const E=parseFloat(document.getElementById('s_sediment').value);
-    const dc=parseFloat(document.getElementById('s_dc').value);
-    const A=parseFloat(document.getElementById('s_A').value);
-    if([hmc,hc,Bc,Qc,dc].some(isNaN))return null;
-    const ratio=Math.pow(hmc/hc,5/3);
-    const dcPow=Math.pow(dc,1/6);
-    hp=Math.pow(A*(Qc/Bc)*ratio/(E*dcPow),3/5);
-    const hpTotal=hp;
-    const genScourDepth=hp-hmc;details={formula:'64-1 冲止流速（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,hp,hpTotal,genScourDepth};
-  }
-  else if(formula==='64-2'){
+  else if(formula==='64-1'||formula==='64-2'){
     const hmc=parseFloat(document.getElementById('s_hmc').value);
     const hc=parseFloat(document.getElementById('s_hc').value);
     const Bc=parseFloat(document.getElementById('s_Bc').value);
@@ -417,9 +400,9 @@ function calcGeneralScour(){
     const dcPow=Math.pow(dc,1/6);
     const inner=A*(Qc/Bc)*ratio/(E*dcPow);
     const hp64_1=Math.pow(inner,3/5);
-    hp=hp64_1*(hmc/hc);
-    const hpTotal=hp;
-    const genScourDepth=hp-hmc;details={formula:'64-2 输沙平衡（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,hp64_1,hp,hpTotal,genScourDepth};
+    hp=formula==='64-1'?hp64_1:hp64_1*(hmc/hc);
+    const genScourDepth=hp-hmc;
+    details={formula:formula==='64-1'?'64-1 冲止流速（SL/T 808-2025 A.3.5-1）':'64-2 输沙平衡（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,hp64_1,hp,hpTotal:hp,genScourDepth};
   }
   else if(formula==='cohesive'){
     const hmc=parseFloat(document.getElementById('s_hmc_c').value);
@@ -433,8 +416,8 @@ function calcGeneralScour(){
     const ILratio=0.33/IL;
     const inner=A*(Qc/Bc)*ratio/ILratio;
     hp=Math.pow(inner,5/8);
-    const hpTotal=hp+hmc;
-    const genScourDepth=hp-hmc;details={formula:'黏性土（SL/T 808-2025 A.3.5-6）',hmc,hc,Bc,Qc,IL,A,ratio,ILratio,inner,hp,hpTotal,genScourDepth};
+    const genScourDepth=hp-hmc;
+    details={formula:'黏性土（SL/T 808-2025 A.3.5-6）',hmc,hc,Bc,Qc,IL,A,ratio,ILratio,inner,hp,hpTotal:hp,genScourDepth};
   }
   return{hp,...details};
 }
@@ -525,7 +508,7 @@ function calcSingle(){
   const gen=calcGeneralScour();
   if(!gen||isNaN(gen.hp)){alert('一般冲刷参数不完整');return;}
 
-  const loc=calcLocalScour(gen.hpTotal);
+  const loc=calcLocalScour(gen.hp);
   if(!loc||isNaN(loc.hb)){alert('局部冲刷参数不完整');return;}
 
   const genDepth=gen.genScourDepth||gen.hp;const totalScour=nat+genDepth+loc.hb;
