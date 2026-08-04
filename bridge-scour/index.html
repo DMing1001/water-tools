@@ -399,9 +399,10 @@ function calcGeneralScour(){
     const A=parseFloat(document.getElementById('s_A').value);
     if([hmc,hc,Bc,Qc,dc].some(isNaN))return null;
     const ratio=Math.pow(hmc/hc,5/3);
-    const inner=A*Qc/(Bc*ratio*E*Math.pow(dc,1/6));
+    const dcPow=Math.pow(dc,1/6);
+    const inner=A*Qc/(Bc*ratio*E*dcPow);
     hp=Math.pow(inner,3/5);
-    details={formula:'64-1 冲止流速（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,hp};
+    details={formula:'64-1 冲止流速（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,hp};
   }
   else if(formula==='64-2'){
     const hmc=parseFloat(document.getElementById('s_hmc').value);
@@ -413,9 +414,11 @@ function calcGeneralScour(){
     const A=parseFloat(document.getElementById('s_A').value);
     if([hmc,hc,Bc,Qc,dc].some(isNaN))return null;
     const ratio=Math.pow(hmc/hc,5/3);
-    const inner=A*Qc/(Bc*ratio*E*Math.pow(dc,1/6));
-    hp=Math.pow(inner,3/5)*(hmc/hc);
-    details={formula:'64-2 输沙平衡（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,hp};
+    const dcPow=Math.pow(dc,1/6);
+    const inner=A*Qc/(Bc*ratio*E*dcPow);
+    const hp64_1=Math.pow(inner,3/5);
+    hp=hp64_1*(hmc/hc);
+    details={formula:'64-2 输沙平衡（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,hp64_1,hp};
   }
   else if(formula==='cohesive'){
     const hmc=parseFloat(document.getElementById('s_hmc_c').value);
@@ -426,9 +429,10 @@ function calcGeneralScour(){
     const A=parseFloat(document.getElementById('s_A_c').value);
     if([hmc,hc,Bc,Qc,IL].some(isNaN))return null;
     const ratio=Math.pow(hmc/hc,5/3);
-    const inner=A*Qc/(Bc*ratio*0.33/IL);
+    const ILratio=0.33/IL;
+    const inner=A*Qc/(Bc*ratio*ILratio);
     hp=Math.pow(inner,5/8);
-    details={formula:'黏性土（SL/T 808-2025 A.3.5-6）',hmc,hc,Bc,Qc,IL,A,ratio,hp};
+    details={formula:'黏性土（SL/T 808-2025 A.3.5-6）',hmc,hc,Bc,Qc,IL,A,ratio,ILratio,inner,hp};
   }
   return{hp,...details};
 }
@@ -487,15 +491,19 @@ function calcLocalScour(hp_val){
     const Kxi=parseFloat(document.getElementById('s_Kxi_c').value);
     const IL=parseFloat(document.getElementById('s_IL_loc').value);
     if([B1,IL].some(isNaN)||isNaN(hp_val))return null;
-    // 行近流速简化
     const qp=parseFloat(document.getElementById('s_qp').value);
     const v=qp/(hp_val*B1);
-    if(hp_val/B1>=2.5){
-      hb=0.83*Kxi*Math.pow(B1,0.6)*Math.pow(IL,1.25)*v;
+    const hpB1=hp_val/B1;
+    const B1pow=Math.pow(B1,0.6);
+    if(hpB1>=2.5){
+      const ILpow=Math.pow(IL,1.25);
+      hb=0.83*Kxi*B1pow*ILpow*v;
+      details={formula:'黏性土（SL/T 808-2025 A.3.5-13/14）',B1,Kxi,IL,v,hp:hp_val,hpB1,B1pow,ILpow,hb,type:'hp/B1≥2.5（A.3.5-13）'};
     }else{
-      hb=0.55*Kxi*Math.pow(B1,0.6)*Math.pow(hp_val,0.1)*IL*v;
+      const hppow=Math.pow(hp_val,0.1);
+      hb=0.55*Kxi*B1pow*hppow*IL*v;
+      details={formula:'黏性土（SL/T 808-2025 A.3.5-13/14）',B1,Kxi,IL,v,hp:hp_val,hpB1,B1pow,hppow,hb,type:'hp/B1<2.5（A.3.5-14）'};
     }
-    details={formula:'黏性土（SL/T 808-2025 A.3.5-13/14）',B1,Kxi,IL,v,hp:hp_val,hb,type:hp_val/B1>=2.5?'hp/B1≥2.5':'hp/B1<2.5'};
     hb=Math.max(hb,0);
   }
   return{hb,...details};
@@ -528,8 +536,6 @@ function calcSingle(){
 function renderSingleResult(){
   const r=lastResult; if(!r)return;
   const el=document.getElementById('singleResult');
-  const genF=document.getElementById('s_genFormula').value;
-  const locF=document.getElementById('s_locFormula').value;
 
   let html=`
     <div class="rp-header"><h3>桥墩冲刷计算结果</h3></div>
@@ -541,51 +547,112 @@ function renderSingleResult(){
         <div class="attr"><span class="k">一般冲刷公式</span><span class="v">${r.gen.formula}</span></div>
         <div class="attr"><span class="k">局部冲刷公式</span><span class="v">${r.loc.formula}</span></div>
       </div>
-
       <div class="crest-box">
         <div class="cb-label">总冲刷深度 = 自然冲刷 + 一般冲刷 + 局部冲刷</div>
         <div class="cb-val">${fv(r.totalScour)} m</div>
         <div class="cb-fm">${fv(r.nat)} + ${fv(r.gen.hp)} + ${fv(r.loc.hb)} = ${fv(r.totalScour)}</div>
       </div>
-
       <div class="crest-box" style="border-color:#93c5fd;background:linear-gradient(135deg,#eff6ff,#dbeafe)">
         <div class="cb-label">最低冲刷线高程 = 设计水位 - 总冲刷深度</div>
         <div class="cb-val" style="color:var(--pri)">${fv(r.lowestLine)} m</div>
         <div class="cb-fm">${fv(r.wl)} - ${fv(r.totalScour)} = ${fv(r.lowestLine)}</div>
-      </div>
+      </div>`;
 
-      <div style="font-size:13px;font-weight:600;color:var(--t2);margin:14px 0 8px">二、一般冲刷计算</div>
-      <table class="rp-table"><tr><th>项目</th><th>公式/取值</th><th>结果</th></tr>`;
+  // === 一般冲刷 ===
+  html+=`<div style="font-size:13px;font-weight:600;color:var(--t2);margin:14px 0 8px">二、一般冲刷计算（${r.gen.formula}）</div>
+         <table class="rp-table"><tr><th>步骤</th><th>项目</th><th>公式/取值</th><th>结果</th></tr>`;
 
-  if(r.gen.formula==='包尔达可夫'){
-    html+=`<tr><td>冲刷前最大水深 hmax</td><td>—</td><td>${fv(r.gen.hmax)} m</td></tr>
-           <tr><td>冲刷系数 P</td><td>—</td><td>${fv(r.gen.P)}</td></tr>`;
+  if(r.gen.formula.includes('包尔达可夫')){
+    html+=`<tr><td>①</td><td>冲刷前最大水深 hmax</td><td>输入</td><td>${fv(r.gen.hmax)} m</td></tr>
+           <tr><td>②</td><td>冲刷系数 P</td><td>输入</td><td>${fv(r.gen.P)}</td></tr>
+           <tr class="total"><td>③</td><td>一般冲刷深度 hp</td><td>P × hmax</td><td>${fv(r.gen.P)} × ${fv(r.gen.hmax)} = <b>${fv(r.gen.hp)} m</b></td></tr>`;
   }else if(r.gen.formula.includes('64')){
-    html+=`<tr><td>河槽最大水深 hmc</td><td>—</td><td>${fv(r.gen.hmc)} m</td></tr>
-           <tr><td>河槽平均水深 hc</td><td>—</td><td>${fv(r.gen.hc)} m</td></tr>
-           <tr><td>桥孔净宽 Bc</td><td>—</td><td>${fv(r.gen.Bc,0)} m</td></tr>
-           <tr><td>河槽流量 Qc</td><td>—</td><td>${fv(r.gen.Qc,0)} m³/s</td></tr>
-           <tr><td>含沙量系数 E</td><td>—</td><td>${fv(r.gen.E)}</td></tr>
-           <tr><td>平均粒径 dc</td><td>—</td><td>${fv(r.gen.dc)} mm</td></tr>
-           <tr><td>单宽流量系数 A</td><td>—</td><td>${fv(r.gen.A)}</td></tr>
-           <tr><td>(hmc/hc)^(5/3)</td><td>—</td><td>${fv(r.gen.ratio,4)}</td></tr>`;
+    const denom=r.gen.Bc*r.gen.ratio*r.gen.E*r.gen.dcPow;
+    html+=`<tr><td>①</td><td>河槽最大水深 hmc</td><td>输入</td><td>${fv(r.gen.hmc)} m</td></tr>
+           <tr><td></td><td>河槽平均水深 hc</td><td>输入</td><td>${fv(r.gen.hc)} m</td></tr>
+           <tr><td></td><td>桥孔净宽 Bc</td><td>输入</td><td>${fv(r.gen.Bc,0)} m</td></tr>
+           <tr><td></td><td>河槽流量 Qc</td><td>输入</td><td>${fv(r.gen.Qc,0)} m³/s</td></tr>
+           <tr><td></td><td>含沙量系数 E</td><td>输入</td><td>${fv(r.gen.E)}</td></tr>
+           <tr><td></td><td>平均粒径 dc</td><td>输入</td><td>${fv(r.gen.dc)} mm</td></tr>
+           <tr><td></td><td>单宽流量系数 A</td><td>输入</td><td>${fv(r.gen.A)}</td></tr>
+           <tr><td>②</td><td>(hmc/hc)^(5/3)</td><td>(${fv(r.gen.hmc)}/${fv(r.gen.hc)})^(5/3)</td><td>${fv(r.gen.ratio,4)}</td></tr>
+           <tr><td>③</td><td>dc^(1/6)</td><td>${fv(r.gen.dc)}^(1/6)</td><td>${fv(r.gen.dcPow,4)}</td></tr>
+           <tr><td>④</td><td>分母 Bc·ratio·E·dc^(1/6)</td><td>${fv(r.gen.Bc,0)}×${fv(r.gen.ratio,4)}×${fv(r.gen.E)}×${fv(r.gen.dcPow,4)}</td><td>${fv(denom,4)}</td></tr>
+           <tr><td>⑤</td><td>分子 A·Qc</td><td>${fv(r.gen.A)}×${fv(r.gen.Qc,0)}</td><td>${fv(r.gen.A*r.gen.Qc,4)}</td></tr>
+           <tr><td>⑥</td><td>括号内值</td><td>A·Qc / 分母</td><td>${fv(r.gen.inner,4)}</td></tr>`;
+    if(r.gen.formula.includes('64-2')){
+      html+=`<tr><td>⑦</td><td>64-1 结果</td><td>括号值^(3/5)</td><td>${fv(r.gen.hp64_1,4)} m</td></tr>
+             <tr class="total"><td>⑧</td><td>一般冲刷深度 hp</td><td>64-1 × (hmc/hc)</td><td>${fv(r.gen.hp64_1,4)} × ${fv(r.gen.hmc/r.gen.hc,4)} = <b>${fv(r.gen.hp)} m</b></td></tr>`;
+    }else{
+      html+=`<tr class="total"><td>⑦</td><td>一般冲刷深度 hp</td><td>括号值^(3/5)</td><td>${fv(r.gen.inner,4)}^(3/5) = <b>${fv(r.gen.hp)} m</b></td></tr>`;
+    }
   }else{
-    html+=`<tr><td>液性指数 IL</td><td>—</td><td>${fv(r.gen.IL)}</td></tr>`;
+    const denom=r.gen.Bc*r.gen.ratio*r.gen.ILratio;
+    html+=`<tr><td>①</td><td>河槽最大水深 hmc</td><td>输入</td><td>${fv(r.gen.hmc)} m</td></tr>
+           <tr><td></td><td>河槽平均水深 hc</td><td>输入</td><td>${fv(r.gen.hc)} m</td></tr>
+           <tr><td></td><td>桥孔净宽 Bc</td><td>输入</td><td>${fv(r.gen.Bc,0)} m</td></tr>
+           <tr><td></td><td>河槽流量 Qc</td><td>输入</td><td>${fv(r.gen.Qc,0)} m³/s</td></tr>
+           <tr><td></td><td>液性指数 IL</td><td>输入</td><td>${fv(r.gen.IL)}</td></tr>
+           <tr><td></td><td>单宽流量系数 A</td><td>输入</td><td>${fv(r.gen.A)}</td></tr>
+           <tr><td>②</td><td>(hmc/hc)^(5/3)</td><td>(${fv(r.gen.hmc)}/${fv(r.gen.hc)})^(5/3)</td><td>${fv(r.gen.ratio,4)}</td></tr>
+           <tr><td>③</td><td>0.33/IL</td><td>0.33/${fv(r.gen.IL)}</td><td>${fv(r.gen.ILratio,4)}</td></tr>
+           <tr><td>④</td><td>分母 Bc·ratio·0.33/IL</td><td>${fv(r.gen.Bc,0)}×${fv(r.gen.ratio,4)}×${fv(r.gen.ILratio,4)}</td><td>${fv(denom,4)}</td></tr>
+           <tr><td>⑤</td><td>括号内值</td><td>A·Qc / 分母</td><td>${fv(r.gen.inner,4)}</td></tr>
+           <tr class="total"><td>⑥</td><td>一般冲刷深度 hp</td><td>括号值^(5/8)</td><td>${fv(r.gen.inner,4)}^(5/8) = <b>${fv(r.gen.hp)} m</b></td></tr>`;
   }
-  html+=`<tr class="total"><td>一般冲刷深度 hp</td><td>${r.gen.formula}</td><td>${fv(r.gen.hp)} m</td></tr></table>`;
+  html+=`</table>`;
 
-  html+=`<div style="font-size:13px;font-weight:600;color:var(--t2);margin:14px 0 8px">三、局部冲刷计算</div>
-         <table class="rp-table"><tr><th>项目</th><th>公式/取值</th><th>结果</th></tr>`;
-  html+=`<tr><td>桥墩计算宽度 B1</td><td>—</td><td>${fv(r.loc.B1)} m</td></tr>
-         <tr><td>墩形系数 Kξ</td><td>—</td><td>${fv(r.loc.Kxi)}</td></tr>`;
-  if(r.loc.v!==undefined)html+=`<tr><td>行近流速 v</td><td>—</td><td>${fv(r.loc.v,3)} m/s</td></tr>`;
-  if(r.loc.v0!==undefined)html+=`<tr><td>启动流速 v0</td><td>—</td><td>${fv(r.loc.v0,3)} m/s</td></tr>`;
-  if(r.loc.v0p!==undefined)html+=`<tr><td>始冲流速 v'0</td><td>—</td><td>${fv(r.loc.v0p,3)} m/s</td></tr>`;
-  if(r.loc.type)html+=`<tr><td>冲刷类型</td><td colspan="2">${r.loc.type}</td></tr>`;
-  html+=`<tr class="total"><td>局部冲刷深度 hb</td><td>${r.loc.formula}</td><td>${fv(r.loc.hb)} m</td></tr></table>`;
+  // === 局部冲刷 ===
+  html+=`<div style="font-size:13px;font-weight:600;color:var(--t2);margin:14px 0 8px">三、局部冲刷计算（${r.loc.formula}）</div>
+         <table class="rp-table"><tr><th>步骤</th><th>项目</th><th>公式/取值</th><th>结果</th></tr>`;
+  html+=`<tr><td>①</td><td>桥墩计算宽度 B1</td><td>输入</td><td>${fv(r.loc.B1)} m</td></tr>
+         <tr><td></td><td>墩形系数 Kξ</td><td>输入</td><td>${fv(r.loc.Kxi)}</td></tr>`;
 
-
-  html+=`</div>`;
+  if(r.loc.formula.includes('65-1')){
+    html+=`<tr><td></td><td>河床粒径 d</td><td>输入</td><td>${fv(r.loc.d)} mm</td></tr>
+           <tr><td></td><td>一般冲刷深度 hp</td><td>上游结果</td><td>${fv(r.loc.hp)} m</td></tr>
+           <tr><td>②</td><td>hp/d</td><td>${fv(r.loc.hp)}/${fv(r.loc.d)}</td><td>${fv(r.loc.hp/r.loc.d,4)}</td></tr>
+           <tr><td>③</td><td>启动流速 v0</td><td>0.0246·(hp/d)^0.14·√(332d+10+(hp/d)^0.72)</td><td>${fv(r.loc.v0,4)} m/s</td></tr>
+           <tr><td>④</td><td>河床颗粒系数 Kη</td><td>0.8·(1/d^0.45+1/d^0.15)</td><td>${fv(r.loc.Keta,4)}</td></tr>
+           <tr><td>⑤</td><td>始冲流速 v'0</td><td>0.462·(d/B1)^0.06·v0</td><td>${fv(r.loc.v0p,4)} m/s</td></tr>
+           <tr><td>⑥</td><td>行近流速 v</td><td>E·dc^(1/6)·hp^(2/3)</td><td>${fv(r.loc.v,4)} m/s</td></tr>`;
+    if(r.loc.v>r.loc.v0){
+      html+=`<tr><td>⑦</td><td>指数 n</td><td>(v0/v)^0.25·d^(-0.19)</td><td>${fv(r.loc.n,4)}</td></tr>
+             <tr><td></td><td>v-v'0</td><td>${fv(r.loc.v,4)}-${fv(r.loc.v0p,4)}</td><td>${fv(r.loc.v-r.loc.v0p,4)}</td></tr>
+             <tr><td></td><td>v0-v'0</td><td>${fv(r.loc.v0,4)}-${fv(r.loc.v0p,4)}</td><td>${fv(r.loc.v0-r.loc.v0p,4)}</td></tr>
+             <tr><td></td><td>(v-v'0)/(v0-v'0)</td><td>—</td><td>${fv((r.loc.v-r.loc.v0p)/(r.loc.v0-r.loc.v0p),4)}</td></tr>
+             <tr><td></td><td>Kξ·Kη·B1^0.6</td><td>${fv(r.loc.Kxi)}×${fv(r.loc.Keta,4)}×${fv(r.loc.B1,2)}^0.6</td><td>${fv(r.loc.Kxi*r.loc.Keta*Math.pow(r.loc.B1,0.6),4)}</td></tr>
+             <tr class="total"><td>⑧</td><td>局部冲刷深度 hb</td><td>动床冲刷公式</td><td><b>${fv(r.loc.hb)} m</b></td></tr>`;
+    }else{
+      html+=`<tr><td></td><td>v-v'0</td><td>${fv(r.loc.v,4)}-${fv(r.loc.v0p,4)}</td><td>${fv(r.loc.v-r.loc.v0p,4)}</td></tr>
+             <tr><td></td><td>Kξ·Kη·B1^0.6</td><td>${fv(r.loc.Kxi)}×${fv(r.loc.Keta,4)}×${fv(r.loc.B1,2)}^0.6</td><td>${fv(r.loc.Kxi*r.loc.Keta*Math.pow(r.loc.B1,0.6),4)}</td></tr>
+             <tr class="total"><td>⑦</td><td>局部冲刷深度 hb</td><td>清水冲刷公式</td><td><b>${fv(r.loc.hb)} m</b></td></tr>`;
+    }
+    html+=`<tr><td></td><td>冲刷类型</td><td colspan="2">${r.loc.type}</td></tr>`;
+  }else if(r.loc.formula.includes('65-2')){
+    html+=`<tr><td></td><td>河床粒径 d</td><td>输入</td><td>${fv(r.loc.d)} mm</td></tr>
+           <tr><td></td><td>一般冲刷深度 hp</td><td>上游结果</td><td>${fv(r.loc.hp)} m</td></tr>
+           <tr><td>②</td><td>启动流速 v0</td><td>0.0246·(hp/d)^0.14·√(332d+10+(hp/d)^0.72)</td><td>${fv(r.loc.v0,4)} m/s</td></tr>
+           <tr><td>③</td><td>Kη2</td><td>0.0023/d^2.2+0.375/d^0.5</td><td>${fv(r.loc.Keta2,4)}</td></tr>
+           <tr><td>④</td><td>始冲流速 v'0</td><td>0.12·d^0.5</td><td>${fv(r.loc.v0p,4)} m/s</td></tr>
+           <tr><td>⑤</td><td>行近流速 v</td><td>E·dc^(1/6)·hp^(2/3)</td><td>${fv(r.loc.v,4)} m/s</td></tr>
+           <tr><td>⑥</td><td>指数 n2</td><td>0.23+0.19·log10(d)</td><td>${fv(r.loc.n2,4)}</td></tr>
+           <tr class="total"><td>⑦</td><td>局部冲刷深度 hb</td><td>${r.loc.type}</td><td><b>${fv(r.loc.hb)} m</b></td></tr>
+           <tr><td></td><td>冲刷类型</td><td colspan="2">${r.loc.type}</td></tr>`;
+  }else{
+    html+=`<tr><td>②</td><td>液性指数 IL</td><td>输入</td><td>${fv(r.loc.IL)}</td></tr>
+           <tr><td>③</td><td>行近流速 v</td><td>QP/(hp·B1)</td><td>${fv(r.loc.v,4)} m/s</td></tr>
+           <tr><td>④</td><td>hp/B1</td><td>${fv(r.loc.hp)}/${fv(r.loc.B1)}</td><td>${fv(r.loc.hpB1,4)}</td></tr>
+           <tr><td>⑤</td><td>B1^0.6</td><td>${fv(r.loc.B1)}^0.6</td><td>${fv(r.loc.B1pow,4)}</td></tr>`;
+    if(r.loc.hpB1>=2.5){
+      html+=`<tr><td>⑥</td><td>IL^1.25</td><td>${fv(r.loc.IL)}^1.25</td><td>${fv(r.loc.ILpow,4)}</td></tr>
+             <tr class="total"><td>⑦</td><td>局部冲刷深度 hb</td><td>0.83·Kξ·B1^0.6·IL^1.25·v</td><td><b>${fv(r.loc.hb)} m</b></td></tr>`;
+    }else{
+      html+=`<tr><td>⑥</td><td>hp^0.1</td><td>${fv(r.loc.hp)}^0.1</td><td>${fv(r.loc.hppow,4)}</td></tr>
+             <tr class="total"><td>⑦</td><td>局部冲刷深度 hb</td><td>0.55·Kξ·B1^0.6·hp^0.1·IL·v</td><td><b>${fv(r.loc.hb)} m</b></td></tr>`;
+    }
+  }
+  html+=`</table></div>`;
   el.innerHTML=html;
   document.getElementById('singleResultWrap').style.display='block';
   document.getElementById('btnReport').style.display='inline-flex';
