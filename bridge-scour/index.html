@@ -273,7 +273,7 @@ body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"Segoe UI",sans
 
     <p style="font-size:12px;font-weight:600;color:var(--pri);margin:10px 0 4px">三、局部冲刷 — 非黏性土河床</p>
     <div class="fml"><b>65-1 修正式（SL/T 808-2025 公式 A.3.5-8 ~ A.3.5-12）</b><br>适用条件：非黏性土河床桥墩，推荐使用<br>清水冲刷（v≤v₀）：<span class="sym">hb</span> = K<sub>ξ</sub>·K<sub>η</sub>·B<sub>1</sub><sup>0.6</sup>·(v-v'<sub>0</sub>)<br>动床冲刷（v>v₀）：<span class="sym">hb</span> = K<sub>ξ</sub>·K<sub>η</sub>·B<sub>1</sub><sup>0.6</sup>·(v<sub>0</sub>-v'<sub>0</sub>)·((v-v'<sub>0</sub>)/(v<sub>0</sub>-v'<sub>0</sub>))<sup>n</sup></div>
-    <div class="fml" style="font-size:11px;color:var(--t3);margin-top:-4px">v₀ = 0.0246(hp/d)<sup>0.14</sup>·√(332d+10+(hp/d)<sup>0.72</sup>)　（A.3.5-10）<br>Kη = 0.8(1/d<sup>0.45</sup> + 1/d<sup>0.15</sup>)　（A.3.5-11）<br>v'₀ = 0.462(d/B₁)<sup>0.06</sup>·v₀　（A.3.5-12）<br>n = (v₀/v)<sup>0.25</sup>·d<sup>-0.19</sup></div>
+    <div class="fml" style="font-size:11px;color:var(--t3);margin-top:-4px">v₀ = 0.0246(hp/d)<sup>0.14</sup>·√(322d+(10+hp)/d<sup>0.72</sup>)　（A.3.5-10）<br>Kη = 0.8(1/d<sup>0.45</sup> + 1/d<sup>0.15</sup>)　（A.3.5-11）<br>v'₀ = 0.462(d/B₁)<sup>0.06</sup>·v₀　（A.3.5-12）<br>n = (v₀/v)<sup>0.25</sup>·d<sup>-0.19</sup></div>
     <div class="fml"><b>65-2 公式（TB 10017）</b><br>适用条件：非黏性土河床桥墩，Kη2 和 n 计算方式与 65-1 不同<br><span class="sym">hb</span> = K<sub>ξ</sub>·K<sub>η2</sub>·B<sub>1</sub><sup>0.6</sup>·h<sub>p</sub><sup>0.15</sup>·(v/v<sub>0</sub>-v'<sub>0</sub>/v<sub>0</sub>)</div>
 
     <p style="font-size:12px;font-weight:600;color:var(--pri);margin:10px 0 4px">四、局部冲刷 — 黏性土河床</p>
@@ -464,7 +464,7 @@ function calcLocalScour(hp_val){
     }
 
     if(formula==='65-1'){
-      const v0=0.0246*Math.pow(hp_val/d,0.14)*Math.sqrt(332*d+10+Math.pow(hp_val/d,0.72));
+      const v0=0.0246*Math.pow(hp_val/d,0.14)*Math.sqrt(322*d+(10+hp_val)/Math.pow(d,0.72));
       const Keta=0.8*(1/Math.pow(d,0.45)+1/Math.pow(d,0.15));
       const v0p=0.462*Math.pow(d/B1,0.06)*v0;
       const n=Math.pow(v0/v,0.25)*Math.pow(d,-0.19);
@@ -475,7 +475,7 @@ function calcLocalScour(hp_val){
       }
       details={formula:'65-1 修正式（SL/T 808-2025 A.3.5-8~12）',B1,Kxi,d,v,v0,Keta,v0p,n,hb,type:v<=v0?'清水':'动床'};
     }else{
-      const v0=0.0246*Math.pow(hp_val/d,0.14)*Math.sqrt(332*d+10+Math.pow(hp_val/d,0.72));
+      const v0=0.0246*Math.pow(hp_val/d,0.14)*Math.sqrt(322*d+(10+hp_val)/Math.pow(d,0.72));
       const Keta2=0.0023/Math.pow(d,2.2)+0.375/Math.pow(d,0.5);
       const v0p=0.12*Math.pow(d,0.5);
       const n2=0.23+0.19*Math.log10(d);
@@ -622,7 +622,7 @@ function renderSingleResult(){
     html+=`<tr><td></td><td>河床粒径 d</td><td>输入</td><td>${fv(r.loc.d)} mm</td></tr>
            <tr><td></td><td>桥下最大水深 hp</td><td>上游结果</td><td>${fv(r.loc.hp)} m</td></tr>
            <tr><td>②</td><td>hp/d</td><td>${fv(r.loc.hp)}/${fv(r.loc.d)}</td><td>${fv(r.loc.hp/r.loc.d,4)}</td></tr>
-           <tr><td>③</td><td>启动流速 v0</td><td>0.0246·(hp/d)^0.14·√(332d+10+(hp/d)^0.72)</td><td>${fv(r.loc.v0,4)} m/s</td></tr>
+           <tr><td>③</td><td>启动流速 v0</td><td>0.0246·(hp/d)^0.14·√(322d+(10+hp)/d^0.72)</td><td>${fv(r.loc.v0,4)} m/s</td></tr>
            <tr><td>④</td><td>河床颗粒系数 Kη</td><td>0.8·(1/d^0.45+1/d^0.15)</td><td>${fv(r.loc.Keta,4)}</td></tr>
            <tr><td>⑤</td><td>始冲流速 v'0</td><td>0.462·(d/B1)^0.06·v0</td><td>${fv(r.loc.v0p,4)} m/s</td></tr>
            <tr><td>⑥</td><td>行近流速 v</td><td>E·dc^(1/6)·hp^(2/3)</td><td>${fv(r.loc.v,4)} m/s</td></tr>`;
@@ -643,7 +643,7 @@ function renderSingleResult(){
   }else if(r.loc.formula.includes('65-2')){
     html+=`<tr><td></td><td>河床粒径 d</td><td>输入</td><td>${fv(r.loc.d)} mm</td></tr>
            <tr><td></td><td>桥下最大水深 hp</td><td>上游结果</td><td>${fv(r.loc.hp)} m</td></tr>
-           <tr><td>②</td><td>启动流速 v0</td><td>0.0246·(hp/d)^0.14·√(332d+10+(hp/d)^0.72)</td><td>${fv(r.loc.v0,4)} m/s</td></tr>
+           <tr><td>②</td><td>启动流速 v0</td><td>0.0246·(hp/d)^0.14·√(322d+(10+hp)/d^0.72)</td><td>${fv(r.loc.v0,4)} m/s</td></tr>
            <tr><td>③</td><td>Kη2</td><td>0.0023/d^2.2+0.375/d^0.5</td><td>${fv(r.loc.Keta2,4)}</td></tr>
            <tr><td>④</td><td>始冲流速 v'0</td><td>0.12·d^0.5</td><td>${fv(r.loc.v0p,4)} m/s</td></tr>
            <tr><td>⑤</td><td>行近流速 v</td><td>E·dc^(1/6)·hp^(2/3)</td><td>${fv(r.loc.v,4)} m/s</td></tr>
@@ -717,7 +717,7 @@ function calcBatch(){
       hp=Math.pow(A*(Qc/Bc)*ratio/(E*Math.pow(dc,1/6)),3/5)*(hmc/hc)+hmc;
     }
     const v=E*Math.pow(dc,1/6)*Math.pow(hp,2/3);
-    const v0=0.0246*Math.pow(hp/dc,0.14)*Math.sqrt(332*dc+10+Math.pow(hp/dc,0.72));
+    const v0=0.0246*Math.pow(hp/dc,0.14)*Math.sqrt(322*dc+(10+hp)/Math.pow(dc,0.72));
     const Keta=0.8*(1/Math.pow(dc,0.45)+1/Math.pow(dc,0.15));
     const v0p=0.462*Math.pow(dc/B1,0.06)*v0;
     if(v<=v0){hb=Kxi*Keta*Math.pow(B1,0.6)*(v-v0p);}
