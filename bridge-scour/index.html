@@ -125,7 +125,7 @@ body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"Segoe UI",sans
   <div class="sf-divider"></div>
   <div class="sf-section"><span class="dot"></span>一般冲刷</div>
   <div class="sf-group">
-    <div class="sf-label">公式选择<span class="sf-tip" data-tip="① 包尔达可夫\n   来源：TB 10017\n   适用：均匀土质、初步估算\n   公式：hp = P × hmax\n\n② 64-1 冲止流速\n   来源：SL/T 808-2025 A.3.5-1\n   适用：非黏性土河槽（推荐）\n   公式：hp=[AQc/(Bc·(hmc/hc)^(5/3)·E·dc^(1/6))]^(3/5)\n\n③ 64-2 输沙平衡\n   来源：SL/T 808-2025 A.3.5-1 变体\n   适用：非黏性土沙质河槽\n   公式：64-1结果 × (hmc/hc)\n\n④ 黏性土公式\n   来源：SL/T 808-2025 A.3.5-6\n   适用：黏性土河床（黏土、壤土）\n   公式：hp=[AQc/(Bc·(hmc/hc)^(5/3)·0.33/IL)]^(5/8)">?</span></div>
+    <div class="sf-label">公式选择<span class="sf-tip" data-tip="① 包尔达可夫\n   来源：TB 10017\n   适用：均匀土质、初步估算\n   公式：hp = P × hmax\n\n② 64-1 冲止流速\n   来源：SL/T 808-2025 A.3.5-1\n   适用：非黏性土河槽（推荐）\n   公式：hp=[A·(Qc/Bc)·(hmc/hc)^(5/3)/(E·dc^(1/6))]^(3/5)\n\n③ 64-2 输沙平衡\n   来源：SL/T 808-2025 A.3.5-1 变体\n   适用：非黏性土沙质河槽\n   公式：64-1结果 × (hmc/hc)\n\n④ 黏性土公式\n   来源：SL/T 808-2025 A.3.5-6\n   适用：黏性土河床（黏土、壤土）\n   公式：hp=[AQc/(Bc·(hmc/hc)^(5/3)·0.33/IL)]^(5/8)">?</span></div>
     <select class="sf-select" id="s_genFormula" onchange="onGenFormulaChange()">
       <option value="bao">① 包尔达可夫（TB 10017，估算用）</option>
       <option value="64-1" selected>② 64-1 冲止流速（SL/T 808-2025 A.3.5-1）</option>
@@ -264,12 +264,12 @@ body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"Segoe UI",sans
     <p style="font-size:11px;color:var(--t3);margin-bottom:10px">依据 SL/T 808-2025 第 A.3.5 条："桥梁(或渡槽等)下的一般冲刷及局部冲刷计算，应根据河床的土性，参照 TB 10017 和 JTG C30 计算"</p>
 
     <p style="font-size:12px;font-weight:600;color:var(--pri);margin:10px 0 4px">一、一般冲刷 — 非黏性土河床</p>
-    <div class="fml"><b>64-1 冲止流速法（SL/T 808-2025 公式 A.3.5-1）</b><br>适用条件：非黏性土河槽，推荐用于一般工程<br><span class="sym">hp</span> = [ A·Q<sub>c</sub> / (B<sub>c</sub>·(h<sub>mc</sub>/h<sub>c</sub>)<sup>5/3</sup>·E·d<sub>c</sub><sup>1/6</sup>) ]<sup>3/5</sup></div>
+    <div class="fml"><b>64-1 冲止流速法（SL/T 808-2025 公式 A.3.5-1）</b><br>适用条件：非黏性土河槽，推荐用于一般工程<br><span class="sym">hp</span> = [ A·(Q<sub>c</sub>/B<sub>c</sub>)·(h<sub>mc</sub>/h<sub>c</sub>)<sup>5/3</sup> / (E·d<sub>c</sub><sup>1/6</sup>) ]<sup>3/5</sup></div>
     <div class="fml"><b>64-2 输沙平衡法（SL/T 808-2025 公式 A.3.5-1 变体）</b><br>适用条件：非黏性土沙质河槽，河槽冲淤平衡<br><span class="sym">hp</span> = 64-1结果 × (h<sub>mc</sub>/h<sub>c</sub>)</div>
     <div class="fml"><b>河滩部分（SL/T 808-2025 公式 A.3.5-4）</b><br>适用条件：非黏性土河滩及人工渠道<br><span class="sym">hp</span> = [ A<sub>t</sub>·Q<sub>t</sub> / (B<sub>t</sub>·(h<sub>mt</sub>/h<sub>t</sub>)<sup>5/3</sup>·V<sub>H1</sub>) ]<sup>5/6</sup></div>
 
     <p style="font-size:12px;font-weight:600;color:var(--pri);margin:10px 0 4px">二、一般冲刷 — 黏性土河床</p>
-    <div class="fml"><b>黏性土河槽（SL/T 808-2025 公式 A.3.5-6）</b><br>适用条件：黏性土河床（黏土、壤土），A=1.0~1.2，IL=0.16~1.19<br><span class="sym">hp</span> = [ A·Q<sub>c</sub> / (B<sub>c</sub>·(h<sub>mc</sub>/h<sub>c</sub>)<sup>5/3</sup>·0.33/I<sub>L</sub>) ]<sup>5/8</sup></div>
+    <div class="fml"><b>黏性土河槽（SL/T 808-2025 公式 A.3.5-6）</b><br>适用条件：黏性土河床（黏土、壤土），A=1.0~1.2，IL=0.16~1.19<br><span class="sym">hp</span> = [ A·(Q<sub>c</sub>/B<sub>c</sub>)·(h<sub>mc</sub>/h<sub>c</sub>)<sup>5/3</sup> / (0.33/I<sub>L</sub>) ]<sup>5/8</sup></div>
 
     <p style="font-size:12px;font-weight:600;color:var(--pri);margin:10px 0 4px">三、局部冲刷 — 非黏性土河床</p>
     <div class="fml"><b>65-1 修正式（SL/T 808-2025 公式 A.3.5-8 ~ A.3.5-12）</b><br>适用条件：非黏性土河床桥墩，推荐使用<br>清水冲刷（v≤v₀）：<span class="sym">hb</span> = K<sub>ξ</sub>·K<sub>η</sub>·B<sub>1</sub><sup>0.6</sup>·(v-v'<sub>0</sub>)<br>动床冲刷（v>v₀）：<span class="sym">hb</span> = K<sub>ξ</sub>·K<sub>η</sub>·B<sub>1</sub><sup>0.6</sup>·(v<sub>0</sub>-v'<sub>0</sub>)·((v-v'<sub>0</sub>)/(v<sub>0</sub>-v'<sub>0</sub>))<sup>n</sup></div>
@@ -400,7 +400,7 @@ function calcGeneralScour(){
     if([hmc,hc,Bc,Qc,dc].some(isNaN))return null;
     const ratio=Math.pow(hmc/hc,5/3);
     const dcPow=Math.pow(dc,1/6);
-    const inner=A*Qc/(Bc*ratio*E*dcPow);
+    const inner=A*(Qc/Bc)*ratio/(E*dcPow);
     hp=Math.pow(inner,3/5);
     const hpTotal=hp+hmc;
     details={formula:'64-1 冲止流速（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,hp,hpTotal};
@@ -416,7 +416,7 @@ function calcGeneralScour(){
     if([hmc,hc,Bc,Qc,dc].some(isNaN))return null;
     const ratio=Math.pow(hmc/hc,5/3);
     const dcPow=Math.pow(dc,1/6);
-    const inner=A*Qc/(Bc*ratio*E*dcPow);
+    const inner=A*(Qc/Bc)*ratio/(E*dcPow);
     const hp64_1=Math.pow(inner,3/5);
     hp=hp64_1*(hmc/hc);
     const hpTotal=hp+hmc;
@@ -432,7 +432,7 @@ function calcGeneralScour(){
     if([hmc,hc,Bc,Qc,IL].some(isNaN))return null;
     const ratio=Math.pow(hmc/hc,5/3);
     const ILratio=0.33/IL;
-    const inner=A*Qc/(Bc*ratio*ILratio);
+    const inner=A*(Qc/Bc)*ratio/ILratio;
     hp=Math.pow(inner,5/8);
     const hpTotal=hp+hmc;
     details={formula:'黏性土（SL/T 808-2025 A.3.5-6）',hmc,hc,Bc,Qc,IL,A,ratio,ILratio,inner,hp,hpTotal};
@@ -570,7 +570,7 @@ function renderSingleResult(){
            <tr><td>②</td><td>冲刷系数 P</td><td>输入</td><td>${fv(r.gen.P)}</td></tr>
            <tr class="total"><td>③</td><td>一般冲刷深度 hp</td><td>P × hmax</td><td>${fv(r.gen.P)} × ${fv(r.gen.hmax)} = <b>${fv(r.gen.hp)} m</b></td></tr>`;
   }else if(r.gen.formula.includes('64')){
-    const denom=r.gen.Bc*r.gen.ratio*r.gen.E*r.gen.dcPow;
+    const denom=r.gen.E*r.gen.dcPow;
     html+=`<tr><td>①</td><td>河槽最大水深 hmc</td><td>输入</td><td>${fv(r.gen.hmc)} m</td></tr>
            <tr><td></td><td>河槽平均水深 hc</td><td>输入</td><td>${fv(r.gen.hc)} m</td></tr>
            <tr><td></td><td>桥孔净宽 Bc</td><td>输入</td><td>${fv(r.gen.Bc,0)} m</td></tr>
@@ -578,11 +578,11 @@ function renderSingleResult(){
            <tr><td></td><td>含沙量系数 E</td><td>输入</td><td>${fv(r.gen.E)}</td></tr>
            <tr><td></td><td>平均粒径 dc</td><td>输入</td><td>${fv(r.gen.dc)} mm</td></tr>
            <tr><td></td><td>单宽流量系数 A</td><td>输入</td><td>${fv(r.gen.A)}</td></tr>
-           <tr><td>②</td><td>(hmc/hc)^(5/3)</td><td>(${fv(r.gen.hmc)}/${fv(r.gen.hc)})^(5/3)</td><td>${fv(r.gen.ratio,4)}</td></tr>
-           <tr><td>③</td><td>dc^(1/6)</td><td>${fv(r.gen.dc)}^(1/6)</td><td>${fv(r.gen.dcPow,4)}</td></tr>
-           <tr><td>④</td><td>分母 Bc·ratio·E·dc^(1/6)</td><td>${fv(r.gen.Bc,0)}×${fv(r.gen.ratio,4)}×${fv(r.gen.E)}×${fv(r.gen.dcPow,4)}</td><td>${fv(denom,4)}</td></tr>
-           <tr><td>⑤</td><td>分子 A·Qc</td><td>${fv(r.gen.A)}×${fv(r.gen.Qc,0)}</td><td>${fv(r.gen.A*r.gen.Qc,4)}</td></tr>
-           <tr><td>⑥</td><td>括号内值</td><td>A·Qc / 分母</td><td>${fv(r.gen.inner,4)}</td></tr>`;
+           <tr><td>②</td><td>Qc/Bc</td><td>${fv(r.gen.Qc,0)}/${fv(r.gen.Bc,0)}</td><td>${fv(r.gen.Qc/r.gen.Bc,4)}</td></tr>
+           <tr><td>③</td><td>(hmc/hc)^(5/3)</td><td>(${fv(r.gen.hmc)}/${fv(r.gen.hc)})^(5/3)</td><td>${fv(r.gen.ratio,4)}</td></tr>
+           <tr><td>④</td><td>A·(Qc/Bc)·ratio</td><td>${fv(r.gen.A)}×${fv(r.gen.Qc/r.gen.Bc,4)}×${fv(r.gen.ratio,4)}</td><td>${fv(r.gen.A*r.gen.Qc/r.gen.Bc*r.gen.ratio,4)}</td></tr>
+           <tr><td>⑤</td><td>E·dc^(1/6)</td><td>${fv(r.gen.E)}×${fv(r.gen.dcPow,4)}</td><td>${fv(denom,4)}</td></tr>
+           <tr><td>⑥</td><td>括号内值</td><td>分子/分母</td><td>${fv(r.gen.inner,4)}</td></tr>`;
     if(r.gen.formula.includes('64-2')){
       html+=`<tr><td>⑦</td><td>64-1 结果</td><td>括号值^(3/5)</td><td>${fv(r.gen.hp64_1,4)} m</td></tr>
              <tr><td>⑧</td><td>一般冲刷深度</td><td>64-1 × (hmc/hc)</td><td>${fv(r.gen.hp64_1,4)} × ${fv(r.gen.hmc/r.gen.hc,4)} = <b>${fv(r.gen.hp,4)} m</b></td></tr>
@@ -711,10 +711,10 @@ function calcBatch(){
     let hp,hb;
     if(formula==='64-1'){
       const ratio=Math.pow(hmc/hc,5/3);
-      hp=Math.pow(A*Qc/(Bc*ratio*Math.pow(dc,1/6)*E),3/5)+hmc;
+      hp=Math.pow(A*(Qc/Bc)*ratio/(E*Math.pow(dc,1/6)),3/5)+hmc;
     }else{
       const ratio=Math.pow(hmc/hc,5/3);
-      hp=Math.pow(A*Qc/(Bc*ratio*Math.pow(dc,1/6)*E),3/5)*(hmc/hc)+hmc;
+      hp=Math.pow(A*(Qc/Bc)*ratio/(E*Math.pow(dc,1/6)),3/5)*(hmc/hc)+hmc;
     }
     const v=E*Math.pow(dc,1/6)*Math.pow(hp,2/3);
     const v0=0.0246*Math.pow(hp/dc,0.14)*Math.sqrt(332*dc+10+Math.pow(hp/dc,0.72));
