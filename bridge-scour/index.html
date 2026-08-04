@@ -503,6 +503,9 @@ function calcSingle(){
   const loc=calcLocalScour(gen.hp);
   if(!loc||isNaN(loc.hb)){alert('局部冲刷参数不完整');return;}
 
+  const totalScour=nat+gen.hp+loc.hb;
+  const lowestLine=wl-totalScour;
+
   lastResult={wl,qp,nat,gen,loc,totalScour,lowestLine};
   renderSingleResult();
 }
