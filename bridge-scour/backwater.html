@@ -371,14 +371,14 @@ function calc(){
         omega=parseFloat(document.getElementById('s_omega').value);
         pierArea=parseFloat(document.getElementById('s_pierArea').value);
         if(isNaN(omega)||isNaN(pierArea)){alert('自动计算P需要填写天然过水面积和桥墩阻水面积');return;}
-        omegaX=QP/(VP*Math.cos(alpha_rail*Math.PI/180));
+        omegaX=qp/(VP*Math.cos(alpha_rail*Math.PI/180));
         omegaG=omega-pierArea;
         P_rail=omegaX/omegaG;
         Psource='auto';
       }else{
         P_rail=parseFloat(document.getElementById('s_P_rail').value);
         if(isNaN(P_rail)){alert('请填写冲刷系数 P');return;}
-        omegaX=QP/(VP*Math.cos(alpha_rail*Math.PI/180));
+        omegaX=qp/(VP*Math.cos(alpha_rail*Math.PI/180));
         Psource='manual';
       }
 
