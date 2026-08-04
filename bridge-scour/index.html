@@ -577,21 +577,20 @@ function renderSingleResult(){
              <tr><td>⑨</td><td>一般冲刷深度</td><td>hp − hmc</td><td>${fv(r.gen.hp,4)} − ${fv(r.gen.hmc)} = <b>${fv(r.gen.hp - r.gen.hmc,4)} m</b></td></tr>`;
     }
   }else{
-    const denom=r.gen.Bc*r.gen.ratio*r.gen.ILratio;
     html+=`<tr><td>①</td><td>河槽最大水深 hmc</td><td>输入</td><td>${fv(r.gen.hmc)} m</td></tr>
            <tr><td></td><td>河槽平均水深 hc</td><td>输入</td><td>${fv(r.gen.hc)} m</td></tr>
            <tr><td></td><td>桥孔净宽 Bc</td><td>输入</td><td>${fv(r.gen.Bc,0)} m</td></tr>
            <tr><td></td><td>河槽流量 Qc</td><td>输入</td><td>${fv(r.gen.Qc,0)} m³/s</td></tr>
            <tr><td></td><td>液性指数 IL</td><td>输入</td><td>${fv(r.gen.IL)}</td></tr>
            <tr><td></td><td>单宽流量系数 A</td><td>输入</td><td>${fv(r.gen.A)}</td></tr>
-           <tr><td>②</td><td>(hmc/hc)^(5/3)</td><td>(${fv(r.gen.hmc)}/${fv(r.gen.hc)})^(5/3)</td><td>${fv(r.gen.ratio,4)}</td></tr>
-           <tr><td>③</td><td>0.33/IL</td><td>0.33/${fv(r.gen.IL)}</td><td>${fv(r.gen.ILratio,4)}</td></tr>
-           <tr><td>④</td><td>分母 Bc·ratio·0.33/IL</td><td>${fv(r.gen.Bc,0)}×${fv(r.gen.ratio,4)}×${fv(r.gen.ILratio,4)}</td><td>${fv(denom,4)}</td></tr>
-           <tr><td>⑤</td><td>括号内值</td><td>A·Qc / 分母</td><td>${fv(r.gen.inner,4)}</td></tr>
-           <tr><td>⑤</td><td>括号内值</td><td>A·Qc / 分母</td><td>${fv(r.gen.inner,4)}</td></tr>
-           <tr class="total"><td>⑥</td><td>桥下最大水深 hp</td><td>公式直接结果</td><td><b>${fv(r.gen.hp,4)} m</b></td></tr>
-           <tr><td>⑦</td><td>天然最大水深 hmc</td><td>输入</td><td>${fv(r.gen.hmc)} m</td></tr>
-           <tr><td>⑧</td><td>一般冲刷深度</td><td>hp − hmc</td><td>${fv(r.gen.hp,4)} − ${fv(r.gen.hmc)} = <b>${fv(r.gen.hp - r.gen.hmc,4)} m</b></td></tr>`;
+           <tr><td>②</td><td>Qc/Bc</td><td>${fv(r.gen.Qc,0)}/${fv(r.gen.Bc,0)}</td><td>${fv(r.gen.Qc/r.gen.Bc,4)}</td></tr>
+           <tr><td>③</td><td>(hmc/hc)^(5/3)</td><td>(${fv(r.gen.hmc)}/${fv(r.gen.hc)})^(5/3)</td><td>${fv(r.gen.ratio,4)}</td></tr>
+           <tr><td>④</td><td>分子 A·(Qc/Bc)·ratio</td><td>${fv(r.gen.A)}×${fv(r.gen.Qc/r.gen.Bc,4)}×${fv(r.gen.ratio,4)}</td><td>${fv(r.gen.A*r.gen.Qc/r.gen.Bc*r.gen.ratio,4)}</td></tr>
+           <tr><td>⑤</td><td>分母 0.33/IL</td><td>0.33/${fv(r.gen.IL)}</td><td>${fv(r.gen.ILratio,4)}</td></tr>
+           <tr><td>⑥</td><td>括号内值</td><td>分子/分母</td><td>${fv(r.gen.inner,4)}</td></tr>
+           <tr class="total"><td>⑦</td><td>桥下最大水深 hp</td><td>括号值^(5/8)</td><td><b>${fv(r.gen.hp,4)} m</b></td></tr>
+           <tr><td>⑧</td><td>天然最大水深 hmc</td><td>输入</td><td>${fv(r.gen.hmc)} m</td></tr>
+           <tr><td>⑨</td><td>一般冲刷深度</td><td>hp − hmc</td><td>${fv(r.gen.hp,4)} − ${fv(r.gen.hmc)} = <b>${fv(r.gen.hp - r.gen.hmc,4)} m</b></td></tr>`;
   }
   html+=`</table>`;
 
