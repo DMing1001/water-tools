@@ -467,7 +467,7 @@ function calcLocalScour(hp_val){
       const v0=0.0246*Math.pow(hp_val/d,0.14)*Math.sqrt(322*d+(10+hp_val)/Math.pow(d,0.72));
       const Keta=0.8*(1/Math.pow(d,0.45)+1/Math.pow(d,0.15));
       const v0p=0.462*Math.pow(d/B1,0.06)*v0;
-      const n=Math.pow(v0/v,0.25)*Math.pow(d,-0.19);
+      const n=Math.pow(v0/v,0.25*Math.pow(d,0.19));
       if(v<=v0){
         hb=Kxi*Keta*Math.pow(B1,0.6)*(v-v0p);
       }else{
@@ -627,7 +627,7 @@ function renderSingleResult(){
            <tr><td>⑤</td><td>始冲流速 v'0</td><td>0.462·(d/B1)^0.06·v0</td><td>${fv(r.loc.v0p,4)} m/s</td></tr>
            <tr><td>⑥</td><td>行近流速 v</td><td>E·dc^(1/6)·hp^(2/3)</td><td>${fv(r.loc.v,4)} m/s</td></tr>`;
     if(r.loc.v>r.loc.v0){
-      html+=`<tr><td>⑦</td><td>指数 n</td><td>(v0/v)^0.25·d^(-0.19)</td><td>${fv(r.loc.n,4)}</td></tr>
+      html+=`<tr><td>⑦</td><td>指数 n</td><td>(v0/v)^(0.25·d^0.19)</td><td>${fv(r.loc.n,4)}</td></tr>
              <tr><td></td><td>v0-v'0</td><td>${fv(r.loc.v0,4)}-${fv(r.loc.v0p,4)}</td><td>${fv(r.loc.v0-r.loc.v0p,4)}</td></tr>
              <tr><td></td><td>v-v'0</td><td>${fv(r.loc.v,4)}-${fv(r.loc.v0p,4)}</td><td>${fv(r.loc.v-r.loc.v0p,4)}</td></tr>
              <tr><td></td><td>(v-v'0)/(v0-v'0)</td><td>—</td><td>${fv((r.loc.v-r.loc.v0p)/(r.loc.v0-r.loc.v0p),4)}</td></tr>
@@ -721,7 +721,7 @@ function calcBatch(){
     const Keta=0.8*(1/Math.pow(dc,0.45)+1/Math.pow(dc,0.15));
     const v0p=0.462*Math.pow(dc/B1,0.06)*v0;
     if(v<=v0){hb=Kxi*Keta*Math.pow(B1,0.6)*(v-v0p);}
-    else{const n=Math.pow(v0/v,0.25)*Math.pow(dc,-0.19);hb=Kxi*Keta*Math.pow(B1,0.6)*(v0-v0p)*Math.pow((v-v0p)/(v0-v0p),n);}
+    else{const n=Math.pow(v0/v,0.25*Math.pow(dc,0.19));hb=Kxi*Keta*Math.pow(B1,0.6)*(v0-v0p)*Math.pow((v-v0p)/(v0-v0p),n);}
     hb=Math.max(hb,0);
     const total=hp+hb;
     const lowest=wl-total;
