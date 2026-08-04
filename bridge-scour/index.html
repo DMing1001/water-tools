@@ -401,9 +401,9 @@ function calcGeneralScour(){
     const ratio=Math.pow(hmc/hc,5/3);
     const dcPow=Math.pow(dc,1/6);
     const inner=A*Qc/(Bc*ratio*E*dcPow);
-    const scourInc=Math.pow(inner,3/5);
-    hp=scourInc+hmc;
-    details={formula:'64-1 冲止流速（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,scourInc,hp};
+    hp=Math.pow(inner,3/5);
+    const hpTotal=hp+hmc;
+    details={formula:'64-1 冲止流速（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,hp,hpTotal};
   }
   else if(formula==='64-2'){
     const hmc=parseFloat(document.getElementById('s_hmc').value);
@@ -418,9 +418,9 @@ function calcGeneralScour(){
     const dcPow=Math.pow(dc,1/6);
     const inner=A*Qc/(Bc*ratio*E*dcPow);
     const hp64_1=Math.pow(inner,3/5);
-    const scourInc=hp64_1*(hmc/hc);
-    hp=scourInc+hmc;
-    details={formula:'64-2 输沙平衡（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,hp64_1,scourInc,hp};
+    hp=hp64_1*(hmc/hc);
+    const hpTotal=hp+hmc;
+    details={formula:'64-2 输沙平衡（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,hp64_1,hp,hpTotal};
   }
   else if(formula==='cohesive'){
     const hmc=parseFloat(document.getElementById('s_hmc_c').value);
@@ -433,9 +433,9 @@ function calcGeneralScour(){
     const ratio=Math.pow(hmc/hc,5/3);
     const ILratio=0.33/IL;
     const inner=A*Qc/(Bc*ratio*ILratio);
-    const scourInc=Math.pow(inner,5/8);
-    hp=scourInc+hmc;
-    details={formula:'黏性土（SL/T 808-2025 A.3.5-6）',hmc,hc,Bc,Qc,IL,A,ratio,ILratio,inner,scourInc,hp};
+    hp=Math.pow(inner,5/8);
+    const hpTotal=hp+hmc;
+    details={formula:'黏性土（SL/T 808-2025 A.3.5-6）',hmc,hc,Bc,Qc,IL,A,ratio,ILratio,inner,hp,hpTotal};
   }
   return{hp,...details};
 }
@@ -526,7 +526,7 @@ function calcSingle(){
   const gen=calcGeneralScour();
   if(!gen||isNaN(gen.hp)){alert('一般冲刷参数不完整');return;}
 
-  const loc=calcLocalScour(gen.hp);
+  const loc=calcLocalScour(gen.hpTotal);
   if(!loc||isNaN(loc.hb)){alert('局部冲刷参数不完整');return;}
 
   const totalScour=nat+gen.hp+loc.hb;
@@ -584,14 +584,14 @@ function renderSingleResult(){
            <tr><td>⑤</td><td>分子 A·Qc</td><td>${fv(r.gen.A)}×${fv(r.gen.Qc,0)}</td><td>${fv(r.gen.A*r.gen.Qc,4)}</td></tr>
            <tr><td>⑥</td><td>括号内值</td><td>A·Qc / 分母</td><td>${fv(r.gen.inner,4)}</td></tr>`;
     if(r.gen.formula.includes('64-2')){
-      html+=`<tr><td>⑦</td><td>64-1 冲刷增量</td><td>括号值^(3/5)</td><td>${fv(r.gen.hp64_1,4)} m</td></tr>
-             <tr><td>⑧</td><td>64-2 冲刷增量</td><td>64-1 × (hmc/hc)</td><td>${fv(r.gen.hp64_1,4)} × ${fv(r.gen.hmc/r.gen.hc,4)} = ${fv(r.gen.scourInc,4)} m</td></tr>
+      html+=`<tr><td>⑦</td><td>64-1 结果</td><td>括号值^(3/5)</td><td>${fv(r.gen.hp64_1,4)} m</td></tr>
+             <tr><td>⑧</td><td>一般冲刷深度</td><td>64-1 × (hmc/hc)</td><td>${fv(r.gen.hp64_1,4)} × ${fv(r.gen.hmc/r.gen.hc,4)} = <b>${fv(r.gen.hp,4)} m</b></td></tr>
              <tr><td>⑨</td><td>天然最大水深 hmc</td><td>输入</td><td>${fv(r.gen.hmc)} m</td></tr>
-             <tr class="total"><td>⑩</td><td>桥下最大水深 hp</td><td>冲刷增量 + hmc</td><td>${fv(r.gen.scourInc,4)} + ${fv(r.gen.hmc)} = <b>${fv(r.gen.hp)} m</b></td></tr>`;
+             <tr class="total"><td>⑩</td><td>桥下最大水深 hp</td><td>冲刷深度 + hmc</td><td>${fv(r.gen.hp,4)} + ${fv(r.gen.hmc)} = <b>${fv(r.gen.hpTotal)} m</b></td></tr>`;
     }else{
-      html+=`<tr><td>⑦</td><td>冲刷增量</td><td>括号值^(3/5)</td><td>${fv(r.gen.scourInc,4)} m</td></tr>
+      html+=`<tr><td>⑦</td><td>一般冲刷深度</td><td>括号值^(3/5)</td><td><b>${fv(r.gen.hp,4)} m</b></td></tr>
              <tr><td>⑧</td><td>天然最大水深 hmc</td><td>输入</td><td>${fv(r.gen.hmc)} m</td></tr>
-             <tr class="total"><td>⑨</td><td>桥下最大水深 hp</td><td>冲刷增量 + hmc</td><td>${fv(r.gen.scourInc,4)} + ${fv(r.gen.hmc)} = <b>${fv(r.gen.hp)} m</b></td></tr>`;
+             <tr class="total"><td>⑨</td><td>桥下最大水深 hp</td><td>冲刷深度 + hmc</td><td>${fv(r.gen.hp,4)} + ${fv(r.gen.hmc)} = <b>${fv(r.gen.hpTotal)} m</b></td></tr>`;
     }
   }else{
     const denom=r.gen.Bc*r.gen.ratio*r.gen.ILratio;
@@ -606,9 +606,9 @@ function renderSingleResult(){
            <tr><td>④</td><td>分母 Bc·ratio·0.33/IL</td><td>${fv(r.gen.Bc,0)}×${fv(r.gen.ratio,4)}×${fv(r.gen.ILratio,4)}</td><td>${fv(denom,4)}</td></tr>
            <tr><td>⑤</td><td>括号内值</td><td>A·Qc / 分母</td><td>${fv(r.gen.inner,4)}</td></tr>
            <tr><td>⑤</td><td>括号内值</td><td>A·Qc / 分母</td><td>${fv(r.gen.inner,4)}</td></tr>
-           <tr><td>⑥</td><td>冲刷增量</td><td>括号值^(5/8)</td><td>${fv(r.gen.scourInc,4)} m</td></tr>
+           <tr><td>⑥</td><td>一般冲刷深度</td><td>括号值^(5/8)</td><td><b>${fv(r.gen.hp,4)} m</b></td></tr>
            <tr><td>⑦</td><td>天然最大水深 hmc</td><td>输入</td><td>${fv(r.gen.hmc)} m</td></tr>
-           <tr class="total"><td>⑧</td><td>桥下最大水深 hp</td><td>冲刷增量 + hmc</td><td>${fv(r.gen.scourInc,4)} + ${fv(r.gen.hmc)} = <b>${fv(r.gen.hp)} m</b></td></tr>`;
+           <tr class="total"><td>⑧</td><td>桥下最大水深 hp</td><td>冲刷深度 + hmc</td><td>${fv(r.gen.hp,4)} + ${fv(r.gen.hmc)} = <b>${fv(r.gen.hpTotal)} m</b></td></tr>`;
   }
   html+=`</table>`;
 
@@ -620,7 +620,7 @@ function renderSingleResult(){
 
   if(r.loc.formula.includes('65-1')){
     html+=`<tr><td></td><td>河床粒径 d</td><td>输入</td><td>${fv(r.loc.d)} mm</td></tr>
-           <tr><td></td><td>一般冲刷深度 hp</td><td>上游结果</td><td>${fv(r.loc.hp)} m</td></tr>
+           <tr><td></td><td>桥下最大水深 hp</td><td>上游结果</td><td>${fv(r.loc.hp)} m</td></tr>
            <tr><td>②</td><td>hp/d</td><td>${fv(r.loc.hp)}/${fv(r.loc.d)}</td><td>${fv(r.loc.hp/r.loc.d,4)}</td></tr>
            <tr><td>③</td><td>启动流速 v0</td><td>0.0246·(hp/d)^0.14·√(332d+10+(hp/d)^0.72)</td><td>${fv(r.loc.v0,4)} m/s</td></tr>
            <tr><td>④</td><td>河床颗粒系数 Kη</td><td>0.8·(1/d^0.45+1/d^0.15)</td><td>${fv(r.loc.Keta,4)}</td></tr>
@@ -642,7 +642,7 @@ function renderSingleResult(){
     html+=`<tr><td></td><td>冲刷类型</td><td colspan="2">${r.loc.type}</td></tr>`;
   }else if(r.loc.formula.includes('65-2')){
     html+=`<tr><td></td><td>河床粒径 d</td><td>输入</td><td>${fv(r.loc.d)} mm</td></tr>
-           <tr><td></td><td>一般冲刷深度 hp</td><td>上游结果</td><td>${fv(r.loc.hp)} m</td></tr>
+           <tr><td></td><td>桥下最大水深 hp</td><td>上游结果</td><td>${fv(r.loc.hp)} m</td></tr>
            <tr><td>②</td><td>启动流速 v0</td><td>0.0246·(hp/d)^0.14·√(332d+10+(hp/d)^0.72)</td><td>${fv(r.loc.v0,4)} m/s</td></tr>
            <tr><td>③</td><td>Kη2</td><td>0.0023/d^2.2+0.375/d^0.5</td><td>${fv(r.loc.Keta2,4)}</td></tr>
            <tr><td>④</td><td>始冲流速 v'0</td><td>0.12·d^0.5</td><td>${fv(r.loc.v0p,4)} m/s</td></tr>
@@ -760,12 +760,14 @@ function makeReport(r){
     t+='    Bc = '+fv(r.gen.Bc,0)+' m,  Qc = '+fv(r.gen.Qc,0)+' m³/s\n';
     t+='    E = '+fv(r.gen.E)+',  dc = '+fv(r.gen.dc)+' mm,  A = '+fv(r.gen.A)+'\n';
     t+='    (hmc/hc)^(5/3) = '+fv(r.gen.ratio,4)+'\n';
-    t+='    hp = '+fv(r.gen.hp)+' m\n\n';
+    t+='    冲刷增量 = '+fv(r.gen.hp)+' m\n';
+    t+='    桥下最大水深 hp = '+fv(r.gen.hp)+' + '+fv(r.gen.hmc)+' = '+fv(r.gen.hpTotal)+' m\n\n';
   }else{
     t+='    IL = '+fv(r.gen.IL)+'\n';
-    t+='    hp = '+fv(r.gen.hp)+' m\n\n';
+    t+='    冲刷增量 = '+fv(r.gen.hp)+' m\n';
+    t+='    桥下最大水深 hp = '+fv(r.gen.hp)+' + '+fv(r.gen.hmc)+' = '+fv(r.gen.hpTotal)+' m\n\n';
   }
-  t+='  一般冲刷深度: '+fv(r.gen.hp)+' m\n\n';
+  t+='  一般冲刷深度: '+fv(r.gen.hp)+' m (桥下最大水深: '+fv(r.gen.hpTotal)+' m)\n\n';
   t+=hr('-')+'\n';
   t+='  二、局部冲刷（'+r.loc.formula+'）\n\n';
   t+='    B1 = '+fv(r.loc.B1)+' m,  Kξ = '+fv(r.loc.Kxi)+'\n';
