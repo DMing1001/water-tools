@@ -403,7 +403,7 @@ function calcGeneralScour(){
     const inner=A*(Qc/Bc)*ratio/(E*dcPow);
     hp=Math.pow(inner,3/5);
     const hpTotal=hp+hmc;
-    details={formula:'64-1 冲止流速（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,hp,hpTotal};
+    const genScourDepth=hpTotal-hmc;details={formula:'64-1 冲止流速（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,hp,hpTotal,genScourDepth};
   }
   else if(formula==='64-2'){
     const hmc=parseFloat(document.getElementById('s_hmc').value);
@@ -420,7 +420,7 @@ function calcGeneralScour(){
     const hp64_1=Math.pow(inner,3/5);
     hp=hp64_1*(hmc/hc);
     const hpTotal=hp+hmc;
-    details={formula:'64-2 输沙平衡（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,hp64_1,hp,hpTotal};
+    const genScourDepth=hpTotal-hmc;details={formula:'64-2 输沙平衡（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,hp64_1,hp,hpTotal,genScourDepth};
   }
   else if(formula==='cohesive'){
     const hmc=parseFloat(document.getElementById('s_hmc_c').value);
@@ -435,7 +435,7 @@ function calcGeneralScour(){
     const inner=A*(Qc/Bc)*ratio/ILratio;
     hp=Math.pow(inner,5/8);
     const hpTotal=hp+hmc;
-    details={formula:'黏性土（SL/T 808-2025 A.3.5-6）',hmc,hc,Bc,Qc,IL,A,ratio,ILratio,inner,hp,hpTotal};
+    const genScourDepth=hpTotal-hmc;details={formula:'黏性土（SL/T 808-2025 A.3.5-6）',hmc,hc,Bc,Qc,IL,A,ratio,ILratio,inner,hp,hpTotal,genScourDepth};
   }
   return{hp,...details};
 }
@@ -529,7 +529,7 @@ function calcSingle(){
   const loc=calcLocalScour(gen.hpTotal);
   if(!loc||isNaN(loc.hb)){alert('局部冲刷参数不完整');return;}
 
-  const totalScour=nat+gen.hp+loc.hb;
+  const genDepth=gen.genScourDepth||gen.hp;const totalScour=nat+genDepth+loc.hb;
   const lowestLine=wl-totalScour;
 
   lastResult={wl,qp,nat,gen,loc,totalScour,lowestLine};
@@ -553,7 +553,7 @@ function renderSingleResult(){
       <div class="crest-box">
         <div class="cb-label">总冲刷深度 = 自然冲刷 + 一般冲刷 + 局部冲刷</div>
         <div class="cb-val">${fv(r.totalScour)} m</div>
-        <div class="cb-fm">${fv(r.nat)} + ${fv(r.gen.hp)} + ${fv(r.loc.hb)} = ${fv(r.totalScour)}</div>
+        <div class="cb-fm">${fv(r.nat)} + ${fv(r.gen.genScourDepth||r.gen.hp)} + ${fv(r.loc.hb)} = ${fv(r.totalScour)}</div>
       </div>
       <div class="crest-box" style="border-color:#93c5fd;background:linear-gradient(135deg,#eff6ff,#dbeafe)">
         <div class="cb-label">最低冲刷线高程 = 设计水位 - 总冲刷深度</div>
@@ -584,14 +584,15 @@ function renderSingleResult(){
            <tr><td>⑤</td><td>E·dc^(1/6)</td><td>${fv(r.gen.E)}×${fv(r.gen.dcPow,4)}</td><td>${fv(denom,4)}</td></tr>
            <tr><td>⑥</td><td>括号内值</td><td>分子/分母</td><td>${fv(r.gen.inner,4)}</td></tr>`;
     if(r.gen.formula.includes('64-2')){
-      html+=`<tr><td>⑦</td><td>64-1 结果</td><td>括号值^(3/5)</td><td>${fv(r.gen.hp64_1,4)} m</td></tr>
-             <tr><td>⑧</td><td>一般冲刷深度</td><td>64-1 × (hmc/hc)</td><td>${fv(r.gen.hp64_1,4)} × ${fv(r.gen.hmc/r.gen.hc,4)} = <b>${fv(r.gen.hp,4)} m</b></td></tr>
-             <tr><td>⑨</td><td>天然最大水深 hmc</td><td>输入</td><td>${fv(r.gen.hmc)} m</td></tr>
-             <tr class="total"><td>⑩</td><td>桥下最大水深 hp</td><td>冲刷深度 + hmc</td><td>${fv(r.gen.hp,4)} + ${fv(r.gen.hmc)} = <b>${fv(r.gen.hpTotal)} m</b></td></tr>`;
+      html+=`<tr><td>⑦</td><td>64-1 冲刷增量</td><td>括号值^(3/5)</td><td>${fv(r.gen.hp64_1,4)} m</td></tr>
+             <tr><td>⑧</td><td>64-2 冲刷增量</td><td>64-1 × (hmc/hc)</td><td>${fv(r.gen.hp64_1,4)} × ${fv(r.gen.hmc/r.gen.hc,4)} = ${fv(r.gen.hp,4)} m</td></tr>
+             <tr><td>⑨</td><td>桥下最大水深 hp</td><td>冲刷增量 + hmc</td><td>${fv(r.gen.hp,4)} + ${fv(r.gen.hmc)} = <b>${fv(r.gen.hpTotal,4)} m</b></td></tr>
+             <tr><td>⑩</td><td>天然最大水深 hmc</td><td>输入</td><td>${fv(r.gen.hmc)} m</td></tr>
+             <tr class="total"><td>⑪</td><td>一般冲刷深度</td><td>hp − hmc</td><td>${fv(r.gen.hpTotal,4)} − ${fv(r.gen.hmc)} = <b>${fv(r.gen.hpTotal - r.gen.hmc,4)} m</b></td></tr>`;
     }else{
-      html+=`<tr><td>⑦</td><td>一般冲刷深度</td><td>括号值^(3/5)</td><td><b>${fv(r.gen.hp,4)} m</b></td></tr>
+      html+=`<tr><td>⑦</td><td>桥下最大水深 hp</td><td>括号值^(3/5) + hmc</td><td>${fv(r.gen.hp,4)} + ${fv(r.gen.hmc)} = <b>${fv(r.gen.hpTotal,4)} m</b></td></tr>
              <tr><td>⑧</td><td>天然最大水深 hmc</td><td>输入</td><td>${fv(r.gen.hmc)} m</td></tr>
-             <tr class="total"><td>⑨</td><td>桥下最大水深 hp</td><td>冲刷深度 + hmc</td><td>${fv(r.gen.hp,4)} + ${fv(r.gen.hmc)} = <b>${fv(r.gen.hpTotal)} m</b></td></tr>`;
+             <tr class="total"><td>⑨</td><td>一般冲刷深度</td><td>hp − hmc</td><td>${fv(r.gen.hpTotal,4)} − ${fv(r.gen.hmc)} = <b>${fv(r.gen.hpTotal - r.gen.hmc,4)} m</b></td></tr>`;
     }
   }else{
     const denom=r.gen.Bc*r.gen.ratio*r.gen.ILratio;
@@ -606,9 +607,9 @@ function renderSingleResult(){
            <tr><td>④</td><td>分母 Bc·ratio·0.33/IL</td><td>${fv(r.gen.Bc,0)}×${fv(r.gen.ratio,4)}×${fv(r.gen.ILratio,4)}</td><td>${fv(denom,4)}</td></tr>
            <tr><td>⑤</td><td>括号内值</td><td>A·Qc / 分母</td><td>${fv(r.gen.inner,4)}</td></tr>
            <tr><td>⑤</td><td>括号内值</td><td>A·Qc / 分母</td><td>${fv(r.gen.inner,4)}</td></tr>
-           <tr><td>⑥</td><td>一般冲刷深度</td><td>括号值^(5/8)</td><td><b>${fv(r.gen.hp,4)} m</b></td></tr>
+           <tr><td>⑥</td><td>桥下最大水深 hp</td><td>括号值^(5/8) + hmc</td><td>${fv(r.gen.hp,4)} + ${fv(r.gen.hmc)} = <b>${fv(r.gen.hpTotal,4)} m</b></td></tr>
            <tr><td>⑦</td><td>天然最大水深 hmc</td><td>输入</td><td>${fv(r.gen.hmc)} m</td></tr>
-           <tr class="total"><td>⑧</td><td>桥下最大水深 hp</td><td>冲刷深度 + hmc</td><td>${fv(r.gen.hp,4)} + ${fv(r.gen.hmc)} = <b>${fv(r.gen.hpTotal)} m</b></td></tr>`;
+           <tr class="total"><td>⑧</td><td>一般冲刷深度</td><td>hp − hmc</td><td>${fv(r.gen.hpTotal,4)} − ${fv(r.gen.hmc)} = <b>${fv(r.gen.hpTotal - r.gen.hmc,4)} m</b></td></tr>`;
   }
   html+=`</table>`;
 
