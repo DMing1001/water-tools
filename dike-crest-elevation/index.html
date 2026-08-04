@@ -394,14 +394,27 @@ e = KV²Fcosβ/(2gd)
 
   <!-- 公式 -->
   <div class="collapsible">
-    <div class="collapse-hd" onclick="toggleCollapse(this)"><span class="arrow">▶</span> 计算公式</div>
+    <div class="collapse-hd" onclick="toggleCollapse(this)"><span class="arrow">▶</span> 计算公式（GB 50286-2013 附录 C）</div>
     <div class="collapse-bd">
-      <div class="fml"><b>一、平均波高（莆田试验站公式）</b><br><span class="sym">g</span>H̄/V² = 0.13·tanh[0.7·(<span class="sym">g</span>d/V²)<sup>0.7</sup>]·tanh{ 0.0018·(<span class="sym">g</span>F/V²)<sup>0.45</sup> / [0.13·tanh(…)] }</div>
-      <div class="fml"><b>二、平均波周期</b><br>T̄ = 4.438·√H̄</div>
-      <div class="fml"><b>三、平均波长（迭代）</b><br>L₀ = <span class="sym">g</span>T̄²/(2π) ， L̄ = L₀·tanh(2πd/L̄)</div>
-      <div class="fml"><b>四、风雍水面高度</b><br>e = K·V²·F·cosβ/(2<span class="sym">g</span>d) ， K = 3.6×10⁻⁶</div>
-      <div class="fml"><b>五、波浪爬高</b><br>Rp = KΔ · Kv · Kp · R₀ · H̄</div>
-      <div class="fml"><b>六、堤顶高程</b><br>= 设计水位 + Rp + e + A</div>
+      <p style="font-size:11px;color:var(--t3);margin-bottom:10px">依据 GB 50286-2013《堤防工程设计规范》附录 C 莆田试验站公式</p>
+
+      <p style="font-size:12px;font-weight:600;color:var(--pri);margin:10px 0 4px">一、平均波高（莆田试验站公式）</p>
+      <div class="fml"><b>公式 C.0.1-1</b><br><span class="sym">g</span>H̄/V² = 0.13·tanh[0.7·(<span class="sym">g</span>d/V²)<sup>0.7</sup>]·tanh{ 0.0018·(<span class="sym">g</span>F/V²)<sup>0.45</sup> / [0.13·tanh(0.7·(<span class="sym">g</span>d/V²)<sup>0.7</sup>)] }<br><br>适用条件：风速 V ≤ 25 m/s，风区长度 F ≤ 100 km</div>
+
+      <p style="font-size:12px;font-weight:600;color:var(--pri);margin:10px 0 4px">二、平均波周期</p>
+      <div class="fml"><b>公式 C.0.1-2</b><br>T̄ = 4.438·√H̄</div>
+
+      <p style="font-size:12px;font-weight:600;color:var(--pri);margin:10px 0 4px">三、平均波长（迭代求解）</p>
+      <div class="fml"><b>公式 C.0.1-3</b><br>L₀ = <span class="sym">g</span>T̄²/(2π)  （深水波长）<br>L̄ = L₀·tanh(2πd/L̄)  （有限水深波长，迭代收敛）</div>
+
+      <p style="font-size:12px;font-weight:600;color:var(--pri);margin:10px 0 4px">四、风雍水面高度</p>
+      <div class="fml"><b>公式 C.0.2</b><br>e = K·V²·F·cosβ/(2<span class="sym">g</span>d)<br>K = 3.6×10⁻⁶ （综合摩擦系数）</div>
+
+      <p style="font-size:12px;font-weight:600;color:var(--pri);margin:10px 0 4px">五、波浪爬高</p>
+      <div class="fml"><b>公式 C.0.3</b><br>Rp = KΔ · Kv · Kp · R₀ · H̄<br><br>KΔ — 护面糙率渗透性系数（查表）<br>Kv — 斜向来波折减系数（β 查表）<br>Kp — 累积频率换算系数（P 和 H̄/d 查表）<br>R₀ — 无风条件下爬高系数（m 和 H̄/L̄ 查表，双线性插值）</div>
+
+      <p style="font-size:12px;font-weight:600;color:var(--pri);margin:10px 0 4px">六、堤顶高程</p>
+      <div class="fml"><b>公式 5.2.1</b><br>堤顶高程 = 设计水位 + Rp + e + A<br><br>A — 安全超高（按堤防等级和越浪条件查表）</div>
     </div>
   </div>
 
@@ -418,15 +431,35 @@ e = KV²Fcosβ/(2gd)
       <table class="ref-t"><tr><th>等级</th><th>1级</th><th>2级</th><th>3级</th><th>4级</th><th>5级</th></tr>
         <tr><td>不允许越浪</td><td>1.0</td><td>0.8</td><td>0.7</td><td>0.6</td><td>0.5</td></tr>
         <tr><td>允许越浪</td><td>0.5</td><td>0.4</td><td>0.4</td><td>0.3</td><td>0.3</td></tr></table>
-      <p style="font-size:12px;font-weight:600;color:var(--pri);margin:12px 0 4px">R₀ 值（P=2%摘录）</p>
-      <table class="ref-t"><tr><th>m</th><th>.001</th><th>.005</th><th>.01</th><th>.02</th><th>.05</th><th>.1</th></tr>
+      <p style="font-size:12px;font-weight:600;color:var(--pri);margin:12px 0 4px">Kp 频率换算系数</p>
+      <table class="ref-t"><tr><th>P</th><th>H̄/d 0~0.1</th><th>0.1~0.2</th><th>0.2~0.3</th><th>0.3~0.5</th><th>0.5~1.0</th></tr>
+        <tr><td>0.1%</td><td>2.97</td><td>2.82</td><td>2.68</td><td>2.46</td><td>2.13</td></tr>
+        <tr><td>1%</td><td>2.42</td><td>2.30</td><td>2.18</td><td>2.00</td><td>1.75</td></tr>
+        <tr><td>2%</td><td>2.07</td><td>1.96</td><td>1.86</td><td>1.70</td><td>1.50</td></tr>
+        <tr><td>5%</td><td>1.64</td><td>1.56</td><td>1.49</td><td>1.38</td><td>1.24</td></tr>
+        <tr><td>13%</td><td>1.18</td><td>1.14</td><td>1.10</td><td>1.05</td><td>0.97</td></tr></table>
+      <p style="font-size:11px;color:var(--t3);margin-top:4px">Kp 随 P 和 H̄/d 双线性插值取值</p>
+
+      <p style="font-size:12px;font-weight:600;color:var(--pri);margin:12px 0 4px">Kv 斜向来波折减系数</p>
+      <table class="ref-t"><tr><th>β (°)</th><th>0</th><th>10</th><th>20</th><th>30</th><th>40</th><th>50</th><th>60</th><th>70</th><th>80</th><th>90</th></tr>
+        <tr><td>Kv</td><td>1.00</td><td>0.98</td><td>0.96</td><td>0.93</td><td>0.90</td><td>0.86</td><td>0.80</td><td>0.72</td><td>0.61</td><td>0.45</td></tr></table>
+
+      <p style="font-size:12px;font-weight:600;color:var(--pri);margin:12px 0 4px">R₀ 无风条件下爬高系数（双线性插值）</p>
+      <div style="overflow-x:auto">
+      <table class="ref-t"><tr><th>m \ H̄/L̄</th><th>.001</th><th>.005</th><th>.01</th><th>.02</th><th>.05</th><th>.1</th></tr>
         <tr><td>1.0</td><td>1.40</td><td>1.60</td><td>1.75</td><td>1.90</td><td>2.10</td><td>2.30</td></tr>
+        <tr><td>1.25</td><td>1.38</td><td>1.58</td><td>1.73</td><td>1.88</td><td>2.08</td><td>2.28</td></tr>
         <tr><td>1.5</td><td>1.35</td><td>1.55</td><td>1.70</td><td>1.85</td><td>2.05</td><td>2.25</td></tr>
+        <tr><td>1.75</td><td>1.33</td><td>1.53</td><td>1.68</td><td>1.83</td><td>2.03</td><td>2.23</td></tr>
         <tr><td>2.0</td><td>1.30</td><td>1.50</td><td>1.65</td><td>1.80</td><td>2.00</td><td>2.20</td></tr>
         <tr><td>2.5</td><td>1.25</td><td>1.45</td><td>1.60</td><td>1.75</td><td>1.95</td><td>2.15</td></tr>
         <tr><td>3.0</td><td>1.20</td><td>1.40</td><td>1.55</td><td>1.70</td><td>1.90</td><td>2.10</td></tr>
+        <tr><td>3.5</td><td>1.15</td><td>1.35</td><td>1.50</td><td>1.65</td><td>1.85</td><td>2.05</td></tr>
         <tr><td>4.0</td><td>1.10</td><td>1.30</td><td>1.45</td><td>1.60</td><td>1.80</td><td>2.00</td></tr>
-        <tr><td>5.0</td><td>1.00</td><td>1.20</td><td>1.35</td><td>1.50</td><td>1.70</td><td>1.90</td></tr></table>
+        <tr><td>5.0</td><td>1.00</td><td>1.20</td><td>1.35</td><td>1.50</td><td>1.70</td><td>1.90</td></tr>
+        <tr><td>6.0</td><td>0.90</td><td>1.10</td><td>1.25</td><td>1.40</td><td>1.60</td><td>1.80</td></tr></table>
+      </div>
+      <p style="font-size:11px;color:var(--t3);margin-top:4px">R₀ 按 m 和 H̄/L̄ 双线性插值取值</p>
     </div>
   </div>
 
@@ -523,39 +556,42 @@ function calcSingle(){
       ${r.section?'<div class="sub">断面 '+r.section+'</div>':''}
     </div>
     <div class="rp-body">
-      <div style="font-size:13px;font-weight:600;color:var(--t2);margin-bottom:10px">一、波浪要素</div>
-      <div class="attr-grid">
-        <div class="attr"><span class="k">设计水位</span><span class="v">${fv(r.WL)} m</span></div>
-        <div class="attr"><span class="k">堤前水深 d</span><span class="v">${fv(r.d)} m</span></div>
-        <div class="attr"><span class="k">计算风速 V</span><span class="v">${fv(r.V,1)} m/s</span></div>
-        <div class="attr"><span class="k">风区长度 F</span><span class="v">${fv(r.F,0)} m</span></div>
-        <div class="attr"><span class="k">平均波高 H̄</span><span class="v">${fv(r.Hbar,4)} m</span></div>
-        <div class="attr"><span class="k">平均波周期 T̄</span><span class="v">${fv(r.Tbar,3)} s</span></div>
-        <div class="attr"><span class="k">平均波长 L̄</span><span class="v">${fv(r.Lbar,3)} m</span></div>
-        <div class="attr"><span class="k">波陡 H̄/L̄</span><span class="v">${fv(r.hl,5)}</span></div>
-      </div>
+      <div style="font-size:13px;font-weight:600;color:var(--t2);margin-bottom:10px">一、波浪要素计算（莆田试验站公式）</div>
+      <table class="rp-table">
+        <tr><th>步骤</th><th>项目</th><th>公式/取值</th><th>结果</th></tr>
+        <tr><td>①</td><td>计算风速 V</td><td>输入</td><td>${fv(r.V,1)} m/s</td></tr>
+        <tr><td></td><td>风区长度 F</td><td>输入</td><td>${fv(r.F,0)} m</td></tr>
+        <tr><td></td><td>堤前水深 d</td><td>输入</td><td>${fv(r.d)} m</td></tr>
+        <tr><td>②</td><td>g/V²</td><td>9.81/${fv(r.V,1)}²</td><td>${fv(9.81/(r.V*r.V),6)}</td></tr>
+        <tr><td>③</td><td>g·d/V²</td><td>9.81×${fv(r.d)}/${fv(r.V,1)}²</td><td>${fv(9.81*r.d/(r.V*r.V),4)}</td></tr>
+        <tr><td>④</td><td>g·F/V²</td><td>9.81×${fv(r.F,0)}/${fv(r.V,1)}²</td><td>${fv(9.81*r.F/(r.V*r.V),4)}</td></tr>
+        <tr><td>⑤</td><td>平均波高 H̄</td><td>莆田公式</td><td><b>${fv(r.Hbar,4)} m</b></td></tr>
+        <tr><td>⑥</td><td>平均波周期 T̄</td><td>4.438×√H̄</td><td>${fv(r.Tbar,3)} s</td></tr>
+        <tr><td>⑦</td><td>深水波长 L₀</td><td>g·T̄²/(2π)</td><td>${fv(r.L0,3)} m</td></tr>
+        <tr><td>⑧</td><td>平均波长 L̄</td><td>迭代求解</td><td>${fv(r.Lbar,3)} m</td></tr>
+        <tr><td>⑨</td><td>波陡 H̄/L̄</td><td>${fv(r.Hbar,4)}/${fv(r.Lbar,3)}</td><td>${fv(r.hl,5)}</td></tr>
+        <tr><td></td><td>H̄/d</td><td>${fv(r.Hbar,4)}/${fv(r.d)}</td><td>${fv(r.Hd,4)}</td></tr>
+      </table>
 
       <div style="font-size:13px;font-weight:600;color:var(--t2);margin:14px 0 10px">二、波浪爬高计算</div>
       <table class="rp-table">
-        <tr><th>项目</th><th>取值/公式</th><th>结果</th></tr>
-        <tr><td style="text-align:left">护面糙率系数 KΔ</td><td>${r.surfText}</td><td>${fv(r.Kd)}</td></tr>
-        <tr><td style="text-align:left">斜向折减系数 Kv</td><td>β=${r.beta}° 查表</td><td>${fv(r.Kv,3)}</td></tr>
-        <tr><td style="text-align:left">频率换算系数 Kp</td><td>P=${r.P}%, H̄/d=${fv(r.Hd,3)}</td><td>${fv(r.Kp,3)}</td></tr>
-        <tr><td style="text-align:left">无风浪爬高 R₀</td><td>m=${fv(r.m,1)}, H̄/L̄=${fv(r.hl,4)}</td><td>${fv(r.R0,3)}</td></tr>
-        ${r.useE?`<tr><td style="text-align:left">风雍高度 e</td><td>KV²Fcosβ/(2gd)</td><td>${fv(r.e,4)} m</td></tr>`:''}
-        <tr class="total"><td style="text-align:left">设计爬高 Rp</td><td>KΔ·Kv·Kp·R₀·H̄</td><td>${fv(r.Rp,3)} m</td></tr>
+        <tr><th>步骤</th><th>项目</th><th>公式/取值</th><th>结果</th></tr>
+        <tr><td>①</td><td>护面糙率系数 KΔ</td><td>${r.surfText}</td><td>${fv(r.Kd)}</td></tr>
+        <tr><td>②</td><td>斜向折减系数 Kv</td><td>β=${r.beta}° 查表插值</td><td>${fv(r.Kv,3)}</td></tr>
+        <tr><td>③</td><td>频率换算系数 Kp</td><td>P=${r.P}%, H̄/d=${fv(r.Hd,3)} 插值</td><td>${fv(r.Kp,3)}</td></tr>
+        <tr><td>④</td><td>无风浪爬高 R₀</td><td>m=${fv(r.m,1)}, H̄/L̄=${fv(r.hl,4)} 双线性插值</td><td>${fv(r.R0,3)}</td></tr>
+        ${r.useE?`<tr><td>⑤</td><td>风雍高度 e</td><td>K·V²·F·cosβ/(2gd)，K=3.6×10⁻⁶</td><td>${fv(r.e,4)} m</td></tr>`:''}
+        <tr class="total"><td>${r.useE?'⑥':'⑤'}</td><td>设计爬高 Rp</td><td>KΔ·Kv·Kp·R₀·H̄</td><td>${fv(r.Kd)}×${fv(r.Kv,3)}×${fv(r.Kp,3)}×${fv(r.R0,3)}×${fv(r.Hbar,4)} = <b>${fv(r.Rp,3)} m</b></td></tr>
       </table>
 
       <div style="font-size:13px;font-weight:600;color:var(--t2);margin:14px 0 10px">三、堤顶高程</div>
       <table class="rp-table">
-        <tr><th>部位</th><th>桩号</th><th>堤型</th><th>堤防等级</th><th>越浪条件</th><th>设计坡度</th><th>安全超高</th><th>堤顶高程</th></tr>
-        <tr><td>${r.name}</td><td>${r.section||'—'}</td><td>${r.surfText}</td><td>${r.grade}级</td><td>${r.overtop?'允许':'不允许'}</td><td>1:${fv(r.m,1)}</td><td>${fv(r.A)} m</td><td><b>${fv(r.crest)} m</b></td></tr>
-      </table>
-
-      <table class="rp-table" style="margin-top:8px">
-        <tr><th rowspan="2">部位</th><th colspan="2">波浪爬高</th><th rowspan="2">安全加高(m)</th><th rowspan="2">堤顶高程(m)</th></tr>
-        <tr><th>频率P</th><th>爬高Rp(m)</th></tr>
-        <tr><td>${r.name}</td><td>P=${r.P}%</td><td>${fv(r.Rp,3)}</td><td>${fv(r.A)}</td><td><b>${fv(r.crest)}</b></td></tr>
+        <tr><th>项目</th><th>数值</th><th>说明</th></tr>
+        <tr><td style="text-align:left">设计水位</td><td>${fv(r.WL)} m</td><td>设计洪水位</td></tr>
+        <tr><td style="text-align:left">+ 波浪爬高 Rp</td><td>${fv(r.Rp,3)} m</td><td>KΔ·Kv·Kp·R₀·H̄</td></tr>
+        <tr><td style="text-align:left">+ 风雍高度 e</td><td>${r.useE?fv(r.e,4)+' m':'不计入'}</td><td>${r.useE?'KV²Fcosβ/(2gd)':'—'}</td></tr>
+        <tr><td style="text-align:left">+ 安全超高 A</td><td>${fv(r.A)} m</td><td>${r.grade}级堤防，${r.overtop?'允许':'不允许'}越浪</td></tr>
+        <tr class="total"><td style="text-align:left">= 堤顶高程</td><td><b>${fv(r.crest)} m</b></td><td>—</td></tr>
       </table>
 
       <div class="crest-box">
