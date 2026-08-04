@@ -272,7 +272,7 @@ body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"Segoe UI",sans
     <div class="fml"><b>黏性土河槽（SL/T 808-2025 公式 A.3.5-6）</b><br>适用条件：黏性土河床（黏土、壤土），A=1.0~1.2，IL=0.16~1.19<br><span class="sym">hp</span> = [ A·Q<sub>c</sub> / (B<sub>c</sub>·(h<sub>mc</sub>/h<sub>c</sub>)<sup>5/3</sup>·0.33/I<sub>L</sub>) ]<sup>5/8</sup></div>
 
     <p style="font-size:12px;font-weight:600;color:var(--pri);margin:10px 0 4px">三、局部冲刷 — 非黏性土河床</p>
-    <div class="fml"><b>65-1 修正式（SL/T 808-2025 公式 A.3.5-8 ~ A.3.5-12）</b><br>适用条件：非黏性土河床桥墩，推荐使用<br>清水冲刷（v≤v₀）：<span class="sym">hb</span> = K<sub>ξ</sub>·K<sub>η</sub>·B<sub>1</sub><sup>0.6</sup>·(v-v'<sub>0</sub>)<br>动床冲刷（v>v₀）：<span class="sym">hb</span> = K<sub>ξ</sub>·K<sub>η</sub>·B<sub>1</sub><sup>0.6</sup>·(v-v'<sub>0</sub>)·((v-v'<sub>0</sub>)/(v<sub>0</sub>-v'<sub>0</sub>))<sup>n</sup></div>
+    <div class="fml"><b>65-1 修正式（SL/T 808-2025 公式 A.3.5-8 ~ A.3.5-12）</b><br>适用条件：非黏性土河床桥墩，推荐使用<br>清水冲刷（v≤v₀）：<span class="sym">hb</span> = K<sub>ξ</sub>·K<sub>η</sub>·B<sub>1</sub><sup>0.6</sup>·(v-v'<sub>0</sub>)<br>动床冲刷（v>v₀）：<span class="sym">hb</span> = K<sub>ξ</sub>·K<sub>η</sub>·B<sub>1</sub><sup>0.6</sup>·(v<sub>0</sub>-v'<sub>0</sub>)·((v-v'<sub>0</sub>)/(v<sub>0</sub>-v'<sub>0</sub>))<sup>n</sup></div>
     <div class="fml" style="font-size:11px;color:var(--t3);margin-top:-4px">v₀ = 0.0246(hp/d)<sup>0.14</sup>·√(332d+10+(hp/d)<sup>0.72</sup>)　（A.3.5-10）<br>Kη = 0.8(1/d<sup>0.45</sup> + 1/d<sup>0.15</sup>)　（A.3.5-11）<br>v'₀ = 0.462(d/B₁)<sup>0.06</sup>·v₀　（A.3.5-12）<br>n = (v₀/v)<sup>0.25</sup>·d<sup>-0.19</sup></div>
     <div class="fml"><b>65-2 公式（TB 10017）</b><br>适用条件：非黏性土河床桥墩，Kη2 和 n 计算方式与 65-1 不同<br><span class="sym">hb</span> = K<sub>ξ</sub>·K<sub>η2</sub>·B<sub>1</sub><sup>0.6</sup>·h<sub>p</sub><sup>0.15</sup>·(v/v<sub>0</sub>-v'<sub>0</sub>/v<sub>0</sub>)</div>
 
@@ -401,8 +401,9 @@ function calcGeneralScour(){
     const ratio=Math.pow(hmc/hc,5/3);
     const dcPow=Math.pow(dc,1/6);
     const inner=A*Qc/(Bc*ratio*E*dcPow);
-    hp=Math.pow(inner,3/5);
-    details={formula:'64-1 冲止流速（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,hp};
+    const scourInc=Math.pow(inner,3/5);
+    hp=scourInc+hmc;
+    details={formula:'64-1 冲止流速（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,scourInc,hp};
   }
   else if(formula==='64-2'){
     const hmc=parseFloat(document.getElementById('s_hmc').value);
@@ -417,8 +418,9 @@ function calcGeneralScour(){
     const dcPow=Math.pow(dc,1/6);
     const inner=A*Qc/(Bc*ratio*E*dcPow);
     const hp64_1=Math.pow(inner,3/5);
-    hp=hp64_1*(hmc/hc);
-    details={formula:'64-2 输沙平衡（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,hp64_1,hp};
+    const scourInc=hp64_1*(hmc/hc);
+    hp=scourInc+hmc;
+    details={formula:'64-2 输沙平衡（SL/T 808-2025 A.3.5-1）',hmc,hc,Bc,Qc,E,dc,A,ratio,dcPow,inner,hp64_1,scourInc,hp};
   }
   else if(formula==='cohesive'){
     const hmc=parseFloat(document.getElementById('s_hmc_c').value);
@@ -431,8 +433,9 @@ function calcGeneralScour(){
     const ratio=Math.pow(hmc/hc,5/3);
     const ILratio=0.33/IL;
     const inner=A*Qc/(Bc*ratio*ILratio);
-    hp=Math.pow(inner,5/8);
-    details={formula:'黏性土（SL/T 808-2025 A.3.5-6）',hmc,hc,Bc,Qc,IL,A,ratio,ILratio,inner,hp};
+    const scourInc=Math.pow(inner,5/8);
+    hp=scourInc+hmc;
+    details={formula:'黏性土（SL/T 808-2025 A.3.5-6）',hmc,hc,Bc,Qc,IL,A,ratio,ILratio,inner,scourInc,hp};
   }
   return{hp,...details};
 }
@@ -468,7 +471,7 @@ function calcLocalScour(hp_val){
       if(v<=v0){
         hb=Kxi*Keta*Math.pow(B1,0.6)*(v-v0p);
       }else{
-        hb=Kxi*Keta*Math.pow(B1,0.6)*(v-v0p)*Math.pow((v-v0p)/(v0-v0p),n);
+        hb=Kxi*Keta*Math.pow(B1,0.6)*(v0-v0p)*Math.pow((v-v0p)/(v0-v0p),n);
       }
       details={formula:'65-1 修正式（SL/T 808-2025 A.3.5-8~12）',B1,Kxi,d,v,v0,Keta,v0p,n,hb,type:v<=v0?'清水':'动床'};
     }else{
@@ -581,10 +584,14 @@ function renderSingleResult(){
            <tr><td>⑤</td><td>分子 A·Qc</td><td>${fv(r.gen.A)}×${fv(r.gen.Qc,0)}</td><td>${fv(r.gen.A*r.gen.Qc,4)}</td></tr>
            <tr><td>⑥</td><td>括号内值</td><td>A·Qc / 分母</td><td>${fv(r.gen.inner,4)}</td></tr>`;
     if(r.gen.formula.includes('64-2')){
-      html+=`<tr><td>⑦</td><td>64-1 结果</td><td>括号值^(3/5)</td><td>${fv(r.gen.hp64_1,4)} m</td></tr>
-             <tr class="total"><td>⑧</td><td>一般冲刷深度 hp</td><td>64-1 × (hmc/hc)</td><td>${fv(r.gen.hp64_1,4)} × ${fv(r.gen.hmc/r.gen.hc,4)} = <b>${fv(r.gen.hp)} m</b></td></tr>`;
+      html+=`<tr><td>⑦</td><td>64-1 冲刷增量</td><td>括号值^(3/5)</td><td>${fv(r.gen.hp64_1,4)} m</td></tr>
+             <tr><td>⑧</td><td>64-2 冲刷增量</td><td>64-1 × (hmc/hc)</td><td>${fv(r.gen.hp64_1,4)} × ${fv(r.gen.hmc/r.gen.hc,4)} = ${fv(r.gen.scourInc,4)} m</td></tr>
+             <tr><td>⑨</td><td>天然最大水深 hmc</td><td>输入</td><td>${fv(r.gen.hmc)} m</td></tr>
+             <tr class="total"><td>⑩</td><td>桥下最大水深 hp</td><td>冲刷增量 + hmc</td><td>${fv(r.gen.scourInc,4)} + ${fv(r.gen.hmc)} = <b>${fv(r.gen.hp)} m</b></td></tr>`;
     }else{
-      html+=`<tr class="total"><td>⑦</td><td>一般冲刷深度 hp</td><td>括号值^(3/5)</td><td>${fv(r.gen.inner,4)}^(3/5) = <b>${fv(r.gen.hp)} m</b></td></tr>`;
+      html+=`<tr><td>⑦</td><td>冲刷增量</td><td>括号值^(3/5)</td><td>${fv(r.gen.scourInc,4)} m</td></tr>
+             <tr><td>⑧</td><td>天然最大水深 hmc</td><td>输入</td><td>${fv(r.gen.hmc)} m</td></tr>
+             <tr class="total"><td>⑨</td><td>桥下最大水深 hp</td><td>冲刷增量 + hmc</td><td>${fv(r.gen.scourInc,4)} + ${fv(r.gen.hmc)} = <b>${fv(r.gen.hp)} m</b></td></tr>`;
     }
   }else{
     const denom=r.gen.Bc*r.gen.ratio*r.gen.ILratio;
@@ -598,7 +605,10 @@ function renderSingleResult(){
            <tr><td>③</td><td>0.33/IL</td><td>0.33/${fv(r.gen.IL)}</td><td>${fv(r.gen.ILratio,4)}</td></tr>
            <tr><td>④</td><td>分母 Bc·ratio·0.33/IL</td><td>${fv(r.gen.Bc,0)}×${fv(r.gen.ratio,4)}×${fv(r.gen.ILratio,4)}</td><td>${fv(denom,4)}</td></tr>
            <tr><td>⑤</td><td>括号内值</td><td>A·Qc / 分母</td><td>${fv(r.gen.inner,4)}</td></tr>
-           <tr class="total"><td>⑥</td><td>一般冲刷深度 hp</td><td>括号值^(5/8)</td><td>${fv(r.gen.inner,4)}^(5/8) = <b>${fv(r.gen.hp)} m</b></td></tr>`;
+           <tr><td>⑤</td><td>括号内值</td><td>A·Qc / 分母</td><td>${fv(r.gen.inner,4)}</td></tr>
+           <tr><td>⑥</td><td>冲刷增量</td><td>括号值^(5/8)</td><td>${fv(r.gen.scourInc,4)} m</td></tr>
+           <tr><td>⑦</td><td>天然最大水深 hmc</td><td>输入</td><td>${fv(r.gen.hmc)} m</td></tr>
+           <tr class="total"><td>⑧</td><td>桥下最大水深 hp</td><td>冲刷增量 + hmc</td><td>${fv(r.gen.scourInc,4)} + ${fv(r.gen.hmc)} = <b>${fv(r.gen.hp)} m</b></td></tr>`;
   }
   html+=`</table>`;
 
@@ -618,11 +628,12 @@ function renderSingleResult(){
            <tr><td>⑥</td><td>行近流速 v</td><td>E·dc^(1/6)·hp^(2/3)</td><td>${fv(r.loc.v,4)} m/s</td></tr>`;
     if(r.loc.v>r.loc.v0){
       html+=`<tr><td>⑦</td><td>指数 n</td><td>(v0/v)^0.25·d^(-0.19)</td><td>${fv(r.loc.n,4)}</td></tr>
-             <tr><td></td><td>v-v'0</td><td>${fv(r.loc.v,4)}-${fv(r.loc.v0p,4)}</td><td>${fv(r.loc.v-r.loc.v0p,4)}</td></tr>
              <tr><td></td><td>v0-v'0</td><td>${fv(r.loc.v0,4)}-${fv(r.loc.v0p,4)}</td><td>${fv(r.loc.v0-r.loc.v0p,4)}</td></tr>
+             <tr><td></td><td>v-v'0</td><td>${fv(r.loc.v,4)}-${fv(r.loc.v0p,4)}</td><td>${fv(r.loc.v-r.loc.v0p,4)}</td></tr>
              <tr><td></td><td>(v-v'0)/(v0-v'0)</td><td>—</td><td>${fv((r.loc.v-r.loc.v0p)/(r.loc.v0-r.loc.v0p),4)}</td></tr>
              <tr><td></td><td>Kξ·Kη·B1^0.6</td><td>${fv(r.loc.Kxi)}×${fv(r.loc.Keta,4)}×${fv(r.loc.B1,2)}^0.6</td><td>${fv(r.loc.Kxi*r.loc.Keta*Math.pow(r.loc.B1,0.6),4)}</td></tr>
-             <tr class="total"><td>⑧</td><td>局部冲刷深度 hb</td><td>动床冲刷公式</td><td><b>${fv(r.loc.hb)} m</b></td></tr>`;
+             <tr><td></td><td>(v0-v'0)·ratio^n</td><td>${fv(r.loc.v0-r.loc.v0p,4)}×${fv(Math.pow((r.loc.v-r.loc.v0p)/(r.loc.v0-r.loc.v0p),r.loc.n),4)}</td><td>${fv((r.loc.v0-r.loc.v0p)*Math.pow((r.loc.v-r.loc.v0p)/(r.loc.v0-r.loc.v0p),r.loc.n),4)}</td></tr>
+             <tr class="total"><td>⑧</td><td>局部冲刷深度 hb</td><td>Kξ·Kη·B1^0.6·(v0-v'0)·ratio^n</td><td><b>${fv(r.loc.hb)} m</b></td></tr>`;
     }else{
       html+=`<tr><td></td><td>v-v'0</td><td>${fv(r.loc.v,4)}-${fv(r.loc.v0p,4)}</td><td>${fv(r.loc.v-r.loc.v0p,4)}</td></tr>
              <tr><td></td><td>Kξ·Kη·B1^0.6</td><td>${fv(r.loc.Kxi)}×${fv(r.loc.Keta,4)}×${fv(r.loc.B1,2)}^0.6</td><td>${fv(r.loc.Kxi*r.loc.Keta*Math.pow(r.loc.B1,0.6),4)}</td></tr>
@@ -700,17 +711,17 @@ function calcBatch(){
     let hp,hb;
     if(formula==='64-1'){
       const ratio=Math.pow(hmc/hc,5/3);
-      hp=Math.pow(A*Qc/(Bc*ratio*Math.pow(dc,1/6)*E),3/5);
+      hp=Math.pow(A*Qc/(Bc*ratio*Math.pow(dc,1/6)*E),3/5)+hmc;
     }else{
       const ratio=Math.pow(hmc/hc,5/3);
-      hp=Math.pow(A*Qc/(Bc*ratio*Math.pow(dc,1/6)*E),3/5)*(hmc/hc);
+      hp=Math.pow(A*Qc/(Bc*ratio*Math.pow(dc,1/6)*E),3/5)*(hmc/hc)+hmc;
     }
     const v=E*Math.pow(dc,1/6)*Math.pow(hp,2/3);
     const v0=0.0246*Math.pow(hp/dc,0.14)*Math.sqrt(332*dc+10+Math.pow(hp/dc,0.72));
     const Keta=0.8*(1/Math.pow(dc,0.45)+1/Math.pow(dc,0.15));
     const v0p=0.462*Math.pow(dc/B1,0.06)*v0;
     if(v<=v0){hb=Kxi*Keta*Math.pow(B1,0.6)*(v-v0p);}
-    else{const n=Math.pow(v0/v,0.25)*Math.pow(dc,-0.19);hb=Kxi*Keta*Math.pow(B1,0.6)*(v-v0p)*Math.pow((v-v0p)/(v0-v0p),n);}
+    else{const n=Math.pow(v0/v,0.25)*Math.pow(dc,-0.19);hb=Kxi*Keta*Math.pow(B1,0.6)*(v0-v0p)*Math.pow((v-v0p)/(v0-v0p),n);}
     hb=Math.max(hb,0);
     const total=hp+hb;
     const lowest=wl-total;
