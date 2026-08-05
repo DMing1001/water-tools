@@ -970,8 +970,11 @@ function mkDS(label,R,key,color,lw,dash){
 
 function drawNormalSection(R){
   const pts=parseSection('sectionData');
+  if(!pts.length)return;
   const canvasId=currentSectionType==='compound'?'cMainChart':'mainChart';
-  const ctx=document.getElementById(canvasId).getContext('2d');if(mainChart)mainChart.destroy();
+  const canvas=document.getElementById(canvasId);
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');if(mainChart)mainChart.destroy();
   const n=R.length,idxs=[0,Math.floor(n*.25),Math.floor(n*.5),Math.floor(n*.75),n-1].filter(i=>i<n);
   const xMin=pts[0].x,xMax=pts[pts.length-1].x;
   const ds=[{label:'断面',data:pts.map(p=>({x:p.x,y:p.z})),borderColor:'#2d3748',borderWidth:2.5,pointRadius:0,tension:.2,fill:false,order:1}];
@@ -982,11 +985,14 @@ function drawNormalSection(R){
     ds.push({data:fd,borderColor:'transparent',backgroundColor:fc[ci],fill:'-1',pointRadius:0,order:3});
   });
   mainChart=new Chart(ctx,{type:'line',data:{datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:'断面淹没示意图',font:{size:15,weight:'bold'},color:'#1a365d'},legend:{display:true,position:'top',labels:{font:{size:10},filter:i=>!i.text.includes('淹没')}}},scales:{x:{type:'linear',title:{display:true,text:'桩号 (m)'}},y:{title:{display:true,text:'高程 (m)'}}}}});
+  setTimeout(()=>{if(mainChart)mainChart.resize();},100);
 }
 
 function drawWeirSection(R){
   const canvasId=currentSectionType==='compound'?'cMainChart':'mainChart';
-  const ctx=document.getElementById(canvasId).getContext('2d');if(mainChart)mainChart.destroy();
+  const canvas=document.getElementById(canvasId);
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');if(mainChart)mainChart.destroy();
   const cz=parseFloat(document.getElementById('weirCrestZ').value);
   const bz=parseFloat(document.getElementById('weirBedZ').value);
   const B=parseFloat(document.getElementById('weirWidth').value);
@@ -1004,8 +1010,11 @@ function drawWeirSection(R){
 
 function drawCompoundSection(R){
   const pts=parseSection('cSectionData');
+  if(!pts.length)return;
   const canvasId=currentSectionType==='compound'?'cMainChart':'mainChart';
-  const ctx=document.getElementById(canvasId).getContext('2d');if(mainChart)mainChart.destroy();
+  const canvas=document.getElementById(canvasId);
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');if(mainChart)mainChart.destroy();
   const r0=R[0];
   const wx0=r0.wx0,wx1=r0.wx1,cz=r0.crestZ;
   const xMin=pts[0].x,xMax=pts[pts.length-1].x;
