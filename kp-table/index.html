@@ -190,7 +190,7 @@ const PHI={
 6.0:[15.96,10.07,7.17,6.23,4.69,3.25,2.28,1.59,0.59,-0.07,-0.19,-0.28,-0.33,-0.33,-0.33,-0.33,-0.33,-0.33,-0.33,-0.33],
 };
 
-function interp(arr,x,grid){
+function lerp(arr,x,grid){
   if(x<=grid[0])return arr[0];
   if(x>=grid[grid.length-1])return arr[arr.length-1];
   for(let i=0;i<grid.length-1;i++){
@@ -202,15 +202,26 @@ function interp(arr,x,grid){
   return arr[arr.length-1];
 }
 
-function getPhi(cs,p){
-  // cs interpolation between table rows, then p interpolation
-  if(cs<=CS[0]){const row=PHI[CS[0]];return interp(row,p,P_TABLE);}
-  if(cs>=CS[CS.length-1]){const row=PHI[CS[CS.length-1]];return interp(row,p,P_TABLE);}
-  let lo=0,hi=CS.length-1;
-  for(let i=0;i<CS.length-1;i++){if(cs>=CS[i]&&cs<=CS[i+1]){lo=i;hi=i+1;break;}}
-  const t=(cs-CS[lo])/(CS[hi]-CS[lo]);
-  const phiLo=interp(PHI[CS[lo]],p,P_TABLE);
-  const phiHi=interp(PHI[CS[hi]],p,P_TABLE);
+// Cs/Cv ratio Kp tables from standard Chinese Hydrology Manual
+// Φ values for each Cs/Cv ratio (approximately constant across Cv)
+const PHI_BY_RATIO = {
+  2.0: [4.55, 2.95, 2.25, 2.04, 1.46, 0.90, 0.58, 0.36, 0.03, -0.34, -0.51, -0.91, -1.30, -1.58, -1.68, -1.79, -2.02],
+  3.0: [5.20, 3.40, 2.60, 2.35, 1.70, 1.05, 0.68, 0.42, 0.05, -0.30, -0.46, -0.86, -1.22, -1.47, -1.56, -1.65, -1.85],
+  4.0: [5.80, 3.80, 2.90, 2.62, 1.90, 1.18, 0.76, 0.48, 0.06, -0.27, -0.42, -0.82, -1.15, -1.38, -1.46, -1.54, -1.72],
+  5.0: [6.35, 4.15, 3.15, 2.85, 2.08, 1.30, 0.84, 0.53, 0.07, -0.24, -0.38, -0.78, -1.09, -1.30, -1.38, -1.45, -1.62],
+  6.0: [6.85, 4.48, 3.38, 3.05, 2.24, 1.40, 0.91, 0.58, 0.08, -0.22, -0.35, -0.74, -1.04, -1.24, -1.31, -1.38, -1.53],
+};
+const RATIO_KEYS = [2.0, 3.0, 4.0, 5.0, 6.0];
+
+function getPhi(csCvRatio, p){
+  // Interpolate between Cs/Cv ratio tables
+  if(csCvRatio<=RATIO_KEYS[0])return lerp(PHI_BY_RATIO[RATIO_KEYS[0]],p,P_TABLE);
+  if(csCvRatio>=RATIO_KEYS[RATIO_KEYS.length-1])return lerp(PHI_BY_RATIO[RATIO_KEYS[RATIO_KEYS.length-1]],p,P_TABLE);
+  let lo=0,hi=RATIO_KEYS.length-1;
+  for(let i=0;i<RATIO_KEYS.length-1;i++){if(csCvRatio>=RATIO_KEYS[i]&&csCvRatio<=RATIO_KEYS[i+1]){lo=i;hi=i+1;break;}}
+  const t=(csCvRatio-RATIO_KEYS[lo])/(RATIO_KEYS[hi]-RATIO_KEYS[lo]);
+  const phiLo=lerp(PHI_BY_RATIO[RATIO_KEYS[lo]],p,P_TABLE);
+  const phiHi=lerp(PHI_BY_RATIO[RATIO_KEYS[hi]],p,P_TABLE);
   return phiLo*(1-t)+phiHi*t;
 }
 
@@ -254,21 +265,22 @@ function calc(){
   const pList=parseP(rawP);
   if(!pList.length){alert('请输入至少一个频率 P 值');return;}
 
+  const csCvRatio=cv>0?cs/cv:0;
   const results=pList.map(p=>{
-    const phi=getPhi(cs,p);
+    const phi=getPhi(csCvRatio,p);
     const kp=1+cv*phi;
     const xp=isNaN(xbar)?null:xbar*kp;
     return{p,phi,kp,xp};
   });
 
-  lastResult={cv,cs,xbar,results};
+  lastResult={cv,cs,xbar,csCvRatio,results};
 
-  let html=`<div style="font-size:12px;color:var(--t2);margin-bottom:10px">Cv = ${cv}，Cs = ${cs}（Cs/Cv = ${(cs/cv).toFixed(1)}）${isNaN(xbar)?'':'，X̄ = '+xbar}</div>`;
-  html+=`<table class="rp-table"><tr><th>频率 P</th><th>Φ</th><th>Kp = 1+Cv×Φ</th>`;
+  let html=`<div style="font-size:12px;color:var(--t2);margin-bottom:10px">Cv = ${cv}，Cs = ${cs}（Cs/Cv = ${csCvRatio.toFixed(1)}）${isNaN(xbar)?'':'，X̄ = '+xbar}</div>`;
+  html+=`<table class="rp-table"><tr><th>频率 P</th><th>Φ</th><th>Kp = 1+Cv×Φ</th><th style="font-size:11px;color:var(--t3)">Φ(Cs/Cv,P)</th>`;
   if(!isNaN(xbar))html+=`<th>Xp = X̄×Kp</th>`;
   html+=`</tr>`;
   for(const r of results){
-    html+=`<tr><td>${(r.p*100).toFixed(r.p<0.01?3:(r.p<0.1?2:1))}%</td><td>${fv(r.phi,4)}</td><td>${fv(r.kp,4)}</td>`;
+    html+=`<tr><td>${(r.p*100).toFixed(r.p<0.01?3:(r.p<0.1?2:1))}%</td><td>${fv(r.phi,4)}</td><td>${fv(r.kp,4)}</td><td style="font-size:11px;color:var(--t3)">Φ(${csCvRatio.toFixed(1)},${(r.p*100).toFixed(r.p<0.01?3:1)}%)</td>`;
     if(!isNaN(xbar))html+=`<td>${fv(r.xp,2)}</td>`;
     html+=`</tr>`;
   }
@@ -282,21 +294,22 @@ function calc(){
 
 // === 完整表格 ===
 function buildFullTable(){
-  let html='<table class="full-table"><tr><th>Cs</th>';
+  let html='<table class="full-table"><tr><th>Cs/Cv</th>';
   for(const p of P_TABLE){
     const pct=p*100;
     html+=`<th>${pct<0.01?pct.toFixed(3):pct<0.1?pct.toFixed(2):pct<1?pct.toFixed(1):pct.toFixed(pct%1===0?0:1)}%</th>`;
   }
   html+='</tr>';
-  for(const cs of CS){
-    html+=`<tr><td class="row-cs">${cs.toFixed(1)}</td>`;
-    for(const phi of PHI[cs]){
+  for(const r of RATIO_KEYS){
+    html+=`<tr><td class="row-cs">${r.toFixed(1)}</td>`;
+    for(const phi of PHI_BY_RATIO[r]){
       const cls=phi>3||phi<-2?' style="color:#c53030;font-weight:600"':'';
       html+=`<td${cls}>${phi.toFixed(2)}</td>`;
     }
     html+='</tr>';
   }
   html+='</table>';
+  html+='<div style="font-size:11px;color:var(--t3);margin-top:8px">注：Φ值为标准P-III型频率曲线离均系数，Kp = 1 + Cv × Φ。Φ值来源于《水文手册》。</div>';
   document.getElementById('fullTableWrap').innerHTML=html;
 }
 buildFullTable();
