@@ -147,6 +147,16 @@ textarea.sf-input{resize:vertical;min-height:80px;font-size:13px;line-height:1.8
   </div>
 </div>
 
+<!-- 公式说明 -->
+<div class="collapsible">
+  <div class="collapse-hd" onclick="toggleCollapse(this)"><span class="arrow">▶</span> 计算公式</div>
+  <div class="collapse-bd">
+    <p style="font-size:12px;font-weight:600;color:var(--pri);margin:8px 0 4px">P-III型频率曲线</p>
+    <div class="fml"><b>模比系数：</b><span class="sym">Kp</span> = 1 + Cv × Φ<br><br><b>离均系数 Φ 计算公式：</b><br>Φ = (2/Cs) × [1 + Cs·Φp/6 - Cs²·(Φp²-1)/36 - Cs³·(Φp³-3Φp)/324 + Cs⁴·(Φp⁴-3)/1944 + …]³ - 2/Cs<br><br>其中 Φp 为标准正态分布分位数（对应频率P）<br><br><b>设计值：</b><span class="sym">Xp</span> = X̄ × Kp</div>
+    <p style="font-size:11px;color:var(--t3);margin-top:8px">依据 SL 44-2006《水利水电工程设计洪水规范》、GB50201-2014《防洪标准》</p>
+  </div>
+</div>
+
 <div class="footer">依据 SL 44-2006 · GB50201-2014 · 水文频率分析 · 仅供参考</div>
 </div>
 
@@ -309,7 +319,7 @@ function buildFullTable(){
     html+='</tr>';
   }
   html+='</table>';
-  html+='<div style="font-size:11px;color:var(--t3);margin-top:8px">注：Φ值为标准P-III型频率曲线离均系数，Kp = 1 + Cv × Φ。Φ值来源于《水文手册》。</div>';
+  html+='<div style="font-size:11px;color:var(--t3);margin-top:8px">注：Kp = 1 + Cv × Φ。Φ值来源于《水文手册》皮尔逊III型频率曲线模比系数Kp值表。<br>当前已录入 Cs=2Cv 数据。Cs=3Cv~6Cv 待补充。</div>';
   document.getElementById('fullTableWrap').innerHTML=html;
 }
 buildFullTable();
