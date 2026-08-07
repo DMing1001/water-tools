@@ -107,16 +107,16 @@ textarea.sf-input{resize:vertical;min-height:80px;font-size:13px;line-height:1.8
   </div>
 
   <div class="sf-divider"></div>
-  <div class="sf-section"><span class="dot"></span>查询频率 P（每行一个，支持百分数或小数）</div>
+  <div class="sf-section"><span class="dot"></span>查询频率 P（每行一个百分数，如输入 1 表示 1%）</div>
   <div class="sf-group">
-    <textarea class="sf-input" id="pInput" placeholder="1%
-5%
-10%
-20%
-50%
-90%
-95%
-99%"></textarea>
+    <textarea class="sf-input" id="pInput" placeholder="1
+5
+10
+20
+50
+90
+95
+99"></textarea>
   </div>
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
     <button class="btn btn-g" style="font-size:11px;padding:4px 10px" onclick="setPreset('common')">常用频率</button>
@@ -225,19 +225,20 @@ document.getElementById('cv').addEventListener('input',updateCsFromRatio);
 
 function setPreset(type){
   const ta=document.getElementById('pInput');
-  if(type==='common')ta.value='1%\n2%\n5%\n10%\n20%\n50%\n90%\n95%\n99%';
-  else if(type==='full')ta.value='0.01%\n0.1%\n0.333%\n0.5%\n1%\n2%\n3.33%\n5%\n10%\n20%\n25%\n33.3%\n50%\n75%\n90%\n95%\n97%\n99%\n99.5%\n99.9%';
-  else if(type==='design')ta.value='0.1%\n0.2%\n0.5%\n1%\n2%\n5%\n10%\n20%';
+  if(type==='common')ta.value='1\n2\n5\n10\n20\n50\n90\n95\n99';
+  else if(type==='full')ta.value='0.01\n0.1\n0.333\n0.5\n1\n2\n3.33\n5\n10\n20\n25\n33.3\n50\n75\n90\n95\n97\n99\n99.5\n99.9';
+  else if(type==='design')ta.value='0.1\n0.2\n0.5\n1\n2\n5\n10\n20';
 }
 
 let lastResult=null;
 
 function parseP(raw){
   return raw.split('\n').map(s=>s.trim()).filter(s=>s&&!s.startsWith('#')).map(s=>{
-    s=s.replace(/%/g,'');
+    s=s.replace(/%/g,'').trim();
     const n=parseFloat(s);
     if(isNaN(n))return null;
-    return n>1?n/100:n; // auto detect percent vs decimal
+    // 所有数字统一按百分数处理：0.01 → 0.01% → 0.0001
+    return n/100;
   }).filter(v=>v!==null&&v>0&&v<1);
 }
 
