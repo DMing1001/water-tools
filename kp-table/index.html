@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P-III型Kp值查询 | 水文频率分析</title>
+<link rel="icon" type="image/svg+xml" href="../icons/favicon-bridge-scour.svg">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+:root{--pri:#2563eb;--pri-l:#eff6ff;--pri-d:#1d4ed8;--pri-bg:#dbeafe;--bg:#f8fafc;--card:#fff;--bdr:#e2e8f0;--bdr2:#cbd5e1;--txt:#0f172a;--t2:#475569;--t3:#94a3b8;--ok:#059669;--ok-bg:#ecfdf5;--ok-bdr:#a7f3d0;--input-bg:#f8fafc;--input-bdr:#cbd5e1;--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -2px rgba(0,0,0,.05)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--txt);line-height:1.6;font-size:14px;-webkit-font-smoothing:antialiased}
+.header{background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 50%,#3b82f6 100%);color:#fff;padding:24px 0;text-align:center;position:relative}
+.header h1{font-size:20px;font-weight:700;letter-spacing:2px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.2)}.header .logo-icon{width:36px;height:36px;vertical-align:middle;margin-right:10px;background:rgba(255,255,255,.9);border-radius:50%;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,.15)}.header p{font-size:12px;opacity:.75;margin-top:4px}
+.header .back{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid rgba(255,255,255,.2);border-radius:16px;transition:all .2s}.header .back:hover{color:#fff;border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.1)}
+.wrap{max-width:1100px;margin:16px auto;padding:0 16px}
+.card{background:var(--card);border-radius:10px;border:1px solid var(--bdr);padding:20px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card-title{font-size:15px;font-weight:600;color:var(--pri);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--pri-bg);display:flex;align-items:center;gap:8px}
+.sf-group{margin-bottom:14px}
+.sf-label{font-size:12.5px;font-weight:500;color:var(--t2);margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.sf-label .hint{font-size:11px;color:var(--t3);font-weight:400}
+.sf-label .sf-tip{display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;font-size:10px;font-weight:700;color:var(--t3);background:#e2e8f0;border-radius:50%;cursor:help;margin-left:3px;position:relative}
+.sf-label .sf-tip:hover::after{content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 8px);background:var(--txt);color:#fff;padding:8px 12px;border-radius:8px;font-size:12px;white-space:pre-line;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,.15);font-weight:400;line-height:1.6;min-width:220px;max-width:340px;text-align:left}
+.sf-label .sf-tip:hover::before{content:'';position:absolute;left:8px;bottom:calc(100% + 2px);border:5px solid transparent;border-top-color:var(--txt);z-index:21}
+.sf-input{width:100%;padding:9px 12px;border:1.5px solid var(--input-bdr);border-radius:8px;font-size:14px;font-family:inherit;color:var(--txt);background:var(--input-bg);transition:all .2s;outline:none}
+.sf-input:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(37,99,235,.1);background:#fff}
+.sf-select{width:100%;padding:9px 12px;border:1.5px solid var(--input-bdr);border-radius:8px;font-size:13px;font-family:inherit;color:var(--txt);background:var(--input-bg);cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.sf-select:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.sf-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.sf-divider{height:1px;background:linear-gradient(90deg,transparent,var(--bdr),transparent);margin:16px 0}
+.sf-section{font-size:13px;font-weight:600;color:var(--pri);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sf-section .dot{width:6px;height:6px;background:var(--pri);border-radius:50%}
+textarea.sf-input{resize:vertical;min-height:80px;font-size:13px;line-height:1.8;font-family:'JetBrains Mono',monospace}
+.btn-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.btn{padding:9px 22px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:var(--pri);color:#fff;box-shadow:0 1px 3px rgba(37,99,235,.3)}.btn-p:hover{background:var(--pri-d);transform:translateY(-1px)}
+.btn-g{background:#f1f5f9;color:var(--t2);border:1px solid var(--bdr)}.btn-g:hover{background:#e2e8f0}
+.btn-ok{background:var(--ok);color:#fff}.btn-ok:hover{background:#047857;transform:translateY(-1px)}
+.rp-table{width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0}
+.rp-table th{background:var(--pri-l);color:var(--pri);font-weight:600;padding:8px 10px;border:1px solid var(--bdr);font-size:12px;white-space:nowrap}
+.rp-table td{padding:7px 10px;border:1px solid var(--bdr);text-align:center;font-size:12.5px;font-family:'JetBrains Mono',monospace}
+.rp-table tr:hover td{background:#f8fafc}
+.rp-table .hl td{background:var(--ok-bg)!important;font-weight:700;color:var(--ok)}
+.collapsible{border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin-bottom:10px;background:var(--card)}
+.collapse-hd{padding:12px 16px;cursor:pointer;user-select:none;font-size:13px;font-weight:500;color:var(--t2);display:flex;align-items:center;gap:8px;transition:all .15s}
+.collapse-hd:hover{color:var(--pri);background:var(--pri-l)}
+.collapse-bd{display:none;padding:0 16px 16px}.collapse-bd.open{display:block}
+.crest-box{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:2px solid var(--ok-bdr);border-radius:10px;padding:18px;text-align:center;margin:16px 0}
+.crest-box .cb-label{font-size:12px;color:var(--t2);margin-bottom:4px}
+.crest-box .cb-val{font-size:24px;font-weight:700;color:var(--ok);font-family:'JetBrains Mono',monospace}
+.crest-box .cb-fm{font-size:12px;color:var(--t3);margin-top:6px;font-family:'JetBrains Mono',monospace}
+.modal-bg{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:14px;width:92%;max-width:800px;max-height:85vh;overflow-y:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal h2{font-size:16px;margin-bottom:12px}
+.modal .close{float:right;font-size:20px;cursor:pointer;color:var(--t3);background:none;border:none}.modal .close:hover{color:var(--txt)}
+.report-box{background:#fafafa;border:1px solid var(--bdr);border-radius:8px;padding:16px;font-family:'Microsoft YaHei',sans-serif;font-size:13px;line-height:2;white-space:pre-wrap;word-break:break-all;max-height:55vh;overflow-y:auto;user-select:text}
+.footer{text-align:center;padding:16px;font-size:11px;color:var(--t3)}
+.full-table-wrap{overflow-x:auto;margin:10px 0}
+.full-table{border-collapse:collapse;font-size:11.5px;min-width:100%}
+.full-table th{background:var(--pri-l);color:var(--pri);font-weight:600;padding:5px 6px;border:1px solid var(--bdr);font-size:11px;white-space:nowrap;position:sticky;top:0}
+.full-table td{padding:4px 6px;border:1px solid var(--bdr);text-align:center;font-size:11.5px;font-family:'JetBrains Mono',monospace}
+.full-table tr:hover td{background:#f0f7ff}
+.full-table .row-cs{background:var(--pri-bg);font-weight:600;color:var(--pri)}
+@media print{.header{background:#1e3a5f!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.btn,.modal-bg{display:none!important}}
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back" href="../">← 工具集</a>
+  <h1><img src="../icons/favicon-bridge-scour.svg" alt="" class="logo-icon">P-Ⅲ型频率曲线 Kp 值查询</h1>
+  <p>水文频率分析 · 皮尔逊Ⅲ型分布 · 模比系数 Kp = 1 + Cv × Φ</p>
+</div>
+<div class="wrap">
+
+<!-- 输入区 -->
+<div class="card">
+  <div class="card-title">📐 参数输入</div>
+  <div class="sf-section"><span class="dot"></span>统计参数</div>
+  <div class="sf-row">
+    <div class="sf-group">
+      <div class="sf-label">均值 X̄<span class="sf-tip" data-tip="系列的算术平均值">?</span></div>
+      <input class="sf-input" type="number" step="any" id="xbar" placeholder="如 1250">
+    </div>
+    <div class="sf-group">
+      <div class="sf-label">变差系数 Cv<span class="sf-tip" data-tip="Cv = σ/X̄\n反映系列的离散程度\n一般取 0.1~2.0">?</span></div>
+      <input class="sf-input" type="number" step="0.01" id="cv" placeholder="如 0.5">
+    </div>
+    <div class="sf-group">
+      <div class="sf-label">偏态系数 Cs<span class="sf-tip" data-tip="Cs 反映频率曲线的偏态\n常取 Cs = 2~6 Cv\n也可直接输入倍比">?</span></div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <select class="sf-select" id="csRatio" onchange="updateCsFromRatio()" style="width:55%">
+          <option value="2.0">Cs = 2.0 Cv</option>
+          <option value="2.5">Cs = 2.5 Cv</option>
+          <option value="3.0">Cs = 3.0 Cv</option>
+          <option value="3.5">Cs = 3.5 Cv</option>
+          <option value="4.0" selected>Cs = 4.0 Cv</option>
+          <option value="4.5">Cs = 4.5 Cv</option>
+          <option value="5.0">Cs = 5.0 Cv</option>
+          <option value="5.5">Cs = 5.5 Cv</option>
+          <option value="6.0">Cs = 6.0 Cv</option>
+          <option value="custom">自定义</option>
+        </select>
+        <input class="sf-input" type="number" step="0.1" id="cs" placeholder="Cs" style="width:45%">
+      </div>
+    </div>
+  </div>
+
+  <div class="sf-divider"></div>
+  <div class="sf-section"><span class="dot"></span>查询频率 P（每行一个，支持百分数或小数）</div>
+  <div class="sf-group">
+    <textarea class="sf-input" id="pInput" placeholder="1%
+5%
+10%
+20%
+50%
+90%
+95%
+99%"></textarea>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+    <button class="btn btn-g" style="font-size:11px;padding:4px 10px" onclick="setPreset('common')">常用频率</button>
+    <button class="btn btn-g" style="font-size:11px;padding:4px 10px" onclick="setPreset('full')">完整频率</button>
+    <button class="btn btn-g" style="font-size:11px;padding:4px 10px" onclick="setPreset('design')">设计常用</button>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-p" onclick="calc()">🧮 查询 Kp</button>
+    <button class="btn btn-ok" onclick="exportReport()" id="btnReport" style="display:none">📄 导出</button>
+  </div>
+</div>
+
+<!-- 结果区 -->
+<div id="resultWrap" style="display:none">
+  <div class="card">
+    <div class="card-title">📊 查询结果</div>
+    <div id="resultArea"></div>
+  </div>
+</div>
+
+<!-- 完整表格 -->
+<div class="collapsible">
+  <div class="collapse-hd" onclick="toggleCollapse(this)"><span class="arrow">▶</span> 完整 Kp 值表（Cs 从 0 到 6.0）</div>
+  <div class="collapse-bd">
+    <div style="font-size:12px;color:var(--t3);margin:8px 0">Kp = 1 + Cv × Φ，查表后可计算设计值 Xp = X̄ × Kp</div>
+    <div class="full-table-wrap" id="fullTableWrap"></div>
+  </div>
+</div>
+
+<div class="footer">依据 SL 44-2006 · GB50201-2014 · 水文频率分析 · 仅供参考</div>
+</div>
+
+<!-- 导出弹窗 -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+<div class="modal">
+  <button class="close" onclick="closeModal()">✕</button>
+  <h2>📄 Kp 查询结果</h2>
+  <p style="font-size:12px;color:var(--t3);margin-bottom:8px">Ctrl+A 全选 → Ctrl+C 复制</p>
+  <div class="report-box" id="reportBox"></div>
+  <div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center">
+    <button class="btn btn-p" onclick="copyReport()">📋 一键复制</button>
+    <button class="btn btn-g" onclick="closeModal()">关闭</button>
+  </div>
+</div>
+</div>
+
+<script>
+// ===== P-III Φ 标准表 =====
+const CS=[0,0.2,0.4,0.6,0.8,1.0,1.2,1.4,1.6,1.8,2.0,2.5,3.0,3.5,4.0,4.5,5.0,5.5,6.0];
+const P_TABLE=[0.0001,0.001,0.00333,0.005,0.01,0.02,0.0333,0.05,0.10,0.20,0.25,0.333,0.50,0.75,0.90,0.95,0.97,0.99,0.995,0.999];
+const PHI={
+0:[3.72,3.09,2.71,2.58,2.33,2.05,1.83,1.64,1.28,0.84,0.67,0.43,0,-0.67,-1.28,-1.64,-1.88,-2.33,-2.58,-3.09],
+0.2:[3.94,3.23,2.82,2.67,2.40,2.11,1.87,1.67,1.29,0.84,0.66,0.42,-0.03,-0.68,-1.27,-1.62,-1.84,-2.25,-2.48,-2.95],
+0.4:[4.16,3.38,2.92,2.76,2.47,2.16,1.91,1.70,1.30,0.83,0.65,0.40,-0.07,-0.69,-1.26,-1.59,-1.79,-2.18,-2.39,-2.81],
+0.6:[4.38,3.52,3.02,2.85,2.54,2.21,1.94,1.72,1.31,0.82,0.64,0.39,-0.10,-0.69,-1.24,-1.55,-1.75,-2.10,-2.29,-2.67],
+0.8:[4.61,3.67,3.12,2.93,2.60,2.25,1.97,1.74,1.32,0.82,0.63,0.37,-0.13,-0.70,-1.22,-1.52,-1.70,-2.03,-2.20,-2.54],
+1.0:[4.83,3.81,3.22,3.01,2.67,2.30,2.01,1.77,1.32,0.81,0.62,0.36,-0.16,-0.70,-1.20,-1.49,-1.66,-1.95,-2.10,-2.40],
+1.2:[5.05,3.95,3.32,3.10,2.74,2.34,2.04,1.79,1.33,0.80,0.61,0.34,-0.19,-0.71,-1.18,-1.45,-1.61,-1.88,-2.00,-2.27],
+1.4:[5.28,4.09,3.42,3.18,2.80,2.39,2.07,1.81,1.33,0.79,0.59,0.32,-0.22,-0.71,-1.15,-1.42,-1.56,-1.81,-1.90,-2.14],
+1.6:[5.50,4.24,3.52,3.26,2.87,2.43,2.10,1.83,1.33,0.78,0.58,0.30,-0.25,-0.71,-1.13,-1.38,-1.52,-1.74,-1.81,-2.02],
+1.8:[5.73,4.38,3.61,3.34,2.93,2.47,2.13,1.85,1.34,0.77,0.57,0.28,-0.28,-0.72,-1.10,-1.35,-1.47,-1.66,-1.72,-1.90],
+2.0:[5.96,4.52,3.71,3.42,2.99,2.51,2.16,1.87,1.34,0.76,0.55,0.26,-0.31,-0.72,-1.08,-1.32,-1.42,-1.59,-1.63,-1.79],
+2.5:[6.53,4.88,3.95,3.62,3.15,2.61,2.23,1.92,1.34,0.73,0.52,0.22,-0.37,-0.72,-1.02,-1.23,-1.31,-1.42,-1.43,-1.52],
+3.0:[7.11,5.24,4.19,3.81,3.30,2.71,2.29,1.96,1.34,0.70,0.48,0.17,-0.43,-0.72,-0.96,-1.14,-1.20,-1.26,-1.24,-1.28],
+3.5:[7.69,5.59,4.42,4.00,3.45,2.80,2.34,1.99,1.33,0.67,0.44,0.13,-0.49,-0.71,-0.90,-1.05,-1.10,-1.11,-1.07,-1.07],
+4.0:[8.28,5.94,4.65,4.18,3.59,2.89,2.39,2.01,1.32,0.64,0.41,0.09,-0.54,-0.70,-0.85,-0.97,-1.00,-0.98,-0.92,-0.90],
+4.5:[8.86,6.29,4.87,4.36,3.73,2.97,2.44,2.03,1.31,0.61,0.37,0.05,-0.59,-0.69,-0.80,-0.90,-0.91,-0.87,-0.80,-0.75],
+5.0:[9.45,6.64,5.10,4.54,3.87,3.05,2.49,2.05,1.30,0.58,0.34,0.01,-0.64,-0.68,-0.75,-0.83,-0.83,-0.77,-0.70,-0.64],
+5.5:[10.04,6.98,5.32,4.71,4.00,3.12,2.53,2.06,1.28,0.55,0.30,-0.03,-0.68,-0.67,-0.71,-0.77,-0.76,-0.69,-0.61,-0.55],
+6.0:[10.63,7.33,5.54,4.88,4.13,3.19,2.57,2.08,1.27,0.52,0.27,-0.06,-0.72,-0.65,-0.67,-0.71,-0.69,-0.62,-0.54,-0.47]
+};
+
+function interp(arr,x,grid){
+  if(x<=grid[0])return arr[0];
+  if(x>=grid[grid.length-1])return arr[arr.length-1];
+  for(let i=0;i<grid.length-1;i++){
+    if(x>=grid[i]&&x<=grid[i+1]){
+      const t=(x-grid[i])/(grid[i+1]-grid[i]);
+      return arr[i]*(1-t)+arr[i+1]*t;
+    }
+  }
+  return arr[arr.length-1];
+}
+
+function getPhi(cs,p){
+  // cs interpolation between table rows, then p interpolation
+  if(cs<=CS[0]){const row=PHI[CS[0]];return interp(row,p,P_TABLE);}
+  if(cs>=CS[CS.length-1]){const row=PHI[CS[CS.length-1]];return interp(row,p,P_TABLE);}
+  let lo=0,hi=CS.length-1;
+  for(let i=0;i<CS.length-1;i++){if(cs>=CS[i]&&cs<=CS[i+1]){lo=i;hi=i+1;break;}}
+  const t=(cs-CS[lo])/(CS[hi]-CS[lo]);
+  const phiLo=interp(PHI[CS[lo]],p,P_TABLE);
+  const phiHi=interp(PHI[CS[hi]],p,P_TABLE);
+  return phiLo*(1-t)+phiHi*t;
+}
+
+function updateCsFromRatio(){
+  const sel=document.getElementById('csRatio').value;
+  const cv=parseFloat(document.getElementById('cv').value);
+  if(sel==='custom')return;
+  if(!isNaN(cv))document.getElementById('cs').value=(parseFloat(sel)*cv).toFixed(2);
+}
+
+document.getElementById('cv').addEventListener('input',updateCsFromRatio);
+
+function setPreset(type){
+  const ta=document.getElementById('pInput');
+  if(type==='common')ta.value='1%\n2%\n5%\n10%\n20%\n50%\n90%\n95%\n99%';
+  else if(type==='full')ta.value='0.01%\n0.1%\n0.333%\n0.5%\n1%\n2%\n3.33%\n5%\n10%\n20%\n25%\n33.3%\n50%\n75%\n90%\n95%\n97%\n99%\n99.5%\n99.9%';
+  else if(type==='design')ta.value='0.1%\n0.2%\n0.5%\n1%\n2%\n5%\n10%\n20%';
+}
+
+let lastResult=null;
+
+function parseP(raw){
+  return raw.split('\n').map(s=>s.trim()).filter(s=>s&&!s.startsWith('#')).map(s=>{
+    s=s.replace(/%/g,'');
+    const n=parseFloat(s);
+    if(isNaN(n))return null;
+    return n>1?n/100:n; // auto detect percent vs decimal
+  }).filter(v=>v!==null&&v>0&&v<1);
+}
+
+function fv(v,d=4){return v==null?'—':Number(v).toFixed(d)}
+
+function calc(){
+  const cv=parseFloat(document.getElementById('cv').value);
+  const cs=parseFloat(document.getElementById('cs').value);
+  const xbar=parseFloat(document.getElementById('xbar').value);
+  const rawP=document.getElementById('pInput').value;
+  if(isNaN(cv)||cv<=0){alert('请输入有效的 Cv 值');return;}
+  if(isNaN(cs)||cs<0){alert('请输入有效的 Cs 值');return;}
+  const pList=parseP(rawP);
+  if(!pList.length){alert('请输入至少一个频率 P 值');return;}
+
+  const results=pList.map(p=>{
+    const phi=getPhi(cs,p);
+    const kp=1+cv*phi;
+    const xp=isNaN(xbar)?null:xbar*kp;
+    return{p,phi,kp,xp};
+  });
+
+  lastResult={cv,cs,xbar,results};
+
+  let html=`<div style="font-size:12px;color:var(--t2);margin-bottom:10px">Cv = ${cv}，Cs = ${cs}（Cs/Cv = ${(cs/cv).toFixed(1)}）${isNaN(xbar)?'':'，X̄ = '+xbar}</div>`;
+  html+=`<table class="rp-table"><tr><th>频率 P</th><th>Φ</th><th>Kp = 1+Cv×Φ</th>`;
+  if(!isNaN(xbar))html+=`<th>Xp = X̄×Kp</th>`;
+  html+=`</tr>`;
+  for(const r of results){
+    html+=`<tr><td>${(r.p*100).toFixed(r.p<0.01?3:(r.p<0.1?2:1))}%</td><td>${fv(r.phi,4)}</td><td>${fv(r.kp,4)}</td>`;
+    if(!isNaN(xbar))html+=`<td>${fv(r.xp,2)}</td>`;
+    html+=`</tr>`;
+  }
+  html+=`</table>`;
+
+  document.getElementById('resultArea').innerHTML=html;
+  document.getElementById('resultWrap').style.display='block';
+  document.getElementById('btnReport').style.display='inline-flex';
+  document.getElementById('resultWrap').scrollIntoView({behavior:'smooth'});
+}
+
+// === 完整表格 ===
+function buildFullTable(){
+  let html='<table class="full-table"><tr><th>Cs</th>';
+  for(const p of P_TABLE){
+    const pct=p*100;
+    html+=`<th>${pct<0.01?pct.toFixed(3):pct<0.1?pct.toFixed(2):pct<1?pct.toFixed(1):pct.toFixed(pct%1===0?0:1)}%</th>`;
+  }
+  html+='</tr>';
+  for(const cs of CS){
+    html+=`<tr><td class="row-cs">${cs.toFixed(1)}</td>`;
+    for(const phi of PHI[cs]){
+      const cls=phi>3||phi<-2?' style="color:#c53030;font-weight:600"':'';
+      html+=`<td${cls}>${phi.toFixed(2)}</td>`;
+    }
+    html+='</tr>';
+  }
+  html+='</table>';
+  document.getElementById('fullTableWrap').innerHTML=html;
+}
+buildFullTable();
+
+// === 导出 ===
+function makeReport(r){
+  const W=58;
+  const hr=(c='=')=>c.repeat(W);
+  let t='';
+  t+=hr()+'\n';
+  t+='        P-Ⅲ型频率曲线 Kp 值查询结果\n\n';
+  t+='  参数: Cv='+r.cv+', Cs='+r.cs+' (Cs/Cv='+(r.cs/r.cv).toFixed(1)+')';
+  if(!isNaN(r.xbar))t+=', X̄='+r.xbar;
+  t+='\n';
+  t+=hr()+'\n\n';
+  t+='  '+('P').padEnd(10)+('Φ').padStart(10)+('Kp').padStart(10);
+  if(!isNaN(r.xbar))t+=('Xp').padStart(12);
+  t+='\n  '+'-'.repeat(W-2)+'\n';
+  for(const o of r.results){
+    const ps=((o.p*100).toFixed(o.p<0.01?3:(o.p<0.1?2:1))+'%');
+    t+='  '+ps.padEnd(10)+fv(o.phi,4).padStart(10)+fv(o.kp,4).padStart(10);
+    if(!isNaN(r.xbar))t+=fv(o.xp,2).padStart(12);
+    t+='\n';
+  }
+  t+='\n'+hr()+'\n';
+  t+='  注: Kp = 1 + Cv × Φ\n';
+  t+='      Xp = X̄ × Kp\n';
+  t+='      Φ 值由 P-Ⅲ型分布标准表双线性插值求得\n';
+  t+=hr()+'\n';
+  return t;
+}
+
+function exportReport(){
+  if(!lastResult){alert('请先查询');return;}
+  document.getElementById('reportBox').textContent=makeReport(lastResult);
+  document.getElementById('modalBg').classList.add('show');
+}
+function copyReport(){
+  const box=document.getElementById('reportBox');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(box.textContent).then(()=>alert('✅ 已复制'));}
+  else{const r=document.createRange();r.selectNodeContents(box);const s=window.getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy');s.removeAllRanges();alert('✅ 已复制');}
+}
+function closeModal(){document.getElementById('modalBg').classList.remove('show');}
+function toggleCollapse(el){const bd=el.nextElementSibling;const arr=el.querySelector('.arrow');bd.classList.toggle('open');arr.textContent=bd.classList.contains('open')?'▼':'▶';}
+</script>
+</body>
+</html>
