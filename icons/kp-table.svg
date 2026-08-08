@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+  <circle cx="32" cy="32" r="28" fill="url(#g)" opacity="0.1"/>
+  <!-- table grid -->
+  <rect x="12" y="12" width="40" height="40" rx="3" stroke="url(#g)" stroke-width="1.5" fill="none"/>
+  <line x1="12" y1="22" x2="52" y2="22" stroke="url(#g)" stroke-width="1"/>
+  <line x1="12" y1="32" x2="52" y2="32" stroke="url(#g)" stroke-width="1"/>
+  <line x1="12" y1="42" x2="52" y2="42" stroke="url(#g)" stroke-width="1"/>
+  <line x1="28" y1="12" x2="28" y2="52" stroke="url(#g)" stroke-width="1"/>
+  <line x1="40" y1="12" x2="40" y2="52" stroke="url(#g)" stroke-width="1"/>
+  <!-- header row highlight -->
+  <rect x="12" y="12" width="40" height="10" rx="3" fill="url(#g)" opacity="0.2"/>
+  <!-- Kp label -->
+  <text x="18" y="19" font-size="7" font-weight="bold" fill="#2563eb">Cv</text>
+  <text x="31" y="19" font-size="6" fill="#2563eb">P%</text>
+  <text x="43" y="19" font-size="6" fill="#2563eb">Kp</text>
+  <!-- data cells -->
+  <text x="18" y="29" font-size="6" fill="#475569">0.5</text>
+  <text x="31" y="29" font-size="6" fill="#475569">1%</text>
+  <text x="42" y="29" font-size="6" font-weight="bold" fill="#059669">1.74</text>
+  <text x="18" y="39" font-size="6" fill="#475569">0.3</text>
+  <text x="31" y="39" font-size="6" fill="#475569">5%</text>
+  <text x="42" y="39" font-size="6" font-weight="bold" fill="#059669">1.18</text>
+  <text x="18" y="49" font-size="6" fill="#475569">0.5</text>
+  <text x="31" y="49" font-size="6" fill="#475569">50%</text>
+  <text x="42" y="49" font-size="6" font-weight="bold" fill="#059669">0.55</text>
+</svg>
