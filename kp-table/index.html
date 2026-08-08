@@ -64,6 +64,12 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--txt)
 .rbox{background:#fafafa;border:1px solid var(--bdr);border-radius:8px;padding:16px;font-family:'Microsoft YaHei',sans-serif;font-size:13px;line-height:2;white-space:pre-wrap;word-break:break-all;max-height:55vh;overflow-y:auto;user-select:text}
 .footer{text-align:center;padding:16px;font-size:11px;color:var(--t3)}
 .hint{font-size:11px;color:var(--t3);margin-bottom:10px}
+.group-card{border:1px solid var(--bdr);border-radius:8px;padding:12px;margin-bottom:10px;background:#fafbfc;position:relative}
+.group-card .group-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.group-card .group-head input{width:80px;padding:5px 8px;border:1px solid var(--input-bdr);border-radius:6px;font-size:12px;text-align:center;font-family:inherit;outline:none}
+.group-card .group-head input:focus{border-color:var(--pri)}
+.group-card .group-head .group-label{font-size:12px;font-weight:600;color:var(--t2);min-width:50px}
+.group-del{position:absolute;top:8px;right:10px;background:none;border:none;color:#ef4444;font-size:16px;cursor:pointer;font-weight:700;padding:2px 6px;border-radius:4px}.group-del:hover{background:#fef2f2}
 @media print{.header{background:#1e3a5f!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.btn,.modal-bg,.collapsible{display:none!important}}
 </style>
 </head>
@@ -93,14 +99,10 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--txt)
   </div>
   <div class="hint">💡 一般取 Cs=2~4Cv，需根据流域特性确定</div>
 
-  <div style="font-size:13px;font-weight:600;color:var(--pri);margin-bottom:8px">② 参数</div>
-  <div class="sf-group">
-    <div class="sf-label">变差系数 Cv <span style="color:#ef4444">*</span> <span style="color:var(--t3);font-size:11px">范围 0.02~2.00</span></div>
-    <input class="sf-input" type="number" step="0.01" id="cvInput" placeholder="0.02 ~ 2.00">
-  </div>
-  <div class="sf-group">
-    <div class="sf-label">均值 X̄ <span style="color:var(--t3)">(选填)</span></div>
-    <input class="sf-input" type="number" step="any" id="xbarInput" placeholder="填写后可计算设计值 Xp">
+  <div style="font-size:13px;font-weight:600;color:var(--pri);margin-bottom:8px">② 时段参数</div>
+  <div id="groupArea"></div>
+  <div style="margin-bottom:14px">
+    <button class="btn btn-g" style="font-size:11px;padding:4px 12px" onclick="addGroup()">＋ 添加时段</button>
   </div>
 
   <div style="font-size:13px;font-weight:600;color:var(--pri);margin-bottom:8px">③ 频率 <span style="color:var(--t3);font-weight:400">（留空=全部输出）</span></div>
@@ -226,24 +228,63 @@ function fmtP(p) {
 
 var lastRes = null;
 
+var groupId = 0;
+function addGroup(name, cv, xbar) {
+  groupId++;
+  var id = groupId;
+  var div = document.createElement('div');
+  div.className = 'group-card';
+  div.id = 'group-' + id;
+  div.innerHTML = '<div class="group-head">' +
+    '<span class="group-label">时段</span>' +
+    '<input type="text" id="gName' + id + '" placeholder="如 1h, 3h, 24h" value="' + (name || '') + '">' +
+    '<span style="font-size:12px;color:var(--t3)">Cv</span>' +
+    '<input type="number" step="0.01" id="gCv' + id + '" placeholder="0.02~2.0" value="' + (cv || '') + '">' +
+    '<span style="font-size:12px;color:var(--t3)">X̄</span>' +
+    '<input type="number" step="any" id="gXbar' + id + '" placeholder="选填" value="' + (xbar || '') + '">' +
+    '</div>' +
+    '<button class="group-del" onclick="this.parentElement.remove()">✕</button>';
+  document.getElementById('groupArea').appendChild(div);
+}
+
+function getGroups() {
+  var cards = document.querySelectorAll('.group-card');
+  var groups = [];
+  cards.forEach(function(card) {
+    var id = card.id.replace('group-', '');
+    var name = document.getElementById('gName' + id).value || ('时段' + groups.length + 1);
+    var cv = parseFloat(document.getElementById('gCv' + id).value);
+    var xbar = parseFloat(document.getElementById('gXbar' + id).value);
+    if (!isNaN(cv) && cv > 0) groups.push({ name: name, cv: cv, xbar: xbar });
+  });
+  return groups;
+}
+
+// Initialize with one group
+addGroup('1h');
+
 function doCalc() {
-  var cv = parseFloat(document.getElementById('cvInput').value);
-  var xbar = parseFloat(document.getElementById('xbarInput').value);
   var rawP = document.getElementById('pInput').value.trim();
-
-  if (isNaN(cv) || cv <= 0) { alert('请输入 Cv'); return; }
-
   var table = KP[selectedRatio];
   if (!table) { alert('无数据'); return; }
-
   var cvMin = table.rows[0][0];
   var cvMax = table.rows[table.rows.length - 1][0];
-  if (cv < cvMin || cv > cvMax) { alert('Cv 超出范围 ' + cvMin + '~' + cvMax); return; }
+
+  var groups = getGroups();
+  if (!groups.length) { alert('请至少输入一个时段的 Cv'); return; }
+
+  // Validate all Cv
+  for (var gi = 0; gi < groups.length; gi++) {
+    if (groups[gi].cv < cvMin || groups[gi].cv > cvMax) {
+      alert('「' + groups[gi].name + '」Cv=' + groups[gi].cv + ' 超出范围 ' + cvMin + '~' + cvMax);
+      return;
+    }
+  }
 
   // Parse P values
   var pList;
   if (!rawP) {
-    pList = table.p; // all
+    pList = table.p;
   } else {
     pList = rawP.split(/[,， \t\n]+/).map(function(s) {
       s = s.replace(/%/g, '').trim();
@@ -253,40 +294,46 @@ function doCalc() {
     if (!pList.length) { alert('请输入频率值'); return; }
   }
 
-  var cs = cv * parseFloat(selectedRatio);
-  var results = pList.map(function(p) {
-    var kp = lookup(selectedRatio, cv, p);
-    var phi = kp != null ? (kp - 1) / cv : null;
-    var xp = (!isNaN(xbar) && kp != null) ? xbar * kp : null;
-    return { p: p, phi: phi, kp: kp, xp: xp };
+  // Calculate for all groups
+  var allResults = groups.map(function(g) {
+    var cs = g.cv * parseFloat(selectedRatio);
+    var results = pList.map(function(p) {
+      var kp = lookup(selectedRatio, g.cv, p);
+      var phi = kp != null ? (kp - 1) / g.cv : null;
+      var xp = (!isNaN(g.xbar) && kp != null) ? g.xbar * kp : null;
+      return { p: p, phi: phi, kp: kp, xp: xp };
+    });
+    return { name: g.name, cv: g.cv, cs: cs, xbar: g.xbar, results: results };
   });
 
-  lastRes = { cv: cv, cs: cs, ratio: selectedRatio, xbar: xbar, results: results };
+  lastRes = { ratio: selectedRatio, groups: allResults, pList: pList };
 
   // Render
+  var hasXbar = allResults.some(function(g) { return !isNaN(g.xbar); });
   var h = '<div class="rp-header"><h3>Kp 查询结果</h3></div><div class="rp-body">';
-  h += '<div class="attr-grid">';
-  h += '<div class="attr"><span class="k">Cv</span><span class="v">' + cv + '</span></div>';
-  h += '<div class="attr"><span class="k">Cs</span><span class="v">' + cs.toFixed(2) + ' (' + selectedRatio + 'Cv)</span></div>';
-  if (!isNaN(xbar)) h += '<div class="attr"><span class="k">X̄</span><span class="v">' + xbar + '</span></div>';
-  h += '<div class="attr"><span class="k">Cv 范围</span><span class="v">' + cvMin + '~' + cvMax + '</span></div>';
-  h += '</div>';
+  h += '<div style="font-size:12px;color:var(--t2);margin-bottom:12px">Cs/Cv = ' + selectedRatio + '，Cv 范围 ' + cvMin + '~' + cvMax + '</div>';
 
-  h += '<table class="rp-table"><tr><th>频率 P</th><th>Φ</th><th>Kp</th>';
-  if (!isNaN(xbar)) h += '<th>Xp = X̄×Kp</th>';
-  h += '</tr>';
-  results.forEach(function(r) {
-    h += '<tr><td>' + fmtP(r.p) + '</td><td>' + fmt(r.phi) + '</td><td>' + fmt(r.kp) + '</td>';
-    if (!isNaN(xbar)) h += '<td>' + fmt(r.xp, 2) + '</td>';
-    h += '</tr>';
+  h += '<table class="rp-table"><tr><th>频率 P</th>';
+  allResults.forEach(function(g) {
+    h += '<th colspan="' + (hasXbar && !isNaN(g.xbar) ? '2' : '1') + '">' + g.name + '<br><span style="font-weight:400;font-size:10px">Cv=' + g.cv + '</span></th>';
   });
-  h += '</table>';
+  h += '</tr><tr><td></td>';
+  allResults.forEach(function(g) {
+    h += '<th>Kp</th>';
+    if (hasXbar && !isNaN(g.xbar)) h += '<th>Xp</th>';
+  });
+  h += '</tr>';
 
-  if (results.length === 1 && !isNaN(xbar)) {
-    var r = results[0];
-    h += '<div class="crest-box"><div class="cb-label">Xp = X̄ × Kp</div><div class="cb-val">' + fmt(r.xp, 2) + '</div>';
-    h += '<div class="cb-fm">' + xbar + ' × ' + fmt(r.kp) + ' = ' + fmt(r.xp, 2) + '</div></div>';
+  for (var pi = 0; pi < pList.length; pi++) {
+    h += '<tr><td>' + fmtP(pList[pi]) + '</td>';
+    allResults.forEach(function(g) {
+      var r = g.results[pi];
+      h += '<td>' + fmt(r.kp) + '</td>';
+      if (hasXbar && !isNaN(g.xbar)) h += '<td>' + fmt(r.xp, 2) + '</td>';
+    });
+    h += '</tr>';
   }
+  h += '</table>';
   h += '</div>';
 
   document.getElementById('resultPanel').innerHTML = h;
@@ -317,18 +364,22 @@ function doExport() {
   var W = 56;
   var hr = '='.repeat(W);
   var t = hr + '\n        P-Ⅲ型频率曲线 Kp 值查询结果\n\n';
-  t += '  Cv=' + r.cv + ', Cs=' + r.cs.toFixed(2) + ' (Cs/Cv=' + r.ratio + ')';
-  if (!isNaN(r.xbar)) t += ', X̄=' + r.xbar;
-  t += '\n' + hr + '\n\n';
-  t += '  P          Φ          Kp';
-  if (!isNaN(r.xbar)) t += '          Xp';
-  t += '\n  ' + '-'.repeat(W - 2) + '\n';
-  r.results.forEach(function(o) {
-    t += '  ' + fmtP(o.p).padEnd(10) + fmt(o.phi).padStart(10) + fmt(o.kp).padStart(10);
-    if (!isNaN(r.xbar)) t += fmt(o.xp, 2).padStart(12);
+  t += '  Cs/Cv = ' + r.ratio + '\n' + hr + '\n\n';
+  r.groups.forEach(function(g) {
+    t += '  【' + g.name + '】 Cv=' + g.cv + ', Cs=' + g.cs.toFixed(2);
+    if (!isNaN(g.xbar)) t += ', X̄=' + g.xbar;
+    t += '\n  ' + '-'.repeat(W - 2) + '\n';
+    t += '  P          Kp';
+    if (!isNaN(g.xbar)) t += '          Xp';
+    t += '\n';
+    g.results.forEach(function(o) {
+      t += '  ' + fmtP(o.p).padEnd(10) + fmt(o.kp).padStart(10);
+      if (!isNaN(g.xbar)) t += fmt(o.xp, 2).padStart(12);
+      t += '\n';
+    });
     t += '\n';
   });
-  t += '\n' + hr + '\n  Kp = 1 + Cv × Φ,  Xp = X̄ × Kp\n  数据来源：《水文手册》\n' + hr + '\n';
+  t += hr + '\n  Kp = 1 + Cv × Φ,  Xp = X̄ × Kp\n  数据来源：《水文手册》\n' + hr + '\n';
   document.getElementById('rbox').textContent = t;
   document.getElementById('modalBg').classList.add('show');
 }
