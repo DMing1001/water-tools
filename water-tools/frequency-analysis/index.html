@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>水文频率分析 | P-III型曲线</title>
+<link rel="icon" type="image/svg+xml" href="../icons/favicon-frequency.svg">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f8fafc;color:#0f172a;line-height:1.6;font-size:14px;-webkit-font-smoothing:antialiased}
+.header{background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 50%,#3b82f6 100%);color:#fff;padding:24px 0;text-align:center;position:relative}
+.header h1{font-size:20px;font-weight:700;letter-spacing:2px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.2)}.header .logo-icon{width:36px;height:36px;vertical-align:middle;margin-right:10px;background:rgba(255,255,255,.9);border-radius:50%;padding:4px;box-shadow:0 2px 8px rgba(0,0,0,.15)}.header p{font-size:12px;opacity:.75;margin-top:3px}
+.header .back{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.7);text-decoration:none;font-size:13px;padding:4px 12px;border:1px solid rgba(255,255,255,.2);border-radius:16px}.header .back:hover{color:#fff;border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.1)}
+.wrap{max-width:700px;margin:40px auto;padding:0 16px;text-align:center}
+.icon-big{width:80px;height:80px;margin:0 auto 20px;background:rgba(37,99,235,.08);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.icon-big img{width:52px;height:52px}
+h2{font-size:20px;font-weight:600;color:#0f172a;margin-bottom:12px}
+.desc{font-size:14px;color:#475569;line-height:1.8;margin-bottom:24px}
+.features{display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left;margin-bottom:24px}
+.feature{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px}
+.feature h4{font-size:13px;font-weight:600;color:#2563eb;margin-bottom:4px}
+.feature p{font-size:12px;color:#64748b;line-height:1.5}
+.badge-coming{display:inline-block;padding:6px 16px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:20px;font-size:13px;color:#94a3b8;font-weight:500}
+.footer{text-align:center;padding:20px;font-size:11px;color:#94a3b8}
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="back" href="../">← 工具集</a>
+  <h1><img src="../icons/frequency.svg" alt="" class="logo-icon">水文频率分析</h1>
+  <p>P-III型频率曲线适配 · 设计洪水计算</p>
+</div>
+<div class="wrap">
+  <div class="icon-big"><img src="../icons/frequency.svg" alt=""></div>
+  <h2>水文频率分析工具</h2>
+  <p class="desc">基于皮尔逊III型频率曲线，进行水文频率分析、设计洪水计算和理论频率曲线适配。</p>
+
+  <div class="features">
+    <div class="feature">
+      <h4>📊 经验频率计算</h4>
+      <p>支持数学期望公式、中值公式等常用经验频率计算方法</p>
+    </div>
+    <div class="feature">
+      <h4>📈 P-III型曲线适配</h4>
+      <p>根据实测数据自动拟合 P-III型频率曲线参数（均值、Cv、Cs）</p>
+    </div>
+    <div class="feature">
+      <h4>🎯 设计值计算</h4>
+      <p>输入设计频率，自动计算对应的设计洪水值（洪峰、洪量等）</p>
+    </div>
+    <div class="feature">
+      <h4>📉 可视化图表</h4>
+      <p>理论频率曲线 + 经验频率点据图，直观展示适配效果</p>
+    </div>
+  </div>
+
+  <div class="badge-coming">🚧 开发中，敬请期待</div>
+</div>
+<div class="footer">依据 SL 44-2006 · GB50201-2014 · 仅供参考</div>
+</body>
+</html>
