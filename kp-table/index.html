@@ -75,51 +75,46 @@ textarea.sf-input{resize:vertical;min-height:80px;font-size:13px;line-height:1.8
 
 <div class="card">
   <div class="card-title">📐 参数输入</div>
-  <div class="sf-section"><span class="dot"></span>统计参数</div>
+
+  <div class="sf-section"><span class="dot"></span>① 选择 Cs/Cv 倍比</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+    <label class="ratio-btn"><input type="radio" name="csRatio" value="1.0"> Cs=Cv</label>
+    <label class="ratio-btn active"><input type="radio" name="csRatio" value="2.0" checked> Cs=2Cv</label>
+    <label class="ratio-btn"><input type="radio" name="csRatio" value="2.5"> Cs=2.5Cv</label>
+    <label class="ratio-btn"><input type="radio" name="csRatio" value="3.0"> Cs=3Cv</label>
+    <label class="ratio-btn"><input type="radio" name="csRatio" value="4.0"> Cs=4Cv</label>
+    <label class="ratio-btn"><input type="radio" name="csRatio" value="5.0"> Cs=5Cv</label>
+    <label class="ratio-btn"><input type="radio" name="csRatio" value="6.0"> Cs=6Cv</label>
+  </div>
+
+  <div class="sf-section"><span class="dot"></span>② 输入参数</div>
   <div class="sf-row">
     <div class="sf-group">
-      <div class="sf-label">均值 X̄<span class="sf-tip" data-tip="系列的算术平均值">?</span></div>
-      <input class="sf-input" type="number" step="any" id="xbar" placeholder="如 1250">
-    </div>
-    <div class="sf-group">
-      <div class="sf-label">变差系数 Cv<span class="sf-tip" data-tip="Cv = σ/X̄">?</span></div>
+      <div class="sf-label">变差系数 Cv <span style="color:#ef4444">*</span><span class="sf-tip" data-tip="Cv = σ/X̄
+反映系列的离散程度">?</span></div>
       <input class="sf-input" type="number" step="0.01" id="cv" placeholder="如 0.5">
     </div>
     <div class="sf-group">
-      <div class="sf-label">偏态系数 Cs<span class="sf-tip" data-tip="Cs/Cv 倍比选择">?</span></div>
-      <select class="sf-select" id="csRatio">
-        <option value="1.0">Cs = Cv</option>
-        <option value="2.0" selected>Cs = 2 Cv</option>
-        <option value="2.5">Cs = 2.5 Cv</option>
-        <option value="3.0">Cs = 3 Cv</option>
-        <option value="4.0">Cs = 4 Cv</option>
-        <option value="5.0">Cs = 5 Cv</option>
-        <option value="6.0">Cs = 6 Cv</option>
-      </select>
+      <div class="sf-label">均值 X̄ <span style="color:var(--t3)">(选填)</span><span class="sf-tip" data-tip="系列的算术平均值
+填写后可直接算出设计值 Xp">?</span></div>
+      <input class="sf-input" type="number" step="any" id="xbar" placeholder="如 1250">
     </div>
   </div>
 
   <div class="sf-divider"></div>
-  <div class="sf-section"><span class="dot"></span>查询频率 P（每行一个百分数，如输入 1 表示 1%）</div>
+  <div class="sf-section"><span class="dot"></span>③ 查询频率 <span style="color:var(--t3);font-weight:400">（默认输出全部）</span></div>
   <div class="sf-group">
-    <textarea class="sf-input" id="pInput" placeholder="1
+    <textarea class="sf-input" id="pInput" placeholder="留空 = 输出全部频率
+自定义每行一个，如:
+1
 5
 10
-20
-50
-90
-95
-99"></textarea>
-  </div>
-  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-    <button class="btn btn-g" style="font-size:11px;padding:4px 10px" onclick="setPreset('common')">常用频率</button>
-    <button class="btn btn-g" style="font-size:11px;padding:4px 10px" onclick="setPreset('full')">完整频率</button>
-    <button class="btn btn-g" style="font-size:11px;padding:4px 10px" onclick="setPreset('design')">设计常用</button>
+20"></textarea>
   </div>
 
-  <div class="btn-row">
-    <button class="btn btn-p" onclick="calc()">🧮 查询 Kp</button>
-    <button class="btn btn-ok" onclick="exportReport()" id="btnReport" style="display:none">📄 导出</button>
+  <div class="btn-row" style="margin-top:14px">
+    <button class="btn btn-p" onclick="calc()">🧮 查询</button>
+    <button class="btn btn-ok" onclick="exportReport()" id="btnReport" style="display:none">📄 计算书</button>
   </div>
 </div>
 
@@ -601,6 +596,15 @@ function toggleCollapse(el) {
 }
 
 // Init full table
+// Ratio button handling
+document.querySelectorAll('.ratio-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.ratio-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    btn.querySelector('input').checked=true;
+  });
+});
+
 buildFullTable();
 </script>
 </body>
