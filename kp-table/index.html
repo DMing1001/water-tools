@@ -228,40 +228,64 @@ function fmtP(p) {
 
 var lastRes = null;
 
-var groupId = 0;
-function addGroup(name, cv, xbar) {
-  groupId++;
-  var id = groupId;
-  var div = document.createElement('div');
-  div.className = 'group-card';
-  div.id = 'group-' + id;
-  div.innerHTML = '<div class="group-head">' +
-    '<span class="group-label">时段</span>' +
-    '<input type="text" id="gName' + id + '" placeholder="如 1h, 3h, 24h" value="' + (name || '') + '">' +
-    '<span style="font-size:12px;color:var(--t3)">Cv</span>' +
-    '<input type="number" step="0.01" id="gCv' + id + '" placeholder="0.02~2.0" value="' + (cv || '') + '">' +
-    '<span style="font-size:12px;color:var(--t3)">X̄</span>' +
-    '<input type="number" step="any" id="gXbar' + id + '" placeholder="选填" value="' + (xbar || '') + '">' +
-    '</div>' +
-    '<button class="group-del" onclick="this.parentElement.remove()">✕</button>';
-  document.getElementById('groupArea').appendChild(div);
+var groupData = [{name:'1h', cv:'', xbar:''}];
+
+function renderGroups() {
+  var h = '';
+  for (var i = 0; i < groupData.length; i++) {
+    var g = groupData[i];
+    h += '<div class="group-card" data-idx="' + i + '">';
+    h += '<div class="group-head">';
+    h += '<span class="group-label">时段</span>';
+    h += '<input type="text" data-field="name" placeholder="如 1h" value="' + g.name + '">';
+    h += '<span style="font-size:12px;color:var(--t3)">Cv *</span>';
+    h += '<input type="number" step="0.01" data-field="cv" placeholder="0.02~2.0" value="' + g.cv + '">';
+    h += '<span style="font-size:12px;color:var(--t3)">X̄</span>';
+    h += '<input type="number" step="any" data-field="xbar" placeholder="选填" value="' + g.xbar + '">';
+    h += '</div>';
+    if (groupData.length > 1) h += '<button class="group-del" onclick="delGroup(' + i + ')">✕</button>';
+    h += '</div>';
+  }
+  document.getElementById('groupArea').innerHTML = h;
+  // Bind input events
+  document.querySelectorAll('#groupArea input').forEach(function(inp) {
+    inp.addEventListener('change', function() {
+      var idx = parseInt(inp.closest('.group-card').getAttribute('data-idx'));
+      var field = inp.getAttribute('data-field');
+      groupData[idx][field] = inp.value;
+    });
+  });
+}
+
+function addGroup() {
+  groupData.push({name:'', cv:'', xbar:''});
+  renderGroups();
+}
+
+function delGroup(idx) {
+  groupData.splice(idx, 1);
+  renderGroups();
 }
 
 function getGroups() {
-  var cards = document.querySelectorAll('.group-card');
-  var groups = [];
-  cards.forEach(function(card) {
-    var id = card.id.replace('group-', '');
-    var name = document.getElementById('gName' + id).value || ('时段' + groups.length + 1);
-    var cv = parseFloat(document.getElementById('gCv' + id).value);
-    var xbar = parseFloat(document.getElementById('gXbar' + id).value);
-    if (!isNaN(cv) && cv > 0) groups.push({ name: name, cv: cv, xbar: xbar });
+  // Sync from DOM first
+  document.querySelectorAll('.group-card').forEach(function(card) {
+    var idx = parseInt(card.getAttribute('data-idx'));
+    if (idx < groupData.length) {
+      card.querySelectorAll('input').forEach(function(inp) {
+        groupData[idx][inp.getAttribute('data-field')] = inp.value;
+      });
+    }
   });
-  return groups;
+  return groupData.filter(function(g) {
+    var cv = parseFloat(g.cv);
+    return !isNaN(cv) && cv > 0;
+  }).map(function(g) {
+    return {name: g.name || '时段', cv: parseFloat(g.cv), xbar: parseFloat(g.xbar)};
+  });
 }
 
-// Initialize with one group
-addGroup('1h');
+renderGroups();
 
 function doCalc() {
   var rawP = document.getElementById('pInput').value.trim();
