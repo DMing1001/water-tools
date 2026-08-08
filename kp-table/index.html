@@ -64,12 +64,14 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--txt)
 .rbox{background:#fafafa;border:1px solid var(--bdr);border-radius:8px;padding:16px;font-family:'Microsoft YaHei',sans-serif;font-size:13px;line-height:2;white-space:pre-wrap;word-break:break-all;max-height:55vh;overflow-y:auto;user-select:text}
 .footer{text-align:center;padding:16px;font-size:11px;color:var(--t3)}
 .hint{font-size:11px;color:var(--t3);margin-bottom:10px}
-.group-card{border:1px solid var(--bdr);border-radius:8px;padding:12px;margin-bottom:10px;background:#fafbfc;position:relative}
-.group-card .group-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.group-card .group-head input{width:80px;padding:5px 8px;border:1px solid var(--input-bdr);border-radius:6px;font-size:12px;text-align:center;font-family:inherit;outline:none}
-.group-card .group-head input:focus{border-color:var(--pri)}
-.group-card .group-head .group-label{font-size:12px;font-weight:600;color:var(--t2);min-width:50px}
-.group-del{position:absolute;top:8px;right:10px;background:none;border:none;color:#ef4444;font-size:16px;cursor:pointer;font-weight:700;padding:2px 6px;border-radius:4px}.group-del:hover{background:#fef2f2}
+.group-row{display:grid;grid-template-columns:60px 1fr 1fr 1fr 32px;gap:8px;align-items:center;margin-bottom:8px;padding:8px 10px;background:#f8fafc;border:1px solid var(--bdr);border-radius:8px;transition:all .15s}
+.group-row:hover{border-color:var(--pri);background:var(--pri-l)}
+.group-row .gl{font-size:11px;font-weight:600;color:var(--t3);text-align:center}
+.group-row input{width:100%;padding:6px 8px;border:1.5px solid var(--input-bdr);border-radius:6px;font-size:12px;font-family:inherit;outline:none;background:var(--card)}
+.group-row input:focus{border-color:var(--pri);box-shadow:0 0 0 2px rgba(37,99,235,.08)}
+.group-row input::placeholder{color:var(--t3);font-size:11px}
+.group-del{background:none;border:none;color:#cbd5e1;font-size:14px;cursor:pointer;font-weight:700;padding:4px;border-radius:4px;transition:all .15s;line-height:1}.group-del:hover{color:#ef4444;background:#fef2f2}
+.group-header{display:grid;grid-template-columns:60px 1fr 1fr 1fr 32px;gap:8px;padding:0 10px 6px;font-size:11px;font-weight:600;color:var(--t3)}
 @media print{.header{background:#1e3a5f!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.btn,.modal-bg,.collapsible{display:none!important}}
 </style>
 </head>
@@ -100,7 +102,7 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--txt)
   <div class="hint">💡 一般取 Cs=2~4Cv，需根据流域特性确定</div>
 
   <div style="font-size:13px;font-weight:600;color:var(--pri);margin-bottom:8px">② 时段参数</div>
-  <div id="groupArea"></div>
+  <div id="groupArea" style="margin-bottom:8px"></div>
   <div style="margin-bottom:14px">
     <button class="btn btn-g" style="font-size:11px;padding:4px 12px" onclick="addGroup()">＋ 添加时段</button>
   </div>
@@ -231,28 +233,22 @@ var lastRes = null;
 var groupData = [{name:'1h', cv:'', xbar:''}];
 
 function renderGroups() {
-  var h = '';
+  var h = '<div class="group-header"><span>时段</span><span>Cv *</span><span>X̄ (选填)</span><span>倍比</span><span></span></div>';
   for (var i = 0; i < groupData.length; i++) {
     var g = groupData[i];
-    h += '<div class="group-card" data-idx="' + i + '">';
-    h += '<div class="group-head">';
-    h += '<span class="group-label">时段</span>';
-    h += '<input type="text" data-field="name" placeholder="如 1h" value="' + g.name + '">';
-    h += '<span style="font-size:12px;color:var(--t3)">Cv *</span>';
-    h += '<input type="number" step="0.01" data-field="cv" placeholder="0.02~2.0" value="' + g.cv + '">';
-    h += '<span style="font-size:12px;color:var(--t3)">X̄</span>';
-    h += '<input type="number" step="any" data-field="xbar" placeholder="选填" value="' + g.xbar + '">';
-    h += '</div>';
-    if (groupData.length > 1) h += '<button class="group-del" onclick="delGroup(' + i + ')">✕</button>';
+    h += '<div class="group-row" data-idx="' + i + '">';
+    h += '<input type="text" data-f="name" placeholder="1h" value="' + g.name + '" style="text-align:center;font-weight:600">';
+    h += '<input type="number" step="0.01" data-f="cv" placeholder="0.02~2.0" value="' + g.cv + '">';
+    h += '<input type="number" step="any" data-f="xbar" placeholder="选填" value="' + g.xbar + '">';
+    h += '<span class="gl" style="font-size:11px;color:var(--t3)">' + selectedRatio + 'Cv</span>';
+    h += '<button class="group-del" onclick="delGroup(' + i + ')" title="删除">✕</button>';
     h += '</div>';
   }
   document.getElementById('groupArea').innerHTML = h;
-  // Bind input events
   document.querySelectorAll('#groupArea input').forEach(function(inp) {
     inp.addEventListener('change', function() {
-      var idx = parseInt(inp.closest('.group-card').getAttribute('data-idx'));
-      var field = inp.getAttribute('data-field');
-      groupData[idx][field] = inp.value;
+      var idx = parseInt(inp.closest('.group-row').getAttribute('data-idx'));
+      groupData[idx][inp.getAttribute('data-f')] = inp.value;
     });
   });
 }
@@ -263,23 +259,22 @@ function addGroup() {
 }
 
 function delGroup(idx) {
+  if (groupData.length <= 1) return;
   groupData.splice(idx, 1);
   renderGroups();
 }
 
 function getGroups() {
-  // Sync from DOM first
-  document.querySelectorAll('.group-card').forEach(function(card) {
-    var idx = parseInt(card.getAttribute('data-idx'));
+  document.querySelectorAll('.group-row').forEach(function(row) {
+    var idx = parseInt(row.getAttribute('data-idx'));
     if (idx < groupData.length) {
-      card.querySelectorAll('input').forEach(function(inp) {
-        groupData[idx][inp.getAttribute('data-field')] = inp.value;
+      row.querySelectorAll('input').forEach(function(inp) {
+        groupData[idx][inp.getAttribute('data-f')] = inp.value;
       });
     }
   });
   return groupData.filter(function(g) {
-    var cv = parseFloat(g.cv);
-    return !isNaN(cv) && cv > 0;
+    return !isNaN(parseFloat(g.cv)) && parseFloat(g.cv) > 0;
   }).map(function(g) {
     return {name: g.name || '时段', cv: parseFloat(g.cv), xbar: parseFloat(g.xbar)};
   });
