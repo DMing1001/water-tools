@@ -1179,7 +1179,7 @@ function calc() {
   html += '</tr>';
   
   for (const r of results) {
-    const pct = r.p * 100;
+    const pct = r.p;
     const pctStr = pct < 0.01 ? pct.toFixed(3) : pct < 0.1 ? pct.toFixed(2) : pct < 1 ? pct.toFixed(1) : pct.toFixed(pct % 1 === 0 ? 0 : 1);
     html += `<tr><td>${pctStr}%</td><td>${fv(r.phi, 4)}</td><td>${fv(r.kp, 4)}</td>`;
     if (!isNaN(xbar)) html += `<td>${fv(r.xp, 2)}</td>`;
@@ -1200,7 +1200,7 @@ function buildFullTable() {
   
   let html = '<table class="full-table"><tr><th>Cv</th>';
   for (const p of table.p) {
-    const pct = p * 100;
+    const pct = p;
     html += `<th>${pct < 0.01 ? pct.toFixed(3) : pct < 0.1 ? pct.toFixed(2) : pct < 1 ? pct.toFixed(1) : pct.toFixed(0)}%</th>`;
   }
   html += '</tr>';
@@ -1231,7 +1231,7 @@ function makeReport(r) {
   if (!isNaN(r.xbar)) t += 'Xp'.padStart(12);
   t += '\n  ' + '-'.repeat(W - 2) + '\n';
   for (const o of r.results) {
-    const pct = o.p * 100;
+    const pct = o.p;
     const ps = (pct < 0.01 ? pct.toFixed(3) : pct < 0.1 ? pct.toFixed(2) : pct < 1 ? pct.toFixed(1) : pct.toFixed(0)) + '%';
     t += '  ' + ps.padEnd(10) + fv(o.phi, 4).padStart(10) + fv(o.kp, 4).padStart(10);
     if (!isNaN(r.xbar)) t += fv(o.xp, 2).padStart(12);
