@@ -1139,8 +1139,8 @@ function parseP(raw) {
     s = s.replace(/%/g, '').trim();
     const n = parseFloat(s);
     if (isNaN(n)) return null;
-    return n / 100;
-  }).filter(v => v !== null && v > 0 && v <= 1);
+    return n;
+  }).filter(v => v !== null && v > 0 && v <= 100);
 }
 
 function fv(v, d = 4) { return v == null ? '—' : Number(v).toFixed(d); }
