@@ -6,6 +6,8 @@
 <meta name="description" content="矩形断面水跃计算 — 共轭水深、水跃长度、能量损失、弗劳德数与跃型判断。">
 <title>水跃计算 | 矩形断面</title>
 <link rel="icon" type="image/svg+xml" href="../icons/favicon-hydraulic-jump.svg">
+<!-- AdSense 验证/加载 -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9808235182133255" crossorigin="anonymous"></script>
 <style>
 :root{
   --pri:#2563eb;--pri-d:#1d4ed8;--pri-l:#eff6ff;--pri-bg:#dbeafe;--pri-rgb:37,99,235;
@@ -157,6 +159,14 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
 
 .footer{text-align:center;padding:24px 16px 12px;font-size:11px;color:var(--t3)}
 
+/* 广告位：未配置时显示占位，配置后由 AdSense 注入 */
+.ad-slot{margin:16px 0;padding:0;text-align:center}
+.ad-slot-label{display:inline-block;font-size:10px;color:var(--t3);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase}
+.ad-slot-ph{min-height:90px;border:1px dashed var(--bdr2);border-radius:10px;background:#fafbfc;display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:12px;line-height:1.6;padding:16px}
+.ad-slot.active .ad-slot-ph{display:none}
+.ad-slot.active .ad-slot-label{display:none}
+.ad-slot ins.adsbygoogle{display:block}
+
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center}
 .modal-bg.show{display:flex}
 .modal{background:#fff;border-radius:14px;width:92%;max-width:800px;max-height:88vh;overflow-y:auto;padding:24px}
@@ -167,7 +177,7 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
 
 @media print{
   .topbar{background:#0f2744!important;-webkit-print-color-adjust:exact}
-  .action-bar,.btn,.modal-bg,.back{display:none!important}
+  .action-bar,.btn,.modal-bg,.back,.ad-slot{display:none!important}
 }
 </style>
 </head>
@@ -267,6 +277,12 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
     </div>
   </div>
 
+  <!-- 广告位：填充 AD_CONFIG.client 后自动启用；未配置时显示占位 -->
+  <div class="ad-slot" data-ad="tool-inline" aria-label="广告">
+    <div class="ad-slot-label">Advertisement</div>
+    <div class="ad-slot-ph">广告位 · 注册 Google AdSense 后填入发布商 ID 即可展示</div>
+  </div>
+
   <div class="acc" id="accFml">
     <div class="acc-hd" onclick="toggleAcc(this)"><span class="arr">▶</span> 计算公式</div>
     <div class="acc-bd">
@@ -296,7 +312,7 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
     </div>
   </div>
 
-  <div class="footer">矩形断面自由水跃 · 仅供参考学习 · 实际工程以教材/规范及审查意见为准</div>
+  <div class="footer">矩形断面自由水跃 · 仅供参考学习 · 实际工程以教材/规范及审查意见为准 · <a href="../privacy.html" style="color:inherit">隐私政策</a></div>
 </div>
 
 <div class="float-tip" id="floatTip"><span class="ft-arrow"></span><span class="ft-text"></span></div>
@@ -314,6 +330,42 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
 </div>
 
 <script>
+/* ========== 广告配置（填入 AdSense 发布商 ID 后自动启用） ========== */
+const AD_CONFIG = {
+  client: 'ca-pub-9808235182133255',
+  // 过审后在 AdSense 后台创建「展示广告」单元，把单元 ID 填到这里
+  slots: {
+    'tool-inline': ''  // 例如 '1234567890'，未填则保持占位
+  }
+};
+
+(function initAds(){
+  if(!AD_CONFIG.client || !String(AD_CONFIG.client).startsWith('ca-pub-')) return;
+  // 注入 AdSense 主脚本（全局一次）
+  if(!document.querySelector('script[data-adsense]')){
+    const s=document.createElement('script');
+    s.async=true;
+    s.crossOrigin='anonymous';
+    s.dataset.adsense='1';
+    s.src=`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(AD_CONFIG.client)}`;
+    document.head.appendChild(s);
+  }
+  document.querySelectorAll('.ad-slot[data-ad]').forEach(el=>{
+    const slotId=AD_CONFIG.slots[el.dataset.ad];
+    if(!slotId) return;
+    const ins=document.createElement('ins');
+    ins.className='adsbygoogle';
+    ins.style.display='block';
+    ins.setAttribute('data-ad-client', AD_CONFIG.client);
+    ins.setAttribute('data-ad-slot', slotId);
+    ins.setAttribute('data-ad-format','auto');
+    ins.setAttribute('data-full-width-responsive','true');
+    el.appendChild(ins);
+    el.classList.add('active');
+    try{(window.adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){}
+  });
+})();
+
 /* ========== 计算逻辑（矩形自由水跃） ========== */
 const g = 9.81;
 function fv(v,d=2){return v==null?'—':Number(v).toFixed(d)}
