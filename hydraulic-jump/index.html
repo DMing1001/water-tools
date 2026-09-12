@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="矩形断面水跃计算 — 共轭水深、水跃长度、能量损失、弗劳德数与跃型判断。">
+<title>水跃计算 | 矩形断面</title>
+<link rel="icon" type="image/svg+xml" href="../icons/favicon-hydraulic-jump.svg">
+<style>
+:root{
+  --pri:#2563eb;--pri-d:#1d4ed8;--pri-l:#eff6ff;--pri-bg:#dbeafe;--pri-rgb:37,99,235;
+  --bg:#f4f7fb;--card:#fff;--bdr:#e2e8f0;--bdr2:#cbd5e1;
+  --txt:#0f172a;--t2:#475569;--t3:#94a3b8;
+  --ok:#059669;--ok-bg:#ecfdf5;--ok-bdr:#a7f3d0;--ok-rgb:5,150,105;
+  --warn:#d97706;--warn-bg:#fffbeb;
+  --acc:#7c3aed;--acc-bg:#f5f3ff;--acc-bdr:#c4b5fd;
+  --input-bg:#f8fafc;
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.04);
+  --radius:12px;
+  --mono:ui-monospace,'Cascadia Code','SF Mono',Menlo,Consolas,'Courier New',monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--txt);line-height:1.55;font-size:14px;-webkit-font-smoothing:antialiased;min-height:100vh}
+
+.topbar{background:linear-gradient(135deg,#0f2744 0%,#1e3a5f 40%,#2563eb 100%);color:#fff;position:relative;overflow:hidden}
+.topbar::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 85% 20%,rgba(255,255,255,.08),transparent 55%);pointer-events:none}
+.topbar-in{max-width:1200px;margin:0 auto;padding:18px 20px;display:flex;align-items:center;gap:14px;position:relative;z-index:1}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand img{width:40px;height:40px;background:rgba(255,255,255,.92);border-radius:50%;padding:4px;box-shadow:0 2px 10px rgba(0,0,0,.18);flex-shrink:0}
+.brand h1{font-size:18px;font-weight:700;letter-spacing:1px;white-space:nowrap}
+.brand .sub{font-size:12px;opacity:.72;margin-top:2px}
+.back{margin-left:auto;color:rgba(255,255,255,.78);text-decoration:none;font-size:12.5px;padding:6px 12px;border:1px solid rgba(255,255,255,.22);border-radius:999px;flex-shrink:0}
+.back:hover{color:#fff;background:rgba(255,255,255,.1)}
+
+.wrap{max-width:1200px;margin:18px auto 0;padding:0 16px 40px}
+
+.action-bar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 12px;padding:12px 14px;background:var(--card);border:1px solid var(--bdr);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:14px;position:sticky;top:8px;z-index:20}
+.ab-group{display:flex;flex-direction:column;gap:5px;min-width:0}
+.ab-group.grow{flex:1 1 130px;min-width:100px}
+.ab-group.actions{flex:0 0 auto;flex-direction:row;align-items:center;gap:8px;margin-left:auto}
+.ab-label{font-size:11px;color:var(--t3);font-weight:500}
+.ab-inline{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.quick-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.qb-chip{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:999px;border:1px solid var(--bdr);background:var(--input-bg);color:var(--t2);font-size:11.5px;font-family:inherit;cursor:pointer;transition:.15s}
+.qb-chip:hover{border-color:var(--pri);color:var(--pri);background:var(--pri-l)}
+.qb-chip.saved{border-style:dashed}
+.qb-del{margin-left:2px;opacity:.5}
+.qb-del:hover{opacity:1;color:#dc2626}
+.ab-group .inp{min-width:100px;padding:8px 10px}
+.ab-group.actions .btn{flex:0 0 auto;min-width:100px;padding:10px 18px}
+
+.fit-warn{display:none;margin:0 0 14px;padding:10px 14px;border-radius:var(--radius);background:var(--warn-bg);border:1px solid #fcd34d;color:#92400e;font-size:12.5px;line-height:1.6}
+.fit-warn.show{display:block}
+.fit-warn b{font-weight:700}
+.fit-warn ul{margin:4px 0 0 18px}
+.fit-ok{display:none;margin:0 0 14px;padding:8px 14px;border-radius:var(--radius);background:var(--ok-bg);border:1px solid var(--ok-bdr);color:var(--ok);font-size:12.5px}
+.fit-ok.show{display:block}
+
+.panel{background:var(--card);border:1px solid var(--bdr);border-radius:var(--radius);box-shadow:var(--shadow);overflow:visible}
+.panel-hd{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.panel-hd h2{font-size:14px;font-weight:600}
+.panel-hd .chip{font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--pri-l);color:var(--pri)}
+.panel-bd{padding:16px 18px}
+
+.single-grid{display:grid;grid-template-columns:minmax(300px,360px) 1fr;gap:16px;align-items:stretch}
+@media(max-width:960px){.single-grid{grid-template-columns:1fr}}
+#resultWrap{min-width:0}
+#resultWrap>.panel{height:100%;display:flex;flex-direction:column;min-height:480px}
+#resultWrap>.panel>.rp-body{flex:1}
+#resultWrap>.panel>.empty-state{flex:1}
+
+.f-sec{font-size:12px;font-weight:700;color:var(--pri);letter-spacing:.4px;margin:14px 0 10px;display:flex;align-items:center;gap:8px}
+.f-sec:first-child{margin-top:0}
+.f-sec::before{content:'';width:3px;height:12px;background:var(--pri);border-radius:2px}
+.f-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.f-item{min-width:0}
+.f-item label{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:500;color:var(--t2);margin-bottom:4px}
+.f-item label .u{color:var(--t3);font-weight:400;font-size:11px}
+.tip-i{width:14px;height:14px;line-height:14px;text-align:center;font-size:10px;font-weight:700;color:var(--t3);background:#e2e8f0;border-radius:50%;cursor:help;flex-shrink:0;font-style:normal}
+.tip-i:hover,.tip-i:focus{color:#fff;background:var(--pri);outline:none}
+
+.float-tip{position:fixed;z-index:9999;max-width:280px;padding:8px 12px;border-radius:8px;background:var(--txt);color:#fff;font-size:12px;line-height:1.55;white-space:pre-line;box-shadow:0 8px 24px rgba(15,23,42,.22);pointer-events:none;opacity:0;visibility:hidden;transition:opacity .12s}
+.float-tip.show{opacity:1;visibility:visible}
+.float-tip .ft-arrow{position:absolute;width:0;height:0;border:5px solid transparent}
+.float-tip.below .ft-arrow{top:-10px;left:var(--ft-arr-x,50%);transform:translateX(-50%);border-bottom-color:var(--txt)}
+.float-tip.above .ft-arrow{bottom:-10px;left:var(--ft-arr-x,50%);transform:translateX(-50%);border-top-color:var(--txt)}
+
+.inp{width:100%;padding:9px 11px;border:1.5px solid var(--bdr2);border-radius:8px;font-size:13.5px;font-family:inherit;color:var(--txt);background:var(--input-bg);outline:none}
+.inp:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(var(--pri-rgb),.12);background:#fff}
+.inp.num{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+
+.btn{padding:11px 16px;border:none;border-radius:9px;font:600 13.5px/1 inherit;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn-p{background:var(--pri);color:#fff;box-shadow:0 2px 8px rgba(var(--pri-rgb),.28)}
+.btn-p:hover{background:var(--pri-d)}
+.btn-ok{background:var(--ok);color:#fff}
+
+.empty-state{min-height:420px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;color:var(--t2)}
+.empty-state .icon-ring{width:72px;height:72px;border-radius:50%;background:var(--pri-l);border:2px dashed var(--pri-bg);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.empty-state .icon-ring img{width:40px;height:40px}
+.empty-state h3{font-size:15px;font-weight:600;color:var(--txt);margin-bottom:6px}
+.empty-state p{font-size:13px;color:var(--t3);max-width:320px;line-height:1.7}
+
+.result-panel .rp-hd{background:linear-gradient(135deg,#4c1d95,#7c3aed);color:#fff;padding:14px 18px}
+.result-panel .rp-hd h3{font-size:15px;font-weight:600}
+.rp-body{padding:16px 18px 20px}
+.rp-sec{font-size:12.5px;font-weight:700;color:var(--t2);margin:16px 0 8px}
+.rp-sec:first-child{margin-top:0}
+
+.rp-table{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0 4px}
+.rp-table th{background:var(--pri-l);color:var(--pri);font-weight:600;padding:7px 10px;border:1px solid var(--bdr);font-size:11.5px;white-space:nowrap;text-align:left}
+.rp-table td{padding:6px 10px;border:1px solid var(--bdr);text-align:left;font-size:12.5px}
+.rp-table td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.rp-table tr:hover td{background:#f8fafc}
+.rp-table .total td{background:var(--acc-bg);font-weight:700;color:var(--acc);border-color:var(--acc-bdr)}
+
+.jmp-viz{margin:0 0 8px;border:2px solid var(--acc-bdr);border-radius:var(--radius);overflow:hidden;background:linear-gradient(180deg,#faf5ff,#f5f3ff)}
+.jmp-head{padding:14px 16px;text-align:center}
+.jmp-head .label{font-size:11.5px;color:var(--t2)}
+.jmp-head .val{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--acc);margin-top:2px;font-variant-numeric:tabular-nums}
+.jmp-head .formula{font-family:var(--mono);font-size:11.5px;color:var(--t3);margin-top:4px}
+.jmp-type{display:inline-block;margin-top:8px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;background:#fff;border:1px solid var(--acc-bdr);color:var(--acc)}
+.jmp-sub{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 14px}
+.jmp-card{background:#fff;border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;text-align:center}
+.jmp-card .k{font-size:11px;color:var(--t3)}
+.jmp-card .v{font-family:var(--mono);font-size:16px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+
+.depth-viz{display:flex;align-items:flex-end;gap:0;height:90px;margin:10px 14px 8px;border:1px solid var(--bdr);border-radius:10px;background:#f0f9ff;overflow:hidden;position:relative}
+.depth-side{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding-bottom:8px;height:100%}
+.depth-bar{width:70%;max-width:120px;background:linear-gradient(180deg,#38bdf8,#0284c7);border-radius:4px 4px 0 0;position:relative}
+.depth-side.up .depth-bar{background:linear-gradient(180deg,#fbbf24,#d97706)}
+.depth-tag{font-size:10px;color:var(--t2);margin-top:4px;font-family:var(--mono)}
+.depth-viz .arrow-mid{width:40px;align-self:center;color:var(--t3);text-align:center;font-size:11px}
+
+.rp-fold{border:1px solid var(--bdr);border-radius:10px;margin-top:14px;overflow:hidden}
+.rp-fold-hd{width:100%;display:flex;align-items:center;gap:8px;padding:10px 12px;border:none;background:var(--pri-l);color:var(--pri);font:600 12.5px/1 inherit;font-family:inherit;cursor:pointer;text-align:left}
+.rp-fold-hd .arr{font-size:10px}
+.rp-fold.open .rp-fold-hd .arr{transform:rotate(90deg)}
+.rp-fold-bd{display:none;padding:8px 10px 10px}
+.rp-fold.open .rp-fold-bd{display:block}
+
+.acc{border:1px solid var(--bdr);border-radius:var(--radius);background:var(--card);margin-top:16px;box-shadow:var(--shadow)}
+.acc-hd{padding:12px 16px;cursor:pointer;font-size:13px;font-weight:600;color:var(--t2);display:flex;align-items:center;gap:8px}
+.acc-hd:hover{color:var(--pri);background:var(--pri-l)}
+.acc-hd .arr{font-size:10px;color:var(--t3)}
+.acc.open .acc-hd .arr{transform:rotate(90deg)}
+.acc-bd{display:none;padding:0 16px 16px}
+.acc.open .acc-bd{display:block}
+.fml{background:var(--pri-l);border:1px solid var(--pri-bg);border-radius:8px;padding:12px 14px;margin:8px 0;font-size:12.5px;line-height:1.85;overflow-x:auto}
+.fml b{color:var(--pri)}
+.fml-t{font-size:12px;font-weight:700;color:var(--pri);margin:12px 0 4px}
+.ref-t{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.ref-t th,.ref-t td{padding:6px 8px;border:1px solid var(--bdr);text-align:center}
+.ref-t th{background:var(--pri-l);color:var(--pri);font-weight:600}
+
+.footer{text-align:center;padding:24px 16px 12px;font-size:11px;color:var(--t3)}
+
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:14px;width:92%;max-width:800px;max-height:88vh;overflow-y:auto;padding:24px}
+.modal h2{font-size:16px;margin-bottom:6px}
+.modal .close{float:right;font-size:20px;cursor:pointer;color:var(--t3);background:none;border:none}
+.report-box{background:#f8fafc;border:1px solid var(--bdr);border-radius:8px;padding:16px;font-family:'Microsoft YaHei','SimSun',sans-serif;font-size:12.5px;line-height:1.9;white-space:pre-wrap;max-height:52vh;overflow-y:auto}
+.modal-actions{display:flex;gap:8px;justify-content:center;margin-top:14px}
+
+@media print{
+  .topbar{background:#0f2744!important;-webkit-print-color-adjust:exact}
+  .action-bar,.btn,.modal-bg,.back{display:none!important}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <img src="../icons/hydraulic-jump.svg" alt="">
+      <div>
+        <h1>水跃计算</h1>
+        <div class="sub">矩形断面 · 共轭水深 · 水跃长度 · 能量损失</div>
+      </div>
+    </div>
+    <a class="back" href="../">← 工具集</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="action-bar">
+    <div class="ab-group grow" style="flex:1.2 1 200px">
+      <span class="ab-label">样例与收藏</span>
+      <div class="ab-inline">
+        <div class="quick-bar" id="quickBar">
+          <button type="button" class="qb-chip" data-preset="stable">稳定水跃</button>
+          <button type="button" class="qb-chip" data-preset="weak">弱水跃</button>
+          <button type="button" class="qb-chip" data-preset="strong">强水跃</button>
+          <button type="button" class="qb-chip" id="btnSaveCase">存当前</button>
+          <span id="savedCases" style="display:contents"></span>
+        </div>
+      </div>
+    </div>
+    <div class="ab-group grow" style="flex:1 1 120px">
+      <span class="ab-label">工程名称</span>
+      <input class="inp" id="s_name" value="水跃工程" placeholder="工程名称">
+    </div>
+    <div class="ab-group actions">
+      <button class="btn btn-p" onclick="calc()">计算</button>
+      <button class="btn btn-ok" onclick="exportReport()" id="btnReport" style="display:none">计算书</button>
+    </div>
+  </div>
+
+  <div class="fit-warn" id="fitWarn"></div>
+  <div class="fit-ok" id="fitOk">参数已填写，可计算</div>
+
+  <div class="single-grid">
+    <div class="panel">
+      <div class="panel-hd">
+        <h2>计算参数</h2>
+        <span class="chip">矩形断面</span>
+      </div>
+      <div class="panel-bd">
+        <div class="f-sec">输入方式</div>
+        <div class="f-item">
+          <label>流量输入方式</label>
+          <select class="inp" id="s_mode" onchange="onModeChange()">
+            <option value="QB" selected>设计流量 Q + 渠宽 B</option>
+            <option value="q">单宽流量 q</option>
+          </select>
+        </div>
+
+        <div class="f-sec">水力参数</div>
+        <div class="f-grid" id="modeQB">
+          <div class="f-item">
+            <label>设计流量 Q <span class="u">m³/s</span><i class="tip-i" data-tip="跃前断面流量">?</i></label>
+            <input class="inp num" type="number" step="0.01" id="s_Q" placeholder="50">
+          </div>
+          <div class="f-item">
+            <label>渠宽 B <span class="u">m</span><i class="tip-i" data-tip="矩形渠道净宽">?</i></label>
+            <input class="inp num" type="number" step="0.01" id="s_B" placeholder="10">
+          </div>
+        </div>
+        <div class="f-grid" id="modeQ" style="display:none">
+          <div class="f-item">
+            <label>单宽流量 q <span class="u">m²/s</span><i class="tip-i" data-tip="q = Q/B">?</i></label>
+            <input class="inp num" type="number" step="0.01" id="s_q" placeholder="5">
+          </div>
+        </div>
+        <div class="f-grid">
+          <div class="f-item">
+            <label>跃前水深 y1 <span class="u">m</span><i class="tip-i" data-tip="收缩断面（跃前）水深，急流">?</i></label>
+            <input class="inp num" type="number" step="0.01" id="s_y1" placeholder="0.50">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="resultWrap">
+      <div class="panel" id="resultPanel">
+        <div class="empty-state">
+          <div class="icon-ring"><img src="../icons/hydraulic-jump.svg" alt=""></div>
+          <h3>填写参数后点击上方「计算」</h3>
+          <p>输出共轭水深 y2、跃长 Lj、能量损失 ΔE，并判断水跃类型。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="acc" id="accFml">
+    <div class="acc-hd" onclick="toggleAcc(this)"><span class="arr">▶</span> 计算公式</div>
+    <div class="acc-bd">
+      <div class="fml-t">弗劳德数与临界水深（矩形）</div>
+      <div class="fml">v1 = q / y1　　Fr1 = v1 / √(g·y1)<br>hk = (q²/g)<sup>1/3</sup></div>
+      <div class="fml-t">共轭水深（动量方程）</div>
+      <div class="fml"><b>y2 = y1/2 · (√(1+8Fr1²) − 1)</b></div>
+      <div class="fml-t">水跃长度（常用）</div>
+      <div class="fml"><b>Lj = 6.9 · (y2 − y1)</b><br>（教材常用式；亦有 Lj≈5~7·y2 等经验式）</div>
+      <div class="fml-t">能量损失</div>
+      <div class="fml"><b>ΔE = (y2−y1)³ / (4·y1·y2)</b><br>E = y + v²/(2g)</div>
+      <div class="fml-t">跃型（按 Fr1）</div>
+      <div class="fml">Fr&lt;1 缓流无跃 · 1~1.7 波状 · 1.7~2.5 弱跃<br>2.5~4.5 摆动 · 4.5~9 稳定 · ≥9 强跃</div>
+    </div>
+  </div>
+
+  <div class="acc" id="accRef">
+    <div class="acc-hd" onclick="toggleAcc(this)"><span class="arr">▶</span> 跃型参考</div>
+    <div class="acc-bd">
+      <table class="ref-t"><tr><th>Fr1</th><th>跃型</th><th>特点</th></tr>
+        <tr><td>&lt;1</td><td>缓流</td><td>无水跃</td></tr>
+        <tr><td>1~1.7</td><td>波状水跃</td><td>表面波状，消能少</td></tr>
+        <tr><td>1.7~2.5</td><td>弱水跃</td><td>消能率约 20%</td></tr>
+        <tr><td>2.5~4.5</td><td>摆动水跃</td><td>不稳定，需防护</td></tr>
+        <tr><td>4.5~9</td><td>稳定水跃</td><td>消能 45%~70%</td></tr>
+        <tr><td>≥9</td><td>强水跃</td><td>消能率高</td></tr></table>
+    </div>
+  </div>
+
+  <div class="footer">矩形断面自由水跃 · 仅供参考学习 · 实际工程以教材/规范及审查意见为准</div>
+</div>
+
+<div class="float-tip" id="floatTip"><span class="ft-arrow"></span><span class="ft-text"></span></div>
+
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="close" onclick="closeModal()">✕</button>
+    <h2>计算书</h2>
+    <div class="report-box" id="reportBox"></div>
+    <div class="modal-actions">
+      <button class="btn btn-p" style="flex:0 0 auto;min-width:120px" onclick="copyReport()">一键复制</button>
+      <button class="btn btn-g" style="flex:0 0 auto;min-width:100px" onclick="closeModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ========== 计算逻辑（矩形自由水跃） ========== */
+const g = 9.81;
+function fv(v,d=2){return v==null?'—':Number(v).toFixed(d)}
+
+function calcJump(inp){
+  let y1 = inp.y1;
+  let q, Q = null, B = null;
+  if (inp.q != null && !isNaN(inp.q)) {
+    q = inp.q;
+    if (inp.Q != null && !isNaN(inp.Q)) { Q = inp.Q; B = inp.B; }
+  } else if (inp.Q != null && inp.B != null && !isNaN(inp.Q) && !isNaN(inp.B)) {
+    Q = inp.Q; B = inp.B; q = Q / B;
+  } else {
+    return null;
+  }
+  if (isNaN(y1) || y1 <= 0 || q <= 0) return null;
+
+  const v1 = q / y1;
+  const Fr1 = v1 / Math.sqrt(g * y1);
+  const hk = Math.pow(q * q / g, 1 / 3);
+  const y2 = y1 / 2 * (Math.sqrt(1 + 8 * Fr1 * Fr1) - 1);
+  const v2 = q / y2;
+  const Fr2 = v2 / Math.sqrt(g * y2);
+  const dy = y2 - y1;
+  const Lj = 6.9 * dy;
+  const dE = Math.pow(dy, 3) / (4 * y1 * y2);
+  const E1 = y1 + v1 * v1 / (2 * g);
+  const E2 = y2 + v2 * v2 / (2 * g);
+  let jumpType;
+  if (Fr1 < 1) jumpType = '缓流，无水跃';
+  else if (Fr1 < 1.7) jumpType = '波状水跃';
+  else if (Fr1 < 2.5) jumpType = '弱水跃';
+  else if (Fr1 < 4.5) jumpType = '摆动水跃';
+  else if (Fr1 < 9) jumpType = '稳定水跃';
+  else jumpType = '强水跃';
+  return { y1, q, Q, B, v1, Fr1, hk, y2, v2, Fr2, dy, Lj, dE, E1, E2, jumpType };
+}
+
+/* ========== UI ========== */
+let lastResult=null;
+
+function onModeChange(){
+  const m=document.getElementById('s_mode').value;
+  document.getElementById('modeQB').style.display=m==='QB'?'grid':'none';
+  document.getElementById('modeQ').style.display=m==='q'?'grid':'none';
+  updateFitWarn();
+}
+
+function readForm(){
+  const g=id=>document.getElementById(id);
+  const mode=g('s_mode').value;
+  const base={name:g('s_name').value||'水跃工程', mode, y1:parseFloat(g('s_y1').value)};
+  if(mode==='QB'){
+    return {...base, Q:parseFloat(g('s_Q').value), B:parseFloat(g('s_B').value)};
+  }
+  return {...base, q:parseFloat(g('s_q').value)};
+}
+
+function writeForm(p){
+  const g=id=>document.getElementById(id);
+  if(p.name) g('s_name').value=p.name;
+  if(p.mode){g('s_mode').value=p.mode; onModeChange();}
+  if(p.y1!=null&&!isNaN(p.y1)) g('s_y1').value=p.y1;
+  if(p.Q!=null&&!isNaN(p.Q)) g('s_Q').value=p.Q;
+  if(p.B!=null&&!isNaN(p.B)) g('s_B').value=p.B;
+  if(p.q!=null&&!isNaN(p.q)) g('s_q').value=p.q;
+  updateFitWarn();
+}
+
+function updateFitWarn(){
+  const box=document.getElementById('fitWarn'), ok=document.getElementById('fitOk');
+  const p=readForm();
+  const items=[];
+  if(isNaN(p.y1)||p.y1<=0) items.push('跃前水深 y1 应大于 0');
+  if(p.mode==='QB'){
+    if(isNaN(p.Q)||p.Q<=0) items.push('请填写设计流量 Q > 0');
+    if(isNaN(p.B)||p.B<=0) items.push('请填写渠宽 B > 0');
+  }else{
+    if(isNaN(p.q)||p.q<=0) items.push('请填写单宽流量 q > 0');
+  }
+  if(items.length){box.innerHTML='<b>请检查参数</b><ul>'+items.map(t=>'<li>'+t+'</li>').join('')+'</ul>';box.classList.add('show');ok.classList.remove('show')}
+  else{box.classList.remove('show');ok.classList.add('show')}
+}
+
+function calc(){
+  updateFitWarn();
+  const p=readForm();
+  const r=calcJump(p);
+  if(!r||isNaN(r.y2)){alert('参数不完整或无法计算');return}
+  lastResult={...p,...r,name:p.name};
+  renderResult();
+}
+
+function renderResult(){
+  const r=lastResult; if(!r)return;
+  const el=document.getElementById('resultPanel');
+  el.className='panel result-panel';
+  const H=80;
+  const h1px=Math.max(8, Math.min(70, (r.y1/r.y2)*H));
+  const h2px=Math.max(8, H);
+
+  el.innerHTML=`
+    <div class="rp-hd">
+      <h3>${r.name} — 水跃计算结果</h3>
+      <div class="sub" style="font-size:12px;opacity:.85;margin-top:2px">矩形断面自由水跃</div>
+    </div>
+    <div class="rp-body">
+      <div class="rp-sec">一、水跃结论</div>
+      <div class="jmp-viz">
+        <div class="jmp-head">
+          <div class="label">共轭水深 y2</div>
+          <div class="val">${fv(r.y2,3)} m</div>
+          <div class="formula">y2 = y1/2·(√(1+8Fr1²)−1)　y1=${fv(r.y1,3)}　Fr1=${fv(r.Fr1,3)}</div>
+          <div class="jmp-type">${r.jumpType}</div>
+        </div>
+        <div class="depth-viz">
+          <div class="depth-side up">
+            <div class="depth-bar" style="height:${h1px}px"></div>
+            <div class="depth-tag">y1=${fv(r.y1,3)}</div>
+          </div>
+          <div class="arrow-mid" style="width:48px;align-self:center;text-align:center;color:var(--t3);font-size:11px">跃<br>→</div>
+          <div class="depth-side">
+            <div class="depth-bar" style="height:${h2px}px"></div>
+            <div class="depth-tag">y2=${fv(r.y2,3)}</div>
+          </div>
+        </div>
+        <div class="jmp-sub">
+          <div class="jmp-card"><div class="k">水跃长度 Lj</div><div class="v">${fv(r.Lj,2)} m</div></div>
+          <div class="jmp-card"><div class="k">能量损失 ΔE</div><div class="v">${fv(r.dE,3)} m</div></div>
+        </div>
+      </div>
+      <table class="rp-table">
+        <tr><th>项</th><th>值</th></tr>
+        <tr><td>跃前 y1 / 跃后 y2</td><td class="n">${fv(r.y1,3)} / ${fv(r.y2,3)} m</td></tr>
+        <tr><td>跃前 v1 / Fr1</td><td class="n">${fv(r.v1,3)} m/s / ${fv(r.Fr1,3)}</td></tr>
+        <tr><td>跃后 v2 / Fr2</td><td class="n">${fv(r.v2,3)} m/s / ${fv(r.Fr2,3)}</td></tr>
+        <tr><td>临界水深 hk</td><td class="n">${fv(r.hk,3)} m</td></tr>
+        <tr class="total"><td>共轭比 y2/y1</td><td class="n">${fv(r.y2/r.y1,3)}</td></tr>
+      </table>
+
+      <div class="rp-sec">二、计算过程</div>
+      <table class="rp-table">
+        <tr><th>项目</th><th>公式</th><th>结果</th></tr>
+        <tr><td>单宽流量 q</td><td>${r.Q!=null?'Q/B':'输入'}</td><td class="n">${fv(r.q,4)} m²/s</td></tr>
+        <tr><td>跃前流速 v1</td><td>q/y1</td><td class="n">${fv(r.v1,4)} m/s</td></tr>
+        <tr><td>弗劳德数 Fr1</td><td>v1/√(g·y1)</td><td class="n">${fv(r.Fr1,4)}</td></tr>
+        <tr><td>临界水深 hk</td><td>(q²/g)^(1/3)</td><td class="n">${fv(r.hk,4)} m</td></tr>
+        <tr class="total"><td>共轭水深 y2</td><td>y1/2·(√(1+8Fr1²)−1)</td><td class="n">${fv(r.y2,4)} m</td></tr>
+        <tr><td>跃后流速 v2</td><td>q/y2</td><td class="n">${fv(r.v2,4)} m/s</td></tr>
+        <tr><td>水跃长度 Lj</td><td>6.9(y2−y1)</td><td class="n">${fv(r.Lj,3)} m</td></tr>
+        <tr><td>能量损失 ΔE</td><td>(y2−y1)³/(4y1y2)</td><td class="n">${fv(r.dE,4)} m</td></tr>
+        <tr><td>断面比能 E1 / E2</td><td>y+v²/(2g)</td><td class="n">${fv(r.E1,3)} / ${fv(r.E2,3)} m</td></tr>
+      </table>
+
+      <div class="rp-fold">
+        <button type="button" class="rp-fold-hd" onclick="this.parentElement.classList.toggle('open')">
+          <span class="arr">▶</span> 三、说明 · 默认折叠
+        </button>
+        <div class="rp-fold-bd">
+          <table class="rp-table">
+            <tr><td>跃型</td><td>${r.jumpType}</td></tr>
+            <tr><td>适用</td><td>矩形断面、棱柱体渠道、自由水跃</td></tr>
+            <tr><td>备注</td><td>Lj 为常用经验式，工程设计可按规范/试验修正</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('btnReport').style.display='inline-flex';
+  document.getElementById('resultWrap').scrollIntoView({behavior:'smooth'});
+}
+
+function makeReport(r){
+  let t='==========================================================\n';
+  t+='                 水 跃 计 算 书\n\n';
+  t+='  断面：矩形自由水跃\n';
+  t+='==========================================================\n\n';
+  t+='  工程名称: '+(r.name||'')+'\n';
+  t+='  跃前水深 y1  '+fv(r.y1,4)+' m\n';
+  t+='  单宽流量 q   '+fv(r.q,4)+' m²/s\n';
+  t+='  跃前流速 v1  '+fv(r.v1,4)+' m/s\n';
+  t+='  弗劳德数 Fr1 '+fv(r.Fr1,4)+'\n';
+  t+='  临界水深 hk  '+fv(r.hk,4)+' m\n';
+  t+='  跃型         '+r.jumpType+'\n\n';
+  t+='  共轭水深 y2 = '+fv(r.y2,4)+' m\n';
+  t+='  水跃长度 Lj = '+fv(r.Lj,4)+' m\n';
+  t+='  能量损失 ΔE = '+fv(r.dE,4)+' m\n';
+  t+='  断面比能 E1 = '+fv(r.E1,4)+' m,  E2 = '+fv(r.E2,4)+' m\n\n';
+  t+='  注: 矩形断面自由水跃常用式, 仅供参考.\n';
+  t+='==========================================================\n';
+  return t;
+}
+function exportReport(){
+  if(!lastResult){alert('请先计算');return}
+  document.getElementById('reportBox').textContent=makeReport(lastResult);
+  document.getElementById('modalBg').classList.add('show');
+}
+function copyReport(){
+  const box=document.getElementById('reportBox');
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(box.textContent).then(()=>alert('已复制'));
+  else{const range=document.createRange();range.selectNodeContents(box);const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);document.execCommand('copy');sel.removeAllRanges();alert('已复制')}
+}
+function closeModal(){document.getElementById('modalBg').classList.remove('show')}
+function toggleAcc(hd){hd.parentElement.classList.toggle('open')}
+
+/* 样例与收藏 */
+const PRESETS={
+  stable:{name:'样例-稳定水跃',mode:'QB',Q:50,B:10,y1:0.50},
+  weak:{name:'样例-弱水跃',mode:'QB',Q:20,B:5,y1:0.80},
+  strong:{name:'样例-强水跃',mode:'q',q:8,y1:0.30}
+};
+const LS_KEY='citeglow_jump_cases_v1';
+function loadSavedCases(){try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]')}catch(e){return []}}
+function saveSavedCases(list){try{localStorage.setItem(LS_KEY,JSON.stringify(list.slice(0,8)))}catch(e){}}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function renderSavedCases(){
+  const host=document.getElementById('savedCases');
+  if(!host)return;
+  host.innerHTML=loadSavedCases().map((c,i)=>
+    `<button type="button" class="qb-chip saved" data-saved="${i}">${escapeHtml(c.name||('算例'+(i+1)))}<span class="qb-del" data-del="${i}">×</span></button>`
+  ).join('');
+}
+function saveCurrentCase(){
+  const p=readForm();
+  const list=loadSavedCases(); list.unshift({...p,savedAt:new Date().toLocaleString('zh-CN')});
+  saveSavedCases(list); renderSavedCases();
+}
+document.getElementById('quickBar').addEventListener('click',e=>{
+  const del=e.target.closest('[data-del]');
+  if(del){e.stopPropagation();const i=parseInt(del.getAttribute('data-del'));const list=loadSavedCases();list.splice(i,1);saveSavedCases(list);renderSavedCases();return}
+  const chip=e.target.closest('.qb-chip');
+  if(!chip)return;
+  if(chip.id==='btnSaveCase'){saveCurrentCase();return}
+  const p=chip.getAttribute('data-preset');
+  if(p&&PRESETS[p]){writeForm(PRESETS[p]);return}
+  const si=chip.getAttribute('data-saved');
+  if(si!=null){const c=loadSavedCases()[parseInt(si)];if(c)writeForm(c)}
+});
+renderSavedCases();
+onModeChange(); updateFitWarn();
+document.querySelector('.wrap').addEventListener('input',updateFitWarn);
+document.querySelector('.wrap').addEventListener('change',updateFitWarn);
+document.querySelector('.single-grid').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();calc()}
+});
+
+/* 浮动提示 */
+(function(){
+  const tip=document.getElementById('floatTip');
+  if(!tip)return;
+  const textEl=tip.querySelector('.ft-text');
+  let hideTimer=0;
+  function place(el){
+    const text=el.getAttribute('data-tip'); if(!text)return;
+    textEl.textContent=text; tip.classList.add('show');
+    const pad=10,gap=8,tr=el.getBoundingClientRect();
+    const th=tip.offsetHeight,tw=tip.offsetWidth;
+    let top=tr.top-th-gap, below=false;
+    if(top<pad){top=tr.bottom+gap;below=true}
+    if(top+th>window.innerHeight-pad) top=Math.max(pad,window.innerHeight-pad-th);
+    let left=tr.left+tr.width/2-tw/2;
+    if(left<pad) left=pad;
+    if(left+tw>window.innerWidth-pad) left=Math.max(pad,window.innerWidth-pad-tw);
+    tip.style.setProperty('--ft-arr-x',Math.min(Math.max(tr.left+tr.width/2-left,12),tw-12)+'px');
+    tip.classList.toggle('below',below); tip.classList.toggle('above',!below);
+    tip.style.top=top+'px'; tip.style.left=left+'px';
+  }
+  function hide(){hideTimer=setTimeout(()=>tip.classList.remove('show'),40)}
+  document.querySelectorAll('[data-tip]').forEach(el=>{
+    el.setAttribute('tabindex','0');
+    el.addEventListener('mouseenter',()=>{clearTimeout(hideTimer);place(el)});
+    el.addEventListener('mouseleave',hide);
+    el.addEventListener('focus',()=>{clearTimeout(hideTimer);place(el)});
+    el.addEventListener('blur',hide);
+  });
+})();
+</script>
+</body>
+</html>
