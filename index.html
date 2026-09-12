@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="在线水利工程计算工具集 — 堤顶高程、桥墩冲刷、桥梁壅水、水位流量、堤防稳定渗流、Kp 查询等，依据国家及行业规范编制。">
 <title>水利计算工具集 | Water Engineering Tools</title>
 <link rel="icon" type="image/svg+xml" href="icons/favicon-water-tools.svg">
 <style>
@@ -34,9 +35,18 @@
 .tool-card .arrow{position:absolute;right:20px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--t3);transition:all .2s}
   .tool-card:hover .arrow{color:var(--pri);right:16px}
 
-  .coming-soon{opacity:.5;cursor:default;border-style:dashed}
+  .coming-soon{opacity:.55;cursor:default;border-style:dashed}
   .coming-soon:hover{transform:none;box-shadow:none;border-color:var(--bdr)}
   .coming-soon .tag{background:#f1f5f9;color:var(--t3)}
+  .tag-tag-warn{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}
+  .tag-tag-dev{background:#f1f5f9;color:var(--t3);border:1px solid #e2e8f0}
+  .tag-tag-ok{background:var(--pri-l);color:var(--pri)}
+  .status-row{display:flex;flex-wrap:wrap;gap:10px;margin:-8px auto 28px;justify-content:center;font-size:12px;color:var(--t2)}
+  .status-row span{display:inline-flex;align-items:center;gap:4px}
+  .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .status-dot.ok{background:#059669}
+  .status-dot.warn{background:#ea580c}
+  .status-dot.dev{background:#94a3b8}
 
   .footer{text-align:center;padding:24px;font-size:12px;color:var(--t3);border-top:1px solid var(--bdr)}
   .footer a{color:var(--pri);text-decoration:none}
@@ -53,27 +63,33 @@
 </div>
 
 <div class="main">
+  <div class="status-row">
+    <span><i class="status-dot ok"></i>已上线 5</span>
+    <span><i class="status-dot warn"></i>待验证 2</span>
+    <span><i class="status-dot dev"></i>开发中 3</span>
+  </div>
+
   <div class="section-title">📐 堤防工程</div>
   <div class="tools-grid">
     <a class="tool-card" href="./dike-crest-elevation/">
       <img class="icon" src="icons/dike.svg" alt="堤顶高程">
       <h3>堤顶高程计算</h3>
       <p>依据 GB 50286-2013 附录 C 莆田试验站公式，计算波浪要素、波浪爬高、风雍水面高度，确定堤顶高程。支持单断面和批量计算。</p>
-      <span class="tag">GB 50286-2013</span>
+      <span class="tag tag-ok">已上线 · GB 50286-2013</span>
       <span class="arrow">→</span>
     </a>
     <a class="tool-card" href="./seepage.html">
       <img class="icon" src="icons/seepage.svg" alt="渗流">
       <h3>堤防渗流计算</h3>
       <p>浸润线计算（杜普伊特公式）、渗流量估算、出逸比降校核、渗径长度校核（勃莱/莱恩爬行法），支持均质堤和透水地基。</p>
-      <span class="tag">GB 50286-2013</span>
+      <span class="tag tag-warn">待验证 · GB 50286-2013</span>
       <span class="arrow">→</span>
     </a>
     <a class="tool-card" href="./stability.html">
       <img class="icon" src="icons/stability.svg" alt="稳定">
       <h3>堤防稳定分析</h3>
       <p>边坡稳定计算，瑞典圆弧法/毕肖普法，自动搜索最危险滑弧，输出安全系数、土条受力分析、Fs等值线图。</p>
-      <span class="tag">GB 50286-2013</span>
+      <span class="tag tag-warn">待验证 · GB 50286-2013</span>
       <span class="arrow">→</span>
     </a>
   </div>
@@ -84,14 +100,14 @@
       <img class="icon" src="icons/bridge-scour.svg" alt="桥墩冲刷">
       <h3>桥墩冲刷计算</h3>
       <p>一般冲刷（包尔达可夫、64-1、64-2、黏性土）+ 局部冲刷（65-1、65-2、黏性土），依据 SL/T 808-2025、JTG C30、TB 10017。</p>
-      <span class="tag">SL/T 808-2025</span>
+      <span class="tag tag-ok">已上线 · SL/T 808-2025</span>
       <span class="arrow">→</span>
     </a>
     <a class="tool-card" href="./bridge-scour/backwater.html">
       <img class="icon" src="icons/backwater.svg" alt="桥梁壅水">
       <h3>桥梁壅水计算</h3>
       <p>铁路公式（TB 10017）和公路公式（JTG C30-2015 铁科院陆浩公式），含壅水曲线长度计算。</p>
-      <span class="tag">JTG C30 · TB 10017</span>
+      <span class="tag tag-ok">已上线 · JTG C30 · TB 10017</span>
       <span class="arrow">→</span>
     </a>
   </div>
@@ -102,40 +118,38 @@
       <img class="icon" src="icons/manning-qh.svg" alt="水位流量">
       <h3>水位流量关系计算</h3>
       <p>曼宁公式断面计算 + 控制堰堰流 + 控制堰+天然复合断面，支持水位流量互查、Q-H/V-H/A-H曲线、断面淹没示意。</p>
-      <span class="tag">Manning · 堰流</span>
+      <span class="tag tag-ok">已上线 · Manning · 堰流</span>
       <span class="arrow">→</span>
     </a>
     <div class="tool-card coming-soon">
       <img class="icon" src="icons/hydraulic-jump.svg" alt="水跃">
       <h3>水跃计算</h3>
       <p>共轭水深、水跃长度、能量损失。</p>
-      <span class="tag">开发中</span>
+      <span class="tag tag-dev">开发中</span>
     </div>
   </div>
 
   <div class="section-title">🌧️ 水文</div>
   <div class="tools-grid">
-    <div class="tool-card">
-      <a href="kp-table/index.html">
-        <img class="icon" src="icons/kp-table.svg" alt="Kp查询">
-        <h3>P-III型 Kp 值查询</h3>
-        <p>皮尔逊Ⅲ型频率曲线 Kp 值表，支持多频率批量查询。</p>
-        <span class="tag">GB50201 · SL 44</span>
-      </a>
-    </div>
-    <div class="tool-card coming-soon">
-      <a href="frequency-analysis/index.html">
-        <img class="icon" src="icons/frequency.svg" alt="频率分析">
-        <h3>水文频率分析</h3>
-        <p>P-III型频率曲线适配，设计洪水计算。</p>
-        <span class="tag">开发中</span>
-      </a>
-    </div>
+    <a class="tool-card" href="./kp-table/">
+      <img class="icon" src="icons/kp-table.svg" alt="Kp查询">
+      <h3>P-III型 Kp 值查询</h3>
+      <p>皮尔逊Ⅲ型频率曲线 Kp 值表，支持多频率批量查询。</p>
+      <span class="tag tag-ok">已上线 · GB50201 · SL 44</span>
+      <span class="arrow">→</span>
+    </a>
+    <a class="tool-card" href="./frequency-analysis/">
+      <img class="icon" src="icons/frequency.svg" alt="频率分析">
+      <h3>水文频率分析</h3>
+      <p>P-III型频率曲线适配，设计洪水计算。</p>
+      <span class="tag tag-dev">开发中 · 预览页</span>
+      <span class="arrow">→</span>
+    </a>
     <div class="tool-card coming-soon">
       <img class="icon" src="icons/rainfall.svg" alt="暴雨强度">
       <h3>暴雨强度公式</h3>
       <p>暴雨强度公式参数拟合与计算。</p>
-      <span class="tag">开发中</span>
+      <span class="tag tag-dev">开发中</span>
     </div>
   </div>
 </div>
