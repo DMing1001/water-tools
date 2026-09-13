@@ -167,6 +167,17 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
 .ad-slot.active .ad-slot-label{display:none}
 .ad-slot ins.adsbygoogle{display:block}
 
+/* 相关教材推荐 */
+.book-panel{margin-top:16px}
+.book-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.book-item{display:flex;flex-direction:column;gap:6px;padding:14px 14px 12px;border:1px solid var(--bdr);border-radius:10px;background:var(--card);text-decoration:none;color:inherit;transition:.15s}
+.book-item:hover{border-color:var(--pri);box-shadow:0 4px 14px rgba(var(--pri-rgb),.08)}
+.book-item .bt{font-size:13.5px;font-weight:600;color:var(--txt)}
+.book-item .ba{font-size:11.5px;color:var(--t3)}
+.book-item .bd{font-size:12px;color:var(--t2);line-height:1.55;flex:1}
+.book-item .bl{font-size:11.5px;color:var(--pri);font-weight:500;margin-top:2px}
+.book-note{margin-top:10px;font-size:11px;color:var(--t3);line-height:1.6}
+
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center}
 .modal-bg.show{display:flex}
 .modal{background:#fff;border-radius:14px;width:92%;max-width:800px;max-height:88vh;overflow-y:auto;padding:24px}
@@ -177,7 +188,7 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
 
 @media print{
   .topbar{background:#0f2744!important;-webkit-print-color-adjust:exact}
-  .action-bar,.btn,.modal-bg,.back,.ad-slot{display:none!important}
+  .action-bar,.btn,.modal-bg,.back,.ad-slot,.book-panel{display:none!important}
 }
 </style>
 </head>
@@ -309,6 +320,42 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
         <tr><td>2.5~4.5</td><td>摆动水跃</td><td>不稳定，需防护</td></tr>
         <tr><td>4.5~9</td><td>稳定水跃</td><td>消能 45%~70%</td></tr>
         <tr><td>≥9</td><td>强水跃</td><td>消能率高</td></tr></table>
+    </div>
+  </div>
+
+  <div class="acc book-panel" id="accBooks" style="display:block">
+    <div class="panel-hd" style="border-bottom:1px solid var(--bdr);border-radius:12px 12px 0 0;background:var(--card)">
+      <h2>相关教材与延伸阅读</h2>
+      <span class="chip">自学 · 备考 · 设计参考</span>
+    </div>
+    <div class="panel-bd" style="border-radius:0 0 12px 12px;background:var(--card);border:1px solid var(--bdr);border-top:none">
+      <div class="book-list">
+        <a class="book-item" href="https://union-click.jd.com/jdc?e=618%7Cpc%7C&p=JF8BATQJK1olWAUFUVxVCUwWAF8IHlIdXwIFVW4ZVxNJXF9RXh5UHw0cSgYYXBcIWDoXSQVJQwYHXVZfDEwWHDZNRwYlPg57IC0CSxF1UBlqTx1hWHEBNx4ZaEcbM244GFoXVAIFV1xbCHsnA2g4STUdVQ4CXFxeDUgfBF8JK1sTVA4BUllZCksRAWY4HFscbV1XOlgJWkhHU2hcHloSXwQyZG5eOEwXCnsOaRpHSQBwZG5dOEgnA24IGlkQWwcAXFpBCE4SC2YLB1sTVA4BUllZCE0TBGo4GVoUWQ8yZIDQuCkVZQsIGCVXIkBhVisbDg_Jjt8ZcCIVVQ4ERW4uYS5yRG5fGgFBHQZnNzkucztXfm9teDwSNA9yKzszChFKfDgBGV5UCHN3XRsKd0sQM2o4G10VXzYDZA" target="_blank" rel="noopener noreferrer sponsored">
+          <div class="bt">水力学（上、下册）</div>
+          <div class="ba">吴持恭 · 高等教育出版社</div>
+          <div class="bd">经典教材，水跃共轭水深、动量方程与消能讲得系统，适合打基础。</div>
+          <div class="bl">去京东查看 →</div>
+        </a>
+        <a class="book-item" href="https://union-click.jd.com/jdc?e=618%7Cpc%7C&p=JF8BATQJK1olWAUFUVtYDEMSBF8IH1sVWwUCVW4ZVxNJXF9RXh5UHw0cSgYYXBcIWDoXSQVJQwYGVF5bC0sWHDZNRwYlAFMBLAA-ehRyZ3VqfzNCPnkAVAwhTkcbM244GFoXVAIFV1xbCHsnA2g4STUdVQ4CXFxeDUgfBF8JK1sTVA4BUllaC0seAm04HFscbV1XOlgJWkhHU2hcHloSXwQyZG5eOEwXCnsOaRpHSQBwZG5dOEgnA24IGl4TXwcKVl9BCEkUA24KB1sTVA4BUllaCEgRBGc4GVoUWQ8yZIDQuDweSg9jbx5UOVZCIygjVRbJjt8ZaSsVWQcERW4lSU58QmoPWRlvOmZpLjdaYEpDVQ9jYTJxPEZeUlszCjRrAzpWaCFcLwAEP1oNQ0x2M2o4G10VXzYDZA" target="_blank" rel="noopener noreferrer sponsored">
+          <div class="bt">水力学</div>
+          <div class="ba">赵振兴 · 河海大学出版社</div>
+          <div class="bd">高校常用教材，章节与本工具公式对应紧，复习水跃很方便。</div>
+          <div class="bl">去京东查看 →</div>
+        </a>
+        <a class="book-item" href="https://search.jd.com/Search?keyword=%E6%B0%B4%E5%8A%9B%E5%AD%A6%20%E6%9D%8E%E7%82%9C&enc=utf-8" target="_blank" rel="noopener noreferrer">
+          <div class="bt">水力学</div>
+          <div class="ba">李炜 · 中国水利水电出版社</div>
+          <div class="bd">工程向写法，例题多，适合把跃型判断接到消能设计里。</div>
+          <div class="bl">去京东查看 →</div>
+        </a>
+        <a class="book-item" href="https://search.jd.com/Search?keyword=%E6%B3%84%E6%B0%B4%E5%BB%BA%E7%AD%91%E7%89%A9%20%E6%B6%88%E8%83%BD%E9%98%B2%E5%86%B2&enc=utf-8" target="_blank" rel="noopener noreferrer">
+          <div class="bt">泄水建筑物消能与防护</div>
+          <div class="ba">相关专著 / 教材</div>
+          <div class="bd">从水跃跳到消力池、海漫等工程做法，设计阶段可延伸阅读。</div>
+          <div class="bl">去京东查看 →</div>
+        </a>
+      </div>
+      <div class="book-note">链接为站外图书检索页，便于核对版本与购买。实际工程请以现行规范原文及审查意见为准；本工具仅供学习参考。</div>
     </div>
   </div>
 
