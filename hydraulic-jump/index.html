@@ -169,14 +169,16 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
 
 /* 相关教材推荐 */
 .book-panel{margin-top:16px}
-.book-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
-.book-item{display:flex;flex-direction:column;gap:6px;padding:14px 14px 12px;border:1px solid var(--bdr);border-radius:10px;background:var(--card);text-decoration:none;color:inherit;transition:.15s}
+.book-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.book-item{display:flex;gap:14px;align-items:stretch;padding:14px;border:1px solid var(--bdr);border-radius:10px;background:var(--card);text-decoration:none;color:inherit;transition:.15s}
 .book-item:hover{border-color:var(--pri);box-shadow:0 4px 14px rgba(var(--pri-rgb),.08)}
-.book-item .bt{font-size:13.5px;font-weight:600;color:var(--txt)}
+.book-cover{flex:0 0 72px;width:72px;height:100px;border-radius:4px;box-shadow:0 2px 8px rgba(15,23,42,.15);object-fit:cover;background:#e2e8f0}
+.book-body{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.book-item .bt{font-size:14px;font-weight:600;color:var(--txt)}
 .book-item .ba{font-size:11.5px;color:var(--t3)}
 .book-item .bd{font-size:12px;color:var(--t2);line-height:1.55;flex:1}
-.book-item .bl{font-size:11.5px;color:var(--pri);font-weight:500;margin-top:2px}
-.book-note{margin-top:10px;font-size:11px;color:var(--t3);line-height:1.6}
+.book-item .bl{font-size:12px;color:var(--pri);font-weight:600;margin-top:4px}
+.book-note{margin-top:12px;font-size:12px;color:var(--t2);line-height:1.7;padding:10px 12px;background:var(--pri-l);border-radius:8px;border:1px solid var(--pri-bg)}
 
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center}
 .modal-bg.show{display:flex}
@@ -331,19 +333,25 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
     <div class="panel-bd" style="border-radius:0 0 12px 12px;background:var(--card);border:1px solid var(--bdr);border-top:none">
       <div class="book-list">
         <a class="book-item" href="https://union-click.jd.com/jdc?e=618%7Cpc%7C&p=JF8BAUYJK1olWAUFUVxVCUwWAF8IHlIdXwIFVW4ZVxNJXF9RXh5UHw0cSgYYXBcIWDoXSQVJQwYHXVZfDEwWHDZNRwYlO18YPA4kTxF0cS9ORg5zVHF0MgYbXkcbM2oIGl0dXQMAU1htC0oVCmsPGFkTXTYyVF1tWiUfC2cIE1kWWAUKU25fCEoeAWkOG1kTbQYEXVZeDk0TAW8IHlIlWgYLZAUIZk1DUWxYS1xBWAcFVlxtOHsUM2gIEk8TL0dQQFgvOHsXM2w4G1oVXAMFXFdeCkkLA2gNHl4SQQYEXVZeDk0TA2gKHFwlXwcDUFdtOJWaswoMehIXLl4EARU1SRMTaGjWlusEL3YLU1dcGXtkagptXFpCXFxWFF44ayxkBm9ceVtwPmFHNDwtAC55ATVVZAwcXwNDASsoAQ5AfG8PK14lXQACVm5cOA" target="_blank" rel="noopener noreferrer sponsored">
-          <div class="bt">水力学（上、下册）</div>
-          <div class="ba">吴持恭 · 高等教育出版社</div>
-          <div class="bd">经典教材，水跃共轭水深、动量方程与消能讲得系统，适合打基础。</div>
-          <div class="bl">去京东查看 →</div>
+          <img class="book-cover" src="../icons/book-hydraulics-wu.svg" alt="水力学 吴持恭" width="72" height="100" loading="lazy">
+          <div class="book-body">
+            <div class="bt">水力学（上、下册）</div>
+            <div class="ba">吴持恭 · 高等教育出版社</div>
+            <div class="bd">水跃、动量方程、消能讲得很系统，适合把共轭水深和跃型真正吃透。</div>
+            <div class="bl">去看看 →</div>
+          </div>
         </a>
         <a class="book-item" href="https://union-click.jd.com/jdc?e=618%7Cpc%7C&p=JF8BAUYJK1olWAUFUVtYDEMSBF8IH1sVWwUCVW4ZVxNJXF9RXh5UHw0cSgYYXBcIWDoXSQVJQwYGVF5bC0sWHDZNRwYlHXZJIF4HUVF1c2x7ARJMO294Exs2aEcbM2oIGl0dXQMAU1htC0oVCmsPGFkTXTYyVF1tWiUfC2cIE1kWWAUKU25fCEoeAWkOG1kTbQYEXVZeDk0QBGoBEl4lWgYLZAUIZk1DUWxYS1xBWAcFVlxtOHsUM2gIEk8TL0dQQFgvOHsXM2w4G1oVXAIGVllbDkoLA2oIH14dQQYEXVZeDk0QB2kAHFolXwcDUFdtOJWasxQAaztHL0d2BgU8dwppWCfWlusEL3YCUFlZGXtvQmpjWl4SH0R4Mz42ciJiVQlXQzt-J29yADs2X055ARB0Gw5LLnxLJlhbY09HSGhpK14lXQACVm5cOA" target="_blank" rel="noopener noreferrer sponsored">
-          <div class="bt">水力学</div>
-          <div class="ba">赵振兴 · 河海大学出版社</div>
-          <div class="bd">高校常用教材，章节与本工具公式对应紧，复习水跃很方便。</div>
-          <div class="bl">去京东查看 →</div>
+          <img class="book-cover" src="../icons/book-hydraulics-zhao.svg" alt="水力学 赵振兴" width="72" height="100" loading="lazy">
+          <div class="book-body">
+            <div class="bt">水力学</div>
+            <div class="ba">赵振兴 · 河海大学出版社</div>
+            <div class="bd">高校常用教材，章节和本页公式对应紧，课后复习水跃效率高。</div>
+            <div class="bl">去看看 →</div>
+          </div>
         </a>
       </div>
-      <div class="book-note">经京东联盟链接购买可支持本站（不影响你的价格）。实际工程请以现行规范原文及审查意见为准；本工具仅供学习参考。</div>
+      <div class="book-note">想把水跃算对、把消能接进设计，这两本是水利专业最常用的底子书。通过下方链接在京东购买，不影响你的到手价，也能支持本站继续维护免费工具。</div>
     </div>
   </div>
 

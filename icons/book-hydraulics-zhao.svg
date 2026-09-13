@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="280" viewBox="0 0 200 280" role="img" aria-label="水力学 赵振兴">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f766e"/>
+      <stop offset="50%" stop-color="#0d9488"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="280" rx="6" fill="url(#bg2)"/>
+  <rect x="0" y="0" width="10" height="280" fill="#134e4a" opacity="0.55"/>
+  <circle cx="160" cy="48" r="22" fill="rgba(255,255,255,.12)"/>
+  <circle cx="148" cy="58" r="10" fill="rgba(255,255,255,.1)"/>
+  <rect x="18" y="28" width="164" height="1" fill="rgba(255,255,255,.35)"/>
+  <text x="100" y="88" text-anchor="middle" fill="#fff" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="28" font-weight="700" letter-spacing="4">水力学</text>
+  <text x="100" y="114" text-anchor="middle" fill="rgba(255,255,255,.75)" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="11" letter-spacing="2">HYDRAULICS</text>
+  <path d="M36 160 C60 140 80 180 100 160 S140 140 164 160" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2"/>
+  <path d="M36 178 C60 158 80 198 100 178 S140 158 164 178" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
+  <rect x="42" y="210" width="116" height="28" rx="14" fill="rgba(255,255,255,.16)"/>
+  <text x="100" y="229" text-anchor="middle" fill="#fff" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="12" font-weight="500">赵振兴 等编</text>
+  <text x="100" y="258" text-anchor="middle" fill="rgba(255,255,255,.65)" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="10">河海大学出版社</text>
+</svg>
