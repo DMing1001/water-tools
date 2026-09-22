@@ -1,3 +1,4 @@
+<!-- AI生成 -->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -25,7 +26,7 @@ html{scroll-behavior:smooth}
 body{font-family:var(--sans);background:var(--bg);color:var(--txt);line-height:1.55;font-size:14px;-webkit-font-smoothing:antialiased;min-height:100vh}
 
 /* Header */
-.topbar{background:linear-gradient(135deg,#0f2744 0%,#1e3a5f 40%,#2563eb 100%);color:#fff;position:relative;overflow:hidden}
+.topbar{background:linear-gradient(135deg,#0f2744 0%,#1e3a5f 42%,#0369a1 100%);color:#fff;position:relative;overflow:hidden}
 .topbar::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 85% 20%,rgba(255,255,255,.08),transparent 55%);pointer-events:none}
 .topbar-in{max-width:1200px;margin:0 auto;padding:18px 20px;display:flex;align-items:center;gap:14px;position:relative;z-index:1}
 .brand{display:flex;align-items:center;gap:12px;min-width:0}
@@ -52,15 +53,46 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);line-height:1
 .panel-hd .chip{font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--pri-l);color:var(--pri)}
 .panel-bd{padding:16px 18px}
 
-/* Layout */
-/* Layout — 左右等高 */
-.single-grid{display:grid;grid-template-columns:minmax(320px,380px) 1fr;gap:16px;align-items:stretch}
+/* Layout — 左栏紧凑、右栏仪表优先 */
+.single-grid{display:grid;grid-template-columns:minmax(280px,340px) minmax(0,1fr);gap:14px;align-items:stretch}
 @media(max-width:960px){.single-grid{grid-template-columns:1fr}}
-.form-sticky{display:flex;flex-direction:column}
-#singleResultWrap{min-width:0}
-#singleResultWrap>.panel{height:100%;display:flex;flex-direction:column;min-height:480px}
+.form-sticky{display:flex;flex-direction:column;height:100%}
+#singleResultWrap{min-width:0;height:100%}
+#singleResultWrap>.panel{display:flex;flex-direction:column;height:100%;min-height:520px}
 #singleResultWrap>.panel>.rp-body{flex:1}
-#singleResultWrap>.panel>.empty-state{flex:1}
+#singleResultWrap>.panel>.empty-state{flex:1;min-height:420px}
+
+/* 仪表结论区（浅色仪器卡） */
+.meter{margin:0 0 12px;border:1px solid var(--bdr);border-radius:var(--radius);background:linear-gradient(180deg,#ffffff,#f8fafc);color:var(--txt);padding:18px 18px 14px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.meter::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#34d399,#059669)}
+.meter-label{font-size:11px;letter-spacing:2px;color:var(--t3);font-weight:600}
+.meter-read{display:flex;align-items:baseline;gap:8px;margin-top:4px;position:relative;z-index:1}
+.meter-val{font-family:var(--mono);font-size:40px;font-weight:700;color:var(--ok);line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.meter-unit{font-family:var(--mono);font-size:14px;color:var(--t3)}
+.meter-formula{font-family:var(--mono);font-size:11px;color:var(--t3);margin-top:8px;line-height:1.5;position:relative;z-index:1}
+.meter-type{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bdr);position:relative;z-index:1}
+.meter-type::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.meter-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;position:relative;z-index:1}
+@media(max-width:640px){.meter-row{grid-template-columns:repeat(2,1fr)}}
+.meter-cell{background:var(--bg);border:1px solid var(--bdr);border-radius:8px;padding:8px 10px}
+.meter-cell .k{font-size:10px;color:var(--t3);letter-spacing:.3px}
+.meter-cell .v{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--txt);margin-top:2px;font-variant-numeric:tabular-nums}
+.meter-cell .v em{font-style:normal;font-size:10px;color:var(--t3);margin-left:2px}
+
+/* 垂直高程尺（签名：设计剖面） */
+.elev-wrap{display:grid;grid-template-columns:56px 1fr;gap:14px;margin-top:14px;align-items:stretch;position:relative;z-index:1}
+.elev-rail{display:flex;flex-direction:column;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;background:var(--bg);min-height:180px}
+.elev-seg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:600;border-bottom:1px solid rgba(15,23,42,.06)}
+.elev-seg:last-child{border-bottom:none}
+.seg-a{background:#d1fae5;color:#065f46}
+.seg-e{background:#ddd6fe;color:#5b21b6}
+.seg-rp{background:#bae6fd;color:#0c4a6e}
+.seg-wl{background:#bfdbfe;color:#1e3a5d}
+.elev-side{display:flex;flex-direction:column;justify-content:center;gap:6px}
+.elev-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2)}
+.elev-item i{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.elev-item .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;color:var(--txt);margin-left:auto}
+.elev-top{font-family:var(--mono);font-size:11px;color:var(--ok);font-weight:700;margin-bottom:2px}
 
 /* 快捷样例 / 收藏 + 顶部操作条 */
 .action-bar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 12px;padding:12px 14px;background:var(--card);border:1px solid var(--bdr);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:14px;position:sticky;top:8px;z-index:20}
@@ -228,6 +260,8 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
 </style>
 </head>
 <body>
+<p data-aigc-mark="1" style="margin:0 0 8px;font-size:10px;line-height:1.3;color:#6b6560;font-weight:400;">AI生成</p>
+
 
 <header class="topbar">
   <div class="topbar-in">
@@ -284,11 +318,11 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
     <div class="single-grid">
       <div class="panel form-sticky">
         <div class="panel-hd">
-          <h2>计算参数</h2>
+          <h2>参数输入</h2>
           <span class="chip">单断面</span>
         </div>
         <div class="panel-bd">
-          <div class="f-sec">基本参数</div>
+          <div class="f-sec">01 · 基本参数</div>
           <div class="f-grid">
             <div class="f-item">
               <label>设计水位 <span class="u">m</span><i class="tip-i" data-tip="设计洪水位或设计潮位，根据防洪标准确定。">?</i></label>
@@ -311,7 +345,7 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
             </div>
           </div>
 
-          <div class="f-sec">风浪参数</div>
+          <div class="f-sec">02 · 风浪参数</div>
           <div class="f-grid">
             <div class="f-item">
               <label>计算风速 V <span class="u">m/s</span><i class="tip-i" data-tip="取汛期最大风速，非年最大。可从气象站资料获取。">?</i></label>
@@ -327,7 +361,7 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
             </div>
           </div>
 
-          <div class="f-sec">堤坡与护面</div>
+          <div class="f-sec">03 · 堤坡与护面</div>
           <div class="f-grid">
             <div class="f-item">
               <label>边坡系数 m<i class="tip-i" data-tip="迎水侧水平/垂直。1:2.5 填 2.5；1:3.0 填 3.0。">?</i></label>
@@ -349,7 +383,7 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
             </div>
           </div>
 
-          <div class="f-sec">其他</div>
+          <div class="f-sec">04 · 其他</div>
           <div class="f-grid">
             <div class="f-item">
               <label>越浪条件<i class="tip-i" data-tip="影响安全超高 A 取值。&#10;不允许越浪：堤顶不得过水&#10;允许越浪：超高较小，后坡需防护">?</i></label>
@@ -596,13 +630,15 @@ function calcSingle(){
       ${r.section?'<div class="sub">断面 '+r.section+'</div>':''}
     </div>
     <div class="rp-body">
-      <div class="rp-sec">一、堤顶高程（结论）</div>
-      <div class="crest-viz">
-        <div class="crest-viz-head">
-          <div class="label">堤顶高程 = 设计水位 + Rp + e + A</div>
-          <div class="val">${fv(r.crest)} m</div>
-          <div class="formula">${fv(r.WL)} + ${fv(r.Rp,3)} + ${r.useE?fv(r.e,4):'0'} + ${fv(r.A)}</div>
+      <div class="rp-sec">一、结论读数</div>
+      <div class="meter">
+        <div class="meter-label">堤顶高程 CREST</div>
+        <div class="meter-read">
+          <span class="meter-val">${fv(r.crest)}</span>
+          <span class="meter-unit">m</span>
         </div>
+        <div class="meter-type">${r.grade} 级 · ${r.overtop?'允许越浪':'不允许越浪'}</div>
+        <div class="meter-formula">Zc = 水位 + Rp + e + A　${fv(r.WL)} + ${fv(r.Rp,3)} + ${r.useE?fv(r.e,4):'0'} + ${fv(r.A)}</div>
         <div class="stack" title="组成示意（按比例）">
           <div class="stack-seg seg-wl" style="width:${pct(r.WL)}%">水位</div>
           <div class="stack-seg seg-rp" style="width:${pct(r.Rp)}%">Rp</div>
@@ -610,7 +646,7 @@ function calcSingle(){
           <div class="stack-seg seg-a" style="width:${pct(r.A)}%">A</div>
         </div>
         <div class="stack-legend">
-          <span><i class="seg-wl" style="background:#3b82f6"></i>设计水位 ${fv(r.WL)} m</span>
+          <span><i style="background:#3b82f6"></i>设计水位 ${fv(r.WL)} m</span>
           <span><i style="background:#0d9488"></i>爬高 Rp ${fv(r.Rp,3)} m</span>
           ${r.useE?`<span><i style="background:#8b5cf6"></i>风雍 e ${fv(r.e,4)} m</span>`:'<span><i style="background:#8b5cf6"></i>风雍 e 不计入</span>'}
           <span><i style="background:#059669"></i>超高 A ${fv(r.A)} m</span>
@@ -624,8 +660,9 @@ function calcSingle(){
         <tr><td>+ 安全超高 A</td><td class="n">${fv(r.A)} m</td><td>${r.grade}级，${r.overtop?'允许':'不允许'}越浪</td></tr>
         <tr class="total"><td>= 堤顶高程</td><td class="n"><b>${fv(r.crest)} m</b></td><td>—</td></tr>
       </table>
+      </div>
 
-      <div class="rp-sec">二、波浪爬高</div>
+      <div class="rp-sec">二、计算过程</div>
       <table class="rp-table">
         <tr><th>项目</th><th>取值 / 公式</th><th>结果</th></tr>
         <tr><td>护面糙率 KΔ</td><td>${r.surfText}</td><td class="n">${fv(r.Kd)}</td></tr>
@@ -638,7 +675,7 @@ function calcSingle(){
 
       <div class="rp-fold" id="rpWaveFold">
         <button type="button" class="rp-fold-hd" onclick="this.parentElement.classList.toggle('open')">
-          <span class="arr">▶</span> 三、波浪要素（莆田试验站）· 默认折叠
+          <span class="arr">▶</span> 三、波浪要素 · 默认折叠
         </button>
         <div class="rp-fold-bd">
           <table class="rp-table">
