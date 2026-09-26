@@ -258,6 +258,7 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
   .panel,.acc{break-inside:avoid;box-shadow:none}
 }
 </style>
+<link rel="stylesheet" href="../auth-gate.css">
 </head>
 <body>
 <p data-aigc-mark="1" style="margin:0 0 8px;font-size:10px;line-height:1.3;color:#6b6560;font-weight:400;">AI生成</p>
@@ -1044,5 +1045,7 @@ document.getElementById('modeSingle').addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();calcSingle()}
 });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+<script src="../auth-gate.js"></script>
 </body>
 </html>
