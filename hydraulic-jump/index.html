@@ -1,3 +1,4 @@
+<!-- AI生成 -->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -118,12 +119,29 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
 .rp-table tr:hover td{background:#f8fafc}
 .rp-table .total td{background:var(--acc-bg);font-weight:700;color:var(--acc);border-color:var(--acc-bdr)}
 
-.jmp-viz{margin:0 0 8px;border:2px solid var(--acc-bdr);border-radius:var(--radius);overflow:hidden;background:linear-gradient(180deg,#faf5ff,#f5f3ff)}
-.jmp-head{padding:14px 16px;text-align:center}
-.jmp-head .label{font-size:11.5px;color:var(--t2)}
-.jmp-head .val{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--acc);margin-top:2px;font-variant-numeric:tabular-nums}
-.jmp-head .formula{font-family:var(--mono);font-size:11.5px;color:var(--t3);margin-top:4px}
-.jmp-type{display:inline-block;margin-top:8px;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;background:#fff;border:1px solid var(--acc-bdr);color:var(--acc)}
+/* 仪表结论区（签名：读数式主结果） */
+.meter{margin:0 0 10px;border:1px solid var(--bdr);border-radius:var(--radius);background:linear-gradient(180deg,#0f172a,#1e293b);color:#e2e8f0;padding:18px 18px 14px;position:relative;overflow:hidden}
+.meter::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 85% 20%,rgba(125,211,252,.12),transparent 55%);pointer-events:none}
+.meter-label{font-size:11px;letter-spacing:2px;color:#94a3b8;font-weight:600}
+.meter-read{display:flex;align-items:baseline;gap:8px;margin-top:6px;position:relative;z-index:1}
+.meter-val{font-family:var(--mono);font-size:40px;font-weight:700;color:#7dd3fc;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.meter-unit{font-family:var(--mono);font-size:14px;color:#94a3b8}
+.meter-formula{font-family:var(--mono);font-size:11px;color:#64748b;margin-top:8px;line-height:1.5;position:relative;z-index:1}
+.meter-type{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:rgba(125,211,252,.12);color:#7dd3fc;border:1px solid rgba(125,211,252,.25);position:relative;z-index:1}
+.meter-type::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 6px currentColor}
+.meter-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;position:relative;z-index:1}
+@media(max-width:640px){.meter-row{grid-template-columns:repeat(2,1fr)}}
+.meter-cell{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:8px 10px}
+.meter-cell .k{font-size:10px;color:#94a3b8;letter-spacing:.3px}
+.meter-cell .v{font-family:var(--mono);font-size:15px;font-weight:600;color:#f1f5f9;margin-top:2px;font-variant-numeric:tabular-nums}
+.meter-cell .v em{font-style:normal;font-size:10px;color:#64748b;margin-left:2px}
+
+.jmp-viz{margin:0 0 8px;border:1px solid var(--bdr);border-radius:var(--radius);overflow:hidden;background:var(--bg)}
+.jmp-head{padding:12px 16px 4px;text-align:center}
+.jmp-head .label{font-size:11px;color:var(--t3)}
+.jmp-head .val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--acc);margin-top:2px;font-variant-numeric:tabular-nums}
+.jmp-head .formula{font-family:var(--mono);font-size:11px;color:var(--t3);margin-top:4px}
+.jmp-type{display:inline-block;margin-top:6px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;background:#fff;border:1px solid var(--acc-bdr);color:var(--acc)}
 .jmp-sub{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 14px}
 .jmp-card{background:#fff;border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;text-align:center}
 .jmp-card .k{font-size:11px;color:var(--t3)}
@@ -159,26 +177,29 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
 
 .footer{text-align:center;padding:24px 16px 12px;font-size:11px;color:var(--t3)}
 
-/* 广告位：未配置时显示占位，配置后由 AdSense 注入 */
-.ad-slot{margin:16px 0;padding:0;text-align:center}
-.ad-slot-label{display:inline-block;font-size:10px;color:var(--t3);letter-spacing:1px;margin-bottom:6px;text-transform:uppercase}
-.ad-slot-ph{min-height:90px;border:1px dashed var(--bdr2);border-radius:10px;background:#fafbfc;display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:12px;line-height:1.6;padding:16px}
-.ad-slot.active .ad-slot-ph{display:none}
-.ad-slot.active .ad-slot-label{display:none}
+/* 广告/推荐：视觉降级，仅出现在成果之后 */
+.ad-slot{margin:20px 0 8px;padding:0 2px;text-align:center}
+.ad-slot-label{display:block;font-size:10px;color:var(--t3);letter-spacing:2px;margin-bottom:6px;text-transform:uppercase}
+.ad-slot-ph{min-height:72px;border:1px dashed var(--bdr2);border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:12px;line-height:1.6;padding:14px}
+.ad-slot.active .ad-slot-ph,.ad-slot.active .ad-slot-label{display:none}
 .ad-slot ins.adsbygoogle{display:block}
 
-/* 相关教材推荐 */
-.book-panel{margin-top:16px}
-.book-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
-.book-item{display:flex;gap:14px;align-items:stretch;padding:14px;border:1px solid var(--bdr);border-radius:10px;background:var(--card);text-decoration:none;color:inherit;transition:.15s}
+/* 相关教材推荐（延伸阅读，降级卡片） */
+.book-panel{margin-top:12px;border:1px solid var(--bdr);border-radius:var(--radius);background:var(--bg)}
+.book-panel .panel-hd{background:transparent;border-bottom:1px solid var(--bdr);border-radius:0}
+.book-panel .panel-bd{background:transparent}
+.book-panel h2{font-size:13px;font-weight:600;color:var(--t2)}
+.book-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.book-item{display:flex;gap:12px;align-items:stretch;padding:12px;border:1px solid var(--bdr);border-radius:10px;background:var(--card);text-decoration:none;color:inherit;transition:.15s}
 .book-item:hover{border-color:var(--pri);box-shadow:0 4px 14px rgba(var(--pri-rgb),.08)}
-.book-cover{flex:0 0 72px;width:72px;height:100px;border-radius:4px;box-shadow:0 2px 8px rgba(15,23,42,.15);object-fit:cover;background:#e2e8f0}
-.book-body{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
-.book-item .bt{font-size:14px;font-weight:600;color:var(--txt)}
-.book-item .ba{font-size:11.5px;color:var(--t3)}
-.book-item .bd{font-size:12px;color:var(--t2);line-height:1.55;flex:1}
-.book-item .bl{font-size:12px;color:var(--pri);font-weight:600;margin-top:4px}
-.book-note{margin-top:12px;font-size:12px;color:var(--t2);line-height:1.7;padding:10px 12px;background:var(--pri-l);border-radius:8px;border:1px solid var(--pri-bg)}
+.book-cover{flex:0 0 56px;width:56px;height:78px;border-radius:3px;box-shadow:0 1px 4px rgba(15,23,42,.12);object-fit:cover;background:#e2e8f0}
+.book-body{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.book-item .bt{font-size:13px;font-weight:600;color:var(--txt)}
+.book-item .ba{font-size:11px;color:var(--t3)}
+.book-item .bd{font-size:12px;color:var(--t2);line-height:1.5;flex:1}
+.book-item .bl{font-size:12px;color:var(--pri);font-weight:600;margin-top:2px}
+.book-note{margin-top:10px;font-size:11.5px;color:var(--t3);line-height:1.6}
+.book-tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:999px;background:#e2e8f0;color:var(--t3);letter-spacing:.5px}
 
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:1000;justify-content:center;align-items:center}
 .modal-bg.show{display:flex}
@@ -193,8 +214,11 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
   .action-bar,.btn,.modal-bg,.back,.ad-slot,.book-panel{display:none!important}
 }
 </style>
+<link rel="stylesheet" href="../auth-gate.css">
 </head>
 <body>
+<p data-aigc-mark="1" style="margin:0 0 8px;font-size:10px;line-height:1.3;color:#6b6560;font-weight:400;">AI生成</p>
+
 
 <header class="topbar">
   <div class="topbar-in">
@@ -290,10 +314,10 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
     </div>
   </div>
 
-  <!-- 广告位：填充 AD_CONFIG.client 后自动启用；未配置时显示占位 -->
+  <!-- 成果之后：广告 + 延伸阅读（计算主路径之前不出现） -->
   <div class="ad-slot" data-ad="tool-inline" aria-label="广告">
-    <div class="ad-slot-label">Advertisement</div>
-    <div class="ad-slot-ph">广告位 · 注册 Google AdSense 后填入发布商 ID 即可展示</div>
+    <div class="ad-slot-label">广告</div>
+    <div class="ad-slot-ph">广告位 · 接入 Google AdSense 后展示（不影响计算）</div>
   </div>
 
   <div class="acc" id="accFml">
@@ -325,12 +349,12 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
     </div>
   </div>
 
-  <div class="acc book-panel" id="accBooks" style="display:block">
-    <div class="panel-hd" style="border-bottom:1px solid var(--bdr);border-radius:12px 12px 0 0;background:var(--card)">
-      <h2>相关教材与延伸阅读</h2>
-      <span class="chip">自学 · 备考 · 设计参考</span>
+  <div class="book-panel" id="accBooks">
+    <div class="panel-hd">
+      <h2>延伸阅读</h2>
+      <span class="book-tag">推荐 · 京东</span>
     </div>
-    <div class="panel-bd" style="border-radius:0 0 12px 12px;background:var(--card);border:1px solid var(--bdr);border-top:none">
+    <div class="panel-bd">
       <div class="book-list">
         <a class="book-item" href="https://union-click.jd.com/jdc?e=618%7Cpc%7C&p=JF8BAUYJK1olWAUFUVxVCUwWAF8IHlIdXwIFVW4ZVxNJXF9RXh5UHw0cSgYYXBcIWDoXSQVJQwYHXVZfDEwWHDZNRwYlO18YPA4kTxF0cS9ORg5zVHF0MgYbXkcbM2oIGl0dXQMAU1htC0oVCmsPGFkTXTYyVF1tWiUfC2cIE1kWWAUKU25fCEoeAWkOG1kTbQYEXVZeDk0TAW8IHlIlWgYLZAUIZk1DUWxYS1xBWAcFVlxtOHsUM2gIEk8TL0dQQFgvOHsXM2w4G1oVXAMFXFdeCkkLA2gNHl4SQQYEXVZeDk0TA2gKHFwlXwcDUFdtOJWaswoMehIXLl4EARU1SRMTaGjWlusEL3YLU1dcGXtkagptXFpCXFxWFF44ayxkBm9ceVtwPmFHNDwtAC55ATVVZAwcXwNDASsoAQ5AfG8PK14lXQACVm5cOA" target="_blank" rel="noopener noreferrer sponsored">
           <img class="book-cover" src="../icons/book-hydraulics-wu.svg" alt="水力学 吴持恭" width="72" height="100" loading="lazy">
@@ -351,7 +375,7 @@ select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+x
           </div>
         </a>
       </div>
-      <div class="book-note">想把水跃算对、把消能接进设计，这两本是水利专业最常用的底子书。通过下方链接在京东购买，不影响你的到手价，也能支持本站继续维护免费工具。</div>
+      <div class="book-note">京东链接购买不影响到手价，可支持本站免费工具维护。广告与推荐仅出现在计算结果之后。</div>
     </div>
   </div>
 
@@ -516,15 +540,23 @@ function renderResult(){
       <div class="sub" style="font-size:12px;opacity:.85;margin-top:2px">矩形断面自由水跃</div>
     </div>
     <div class="rp-body">
-      <div class="rp-sec">一、水跃结论</div>
-      <div class="jmp-viz">
-        <div class="jmp-head">
-          <div class="label">共轭水深 y2</div>
-          <div class="val">${fv(r.y2,3)} m</div>
-          <div class="formula">y2 = y1/2·(√(1+8Fr1²)−1)　y1=${fv(r.y1,3)}　Fr1=${fv(r.Fr1,3)}</div>
-          <div class="jmp-type">${r.jumpType}</div>
+      <div class="rp-sec">一、结论读数</div>
+      <div class="meter">
+        <div class="meter-label">共轭水深 Y2</div>
+        <div class="meter-read">
+          <span class="meter-val">${fv(r.y2,3)}</span>
+          <span class="meter-unit">m</span>
         </div>
-        <div class="depth-viz">
+        <div class="meter-type">${r.jumpType}</div>
+        <div class="meter-formula">y₂ = y₁/2·(√(1+8Fr₁²)−1)　y₁=${fv(r.y1,3)}　Fr₁=${fv(r.Fr1,3)}</div>
+        <div class="meter-row">
+          <div class="meter-cell"><div class="k">水跃长度 LJ</div><div class="v">${fv(r.Lj,2)}<em>m</em></div></div>
+          <div class="meter-cell"><div class="k">能量损失 ΔE</div><div class="v">${fv(r.dE,3)}<em>m</em></div></div>
+          <div class="meter-cell"><div class="k">弗劳德数 FR1</div><div class="v">${fv(r.Fr1,3)}</div></div>
+          <div class="meter-cell"><div class="k">共轭比 Y2/Y1</div><div class="v">${fv(r.y2/r.y1,3)}</div></div>
+        </div>
+      </div>
+      <div class="depth-viz">
           <div class="depth-side up">
             <div class="depth-bar" style="height:${h1px}px"></div>
             <div class="depth-tag">y1=${fv(r.y1,3)}</div>
@@ -534,20 +566,7 @@ function renderResult(){
             <div class="depth-bar" style="height:${h2px}px"></div>
             <div class="depth-tag">y2=${fv(r.y2,3)}</div>
           </div>
-        </div>
-        <div class="jmp-sub">
-          <div class="jmp-card"><div class="k">水跃长度 Lj</div><div class="v">${fv(r.Lj,2)} m</div></div>
-          <div class="jmp-card"><div class="k">能量损失 ΔE</div><div class="v">${fv(r.dE,3)} m</div></div>
-        </div>
       </div>
-      <table class="rp-table">
-        <tr><th>项</th><th>值</th></tr>
-        <tr><td>跃前 y1 / 跃后 y2</td><td class="n">${fv(r.y1,3)} / ${fv(r.y2,3)} m</td></tr>
-        <tr><td>跃前 v1 / Fr1</td><td class="n">${fv(r.v1,3)} m/s / ${fv(r.Fr1,3)}</td></tr>
-        <tr><td>跃后 v2 / Fr2</td><td class="n">${fv(r.v2,3)} m/s / ${fv(r.Fr2,3)}</td></tr>
-        <tr><td>临界水深 hk</td><td class="n">${fv(r.hk,3)} m</td></tr>
-        <tr class="total"><td>共轭比 y2/y1</td><td class="n">${fv(r.y2/r.y1,3)}</td></tr>
-      </table>
 
       <div class="rp-sec">二、计算过程</div>
       <table class="rp-table">
@@ -565,7 +584,7 @@ function renderResult(){
 
       <div class="rp-fold">
         <button type="button" class="rp-fold-hd" onclick="this.parentElement.classList.toggle('open')">
-          <span class="arr">▶</span> 三、说明 · 默认折叠
+          <span class="arr">▶</span> 三、跃前跃后明细 · 默认折叠
         </button>
         <div class="rp-fold-bd">
           <table class="rp-table">
@@ -686,5 +705,7 @@ document.querySelector('.single-grid').addEventListener('keydown',e=>{
   });
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+<script src="../auth-gate.js"></script>
 </body>
 </html>
