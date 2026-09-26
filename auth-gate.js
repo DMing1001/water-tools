@@ -1,7 +1,9 @@
 /* water-tools · 登录墙（GitHub + 邮箱）
-   顺序：加载 supabase → 解析 OAuth 回跳（hash / ?code）→ getSession
-   → 有会话则进站；确认无会话才显示登录表单。 */
+   AUTH_GATE_ENABLED=false 时整段关闭（临时开放工具） */
+var AUTH_GATE_ENABLED = false;
+
 (function () {
+  if (!AUTH_GATE_ENABLED) return;
   if (document.documentElement.hasAttribute('data-auth-gate-off')) return;
 
   var SUPABASE_URL = 'https://vbrvfpoqgklezvykmzvn.supabase.co';
@@ -66,7 +68,7 @@
     var el = document.createElement('div');
     el.id = 'authGateBoot';
     el.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#FAF7F5;display:flex;align-items:center;justify-content:center;font-family:inherit;color:#666;font-size:14px;';
-    el.textContent = text || '正在恢复登录状态…';
+    el.textContent = text || 'Restoring session...';
     document.body.appendChild(el);
     document.body.classList.add('auth-gate-locked');
   }
@@ -120,10 +122,10 @@
   }
 
   async function sendOtp() {
-    if (!sb) { ensureLoginUI(); setMsg('登录服务未就绪，请刷新', 'err'); return; }
+    if (!sb) { ensureLoginUI(); setMsg('Login service not ready. Refresh.', 'err'); return; }
     var email = (document.getElementById('agEmail').value || '').trim();
-    if (!email || email.indexOf('@') < 0) { setMsg('请填写有效邮箱', 'err'); return; }
-    setMsg('发送中…');
+    if (!email || email.indexOf('@') < 0) { setMsg('Invalid email', 'err'); return; }
+    setMsg('Sending...');
     try {
       var res = await sb.auth.signInWithOtp({
         email: email,
@@ -135,9 +137,9 @@
       if (wrap) wrap.style.display = '';
       var r1 = document.getElementById('agRow1'); if (r1) r1.style.display = 'none';
       var r2 = document.getElementById('agRow2'); if (r2) r2.style.display = '';
-      setMsg('已发送登录邮件。若邮件里是链接请直接点击；若是数字码请填入上方。', 'ok');
+      setMsg('Email sent. Click the link in the mail, or enter the code above.', 'ok');
     } catch (e) {
-      setMsg('发送失败：' + (e.message || e), 'err');
+      setMsg('Send failed: ' + (e.message || e), 'err');
     }
   }
 
@@ -145,22 +147,18 @@
     if (!sb) return;
     var email = (document.getElementById('agEmail').value || '').trim();
     var code = (document.getElementById('agCode').value || '').trim();
-    if (!email || !code) { setMsg('请填写邮箱和验证码', 'err'); return; }
-    setMsg('验证中…');
+    if (!email || !code) { setMsg('Email and code required', 'err'); return; }
+    setMsg('Verifying...');
     try {
       var res = await sb.auth.verifyOtp({ email: email, token: code, type: 'email' });
       if (res && res.error) throw res.error;
-      if (res && res.data && res.data.user) {
-        hideAllGate();
-        return;
-      }
-      // 部分版本 verify 后才异步写会话
+      if (res && res.data && res.data.user) { hideAllGate(); return; }
       await wait(300);
       var s = await sb.auth.getSession();
       if (s && s.data && s.data.session) { hideAllGate(); return; }
-      setMsg('未取到登录会话，请刷新页面', 'err');
+      setMsg('No session after verify. Refresh the page.', 'err');
     } catch (e) {
-      setMsg('验证失败：' + (e.message || e), 'err');
+      setMsg('Verify failed: ' + (e.message || e), 'err');
     }
   }
 
@@ -173,7 +171,7 @@
       });
     } catch (e) {
       ensureLoginUI();
-      setMsg('GitHub 登录失败：' + (e.message || e), 'err');
+      setMsg('GitHub login failed: ' + (e.message || e), 'err');
     }
   }
 
@@ -185,16 +183,12 @@
       var code = u.searchParams.get('code');
       if (!code || !sb || !sb.auth || !sb.auth.exchangeCodeForSession) return;
       await sb.auth.exchangeCodeForSession({ authCode: code });
-      if (history.replaceState) {
-        u.searchParams.delete('code');
-        history.replaceState(null, '', u.pathname + (u.search || '') );
-      }
+      if (history.replaceState) history.replaceState(null, '', u.pathname + (u.search || ''));
     } catch (e) { /* ignore */ }
   }
 
   async function restoreSession() {
     await exchangeCodeIfNeeded();
-    // 给 detectSessionInUrl 一点时间解析 #access_token
     for (var i = 0; i < 6; i++) {
       try {
         var s = await sb.auth.getSession();
@@ -202,7 +196,6 @@
       } catch (e) { /* retry */ }
       await wait(150);
     }
-    // 最后用 getUser 再确认
     try {
       if (sb.auth.getUser) {
         var u = await sb.auth.getUser();
@@ -213,14 +206,14 @@
   }
 
   ready(async function () {
-    showBoot('正在恢复登录状态…');
+    showBoot('Restoring session...');
     try {
       if (typeof window.supabase === 'undefined') {
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js');
       }
       if (!window.supabase || !window.supabase.createClient) {
         ensureLoginUI();
-        setMsg('无法加载登录组件（网络受限）', 'err');
+        setMsg('Login component failed to load', 'err');
         return;
       }
       sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -232,9 +225,8 @@
       });
 
       var user = await restoreSession();
-      if (user) {
-        hideAllGate();
-      } else {
+      if (user) hideAllGate();
+      else {
         ensureLoginUI();
         setMsg('');
       }
@@ -250,7 +242,7 @@
       }
     } catch (e) {
       ensureLoginUI();
-      setMsg('登录初始化失败：' + (e.message || e), 'err');
+      setMsg('Init failed: ' + (e.message || e), 'err');
     }
   });
 })();
