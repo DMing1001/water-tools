@@ -1,0 +1,65 @@
+/* water-tools 登录墙 */
+#authGate {
+  position: fixed; inset: 0; z-index: 99999;
+  background: #FAF7F5; color: #213547;
+  font-family: "MiSans","PingFang SC","Microsoft YaHei",sans-serif;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+#authGate.hidden { display: none !important; }
+#authGate .ag-card {
+  width: 100%; max-width: 400px;
+  background: #fff; border: 1px solid #000; border-top: 3px solid #000;
+  padding: 32px 28px;
+}
+#authGate .ag-brand {
+  font-size: 12px; letter-spacing: 2px; color: rgba(0,0,0,.4);
+  margin-bottom: 8px;
+}
+#authGate h1 {
+  font-size: 22px; font-weight: 700; color: #000;
+  margin: 0 0 8px; line-height: 1.35;
+}
+#authGate .ag-sub {
+  font-size: 13px; color: #666; line-height: 1.6; margin-bottom: 22px;
+}
+#authGate label {
+  display: block; font-size: 12px; color: #666; margin-bottom: 6px;
+}
+#authGate input {
+  width: 100%; box-sizing: border-box;
+  border: 1px solid #000; border-radius: 0;
+  padding: 10px 12px; font-size: 14px; margin-bottom: 12px;
+  background: #fff; color: #000;
+}
+#authGate input:focus {
+  outline: none; box-shadow: inset 0 0 0 1px #000;
+}
+#authGate .ag-btn {
+  width: 100%; border: 1px solid #000; border-radius: 0;
+  padding: 11px 14px; font-size: 14px; cursor: pointer;
+  background: #000; color: #fff; margin-top: 4px;
+}
+#authGate .ag-btn:hover { opacity: .85; }
+#authGate .ag-btn.ghost {
+  background: #fff; color: #000;
+}
+#authGate .ag-btn:disabled { opacity: .45; cursor: not-allowed; }
+#authGate .ag-row { display: flex; gap: 8px; }
+#authGate .ag-row .ag-btn { flex: 1; }
+#authGate .ag-div {
+  display: flex; align-items: center; gap: 12px;
+  margin: 18px 0; color: rgba(0,0,0,.35); font-size: 12px;
+}
+#authGate .ag-div::before, #authGate .ag-div::after {
+  content: ""; flex: 1; height: 1px; background: #E5E7EB;
+}
+#authGate .ag-msg {
+  min-height: 20px; font-size: 13px; margin: 8px 0 4px; line-height: 1.5;
+}
+#authGate .ag-msg.err { color: #A32D2D; }
+#authGate .ag-msg.ok { color: #0F6E56; }
+#authGate .ag-foot {
+  margin-top: 18px; font-size: 11px; color: rgba(0,0,0,.4); line-height: 1.5;
+}
+body.auth-gate-locked { overflow: hidden; }
