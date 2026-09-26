@@ -88,6 +88,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Micr
 .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-80px);background:#2d3748;color:#fff;padding:12px 28px;border-radius:10px;font-size:.9rem;font-weight:500;z-index:9999;opacity:0;transition:all .35s cubic-bezier(.4,0,.2,1);pointer-events:none;box-shadow:0 6px 24px rgba(0,0,0,.2)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
+<link rel="stylesheet" href="auth-gate.css">
 </head>
 <body>
 <div class="header">
@@ -515,5 +516,7 @@ function clearAll(){
 
 window.addEventListener('load',()=>{loadPreset('simple');document.querySelectorAll('.preset-btn')[0].classList.add('active');drawPreview();});
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+<script src="auth-gate.js"></script>
 </body>
 </html>
