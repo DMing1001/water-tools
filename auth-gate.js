@@ -1,15 +1,36 @@
-/* water-tools · GitHub / 邮箱验证码 登录墙（共用）
-   会话策略：先静默恢复（含 OAuth 回跳 #access_token），成功则直接进站；
-   仅在确认未登录时才显示登录墙。 */
+/* water-tools · 登录墙（GitHub + 邮箱）
+   顺序：加载 supabase → 解析 OAuth 回跳（hash / ?code）→ getSession
+   → 有会话则进站；确认无会话才显示登录表单。 */
 (function () {
   if (document.documentElement.hasAttribute('data-auth-gate-off')) return;
 
   var SUPABASE_URL = 'https://vbrvfpoqgklezvykmzvn.supabase.co';
   var SUPABASE_ANON_KEY = 'sb_publishable_HUsypDUn_0t3kyVhQZ5nrw_ESfLMZ3P';
   var sb = null;
-  var user = null;
   var otpSent = false;
-  var gateReady = false;
+  var LOGIN_HTML =
+    '<div class="ag-card">' +
+    '<div class="ag-brand">CITEGLOW · WATER TOOLS</div>' +
+    '<h1>计算工具需要登录</h1>' +
+    '<div class="ag-sub">水利计算工具仅对已登录用户开放。可用邮箱验证码或 GitHub 登录。</div>' +
+    '<label for="agEmail">邮箱</label>' +
+    '<input id="agEmail" type="email" autocomplete="email" placeholder="you@example.com">' +
+    '<div id="agOtpWrap" style="display:none">' +
+    '<label for="agCode">验证码</label>' +
+    '<input id="agCode" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="邮箱中的数字码">' +
+    '</div>' +
+    '<div class="ag-msg" id="agMsg"></div>' +
+    '<div class="ag-row" id="agRow1">' +
+    '<button type="button" class="ag-btn" id="agSend">发送验证码</button>' +
+    '</div>' +
+    '<div class="ag-row" id="agRow2" style="display:none">' +
+    '<button type="button" class="ag-btn" id="agVerify">登录</button>' +
+    '<button type="button" class="ag-btn ghost" id="agResend">重新发送</button>' +
+    '</div>' +
+    '<div class="ag-div">或</div>' +
+    '<button type="button" class="ag-btn ghost" id="agGithub">使用 GitHub 登录</button>' +
+    '<div class="ag-foot">登录后同域保持会话。未登录无法使用计算功能。</div>' +
+    '</div>';
 
   function ready(fn) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
@@ -25,59 +46,47 @@
   }
 
   function cleanAuthHash() {
-    // 清掉地址栏中的 token，避免收藏/分享泄露
     if (!location.hash) return;
-    if (location.hash.indexOf('access_token') >= 0 ||
-        location.hash.indexOf('refresh_token') >= 0 ||
-        location.hash.indexOf('token_type') >= 0 ||
-        location.hash.indexOf('provider_token') >= 0 ||
-        location.hash.indexOf('type=signup') >= 0) {
-      if (history.replaceState) {
-        history.replaceState(null, '', location.pathname + location.search);
-      } else {
-        location.hash = '';
-      }
+    var h = location.hash;
+    if (h.indexOf('access_token') >= 0 || h.indexOf('refresh_token') >= 0 ||
+        h.indexOf('token_type') >= 0 || h.indexOf('provider_token') >= 0 ||
+        h.indexOf('type=signup') >= 0 || h.indexOf('error_description') >= 0) {
+      if (history.replaceState) history.replaceState(null, '', location.pathname + location.search);
+      else location.hash = '';
     }
   }
 
-  function mountGate() {
-    if (document.getElementById('authGate')) return;
-    var el = document.createElement('div');
-    el.id = 'authGate';
-    el.innerHTML =
-      '<div class="ag-card">' +
-      '<div class="ag-brand">CITEGLOW · WATER TOOLS</div>' +
-      '<h1>计算工具需要登录</h1>' +
-      '<div class="ag-sub">水利计算工具仅对已登录用户开放。可使用邮箱验证码或 GitHub 登录。</div>' +
-      '<label for="agEmail">邮箱</label>' +
-      '<input id="agEmail" type="email" autocomplete="email" placeholder="you@example.com">' +
-      '<div id="agOtpWrap" style="display:none">' +
-      '<label for="agCode">验证码</label>' +
-      '<input id="agCode" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="6 位验证码">' +
-      '</div>' +
-      '<div class="ag-msg" id="agMsg"></div>' +
-      '<div class="ag-row" id="agRow1">' +
-      '<button type="button" class="ag-btn" id="agSend">发送验证码</button>' +
-      '</div>' +
-      '<div class="ag-row" id="agRow2" style="display:none">' +
-      '<button type="button" class="ag-btn" id="agVerify">登录</button>' +
-      '<button type="button" class="ag-btn ghost" id="agResend">重新发送</button>' +
-      '</div>' +
-      '<div class="ag-div">或</div>' +
-      '<button type="button" class="ag-btn ghost" id="agGithub">使用 GitHub 登录</button>' +
-      '<div class="ag-foot">登录后同域保持会话。未登录无法使用计算功能。</div>' +
-      '</div>';
-    document.body.appendChild(el);
+  function removeBoot() {
+    var b = document.getElementById('authGateBoot');
+    if (b && b.parentNode) b.parentNode.removeChild(b);
   }
 
-  function showGate() {
-    mountGate();
+  function showBoot(text) {
+    removeBoot();
+    var el = document.createElement('div');
+    el.id = 'authGateBoot';
+    el.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#FAF7F5;display:flex;align-items:center;justify-content:center;font-family:inherit;color:#666;font-size:14px;';
+    el.textContent = text || '正在恢复登录状态…';
+    document.body.appendChild(el);
+    document.body.classList.add('auth-gate-locked');
+  }
+
+  function ensureLoginUI() {
+    removeBoot();
+    if (!document.getElementById('authGate')) {
+      var el = document.createElement('div');
+      el.id = 'authGate';
+      el.innerHTML = LOGIN_HTML;
+      document.body.appendChild(el);
+      bindLoginUI();
+    }
     var g = document.getElementById('authGate');
     if (g) g.classList.remove('hidden');
     document.body.classList.add('auth-gate-locked');
   }
 
-  function hideGate() {
+  function hideAllGate() {
+    removeBoot();
     var g = document.getElementById('authGate');
     if (g) g.classList.add('hidden');
     document.body.classList.remove('auth-gate-locked');
@@ -91,7 +100,7 @@
     m.className = 'ag-msg' + (kind ? ' ' + kind : '');
   }
 
-  function bind() {
+  function bindLoginUI() {
     var send = document.getElementById('agSend');
     var verify = document.getElementById('agVerify');
     var resend = document.getElementById('agResend');
@@ -111,158 +120,136 @@
   }
 
   async function sendOtp() {
-    if (!sb) { setMsg('登录服务未就绪，请刷新页面', 'err'); return; }
+    if (!sb) { ensureLoginUI(); setMsg('登录服务未就绪，请刷新', 'err'); return; }
     var email = (document.getElementById('agEmail').value || '').trim();
     if (!email || email.indexOf('@') < 0) { setMsg('请填写有效邮箱', 'err'); return; }
     setMsg('发送中…');
     try {
-      var { error } = await sb.auth.signInWithOtp({
+      var res = await sb.auth.signInWithOtp({
         email: email,
         options: { shouldCreateUser: true }
       });
-      if (error) throw error;
+      if (res && res.error) throw res.error;
       otpSent = true;
-      document.getElementById('agOtpWrap').style.display = '';
-      document.getElementById('agRow1').style.display = 'none';
-      document.getElementById('agRow2').style.display = '';
-      setMsg('验证码已发送，请查收邮箱（含垃圾箱）', 'ok');
+      var wrap = document.getElementById('agOtpWrap');
+      if (wrap) wrap.style.display = '';
+      var r1 = document.getElementById('agRow1'); if (r1) r1.style.display = 'none';
+      var r2 = document.getElementById('agRow2'); if (r2) r2.style.display = '';
+      setMsg('已发送登录邮件。若邮件里是链接请直接点击；若是数字码请填入上方。', 'ok');
     } catch (e) {
       setMsg('发送失败：' + (e.message || e), 'err');
     }
   }
 
   async function verifyOtp() {
-    if (!sb) { setMsg('登录服务未就绪', 'err'); return; }
+    if (!sb) return;
     var email = (document.getElementById('agEmail').value || '').trim();
     var code = (document.getElementById('agCode').value || '').trim();
     if (!email || !code) { setMsg('请填写邮箱和验证码', 'err'); return; }
     setMsg('验证中…');
     try {
-      var { data, error } = await sb.auth.verifyOtp({
-        email: email,
-        token: code,
-        type: 'email'
-      });
-      if (error) throw error;
-      user = data && data.user;
-      if (user) { hideGate(); return; }
-      setMsg('验证成功但未取到用户，请刷新页面', 'err');
+      var res = await sb.auth.verifyOtp({ email: email, token: code, type: 'email' });
+      if (res && res.error) throw res.error;
+      if (res && res.data && res.data.user) {
+        hideAllGate();
+        return;
+      }
+      // 部分版本 verify 后才异步写会话
+      await wait(300);
+      var s = await sb.auth.getSession();
+      if (s && s.data && s.data.session) { hideAllGate(); return; }
+      setMsg('未取到登录会话，请刷新页面', 'err');
     } catch (e) {
       setMsg('验证失败：' + (e.message || e), 'err');
     }
   }
 
   async function loginGithub() {
-    if (!sb) { setMsg('登录服务未就绪', 'err'); return; }
+    if (!sb) return;
     try {
       await sb.auth.signInWithOAuth({
         provider: 'github',
-        options: { redirectTo: location.href.split('#')[0] }
+        options: { redirectTo: location.href.split('#')[0].split('?')[0] }
       });
     } catch (e) {
+      ensureLoginUI();
       setMsg('GitHub 登录失败：' + (e.message || e), 'err');
     }
   }
 
-  async function restoreSession() {
-    // 1) 让 supabase 解析 OAuth 回跳 hash / code
-    try {
-      if (sb.auth.getSession) {
-        var s1 = await sb.auth.getSession();
-        if (s1 && s1.data && s1.data.session && s1.data.session.user) {
-          return s1.data.session.user;
-        }
-      }
-    } catch (e) { /* continue */ }
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
-    // 2) 若 URL 仍带 token 且未入会话，再等一小会儿重试
-    if (location.hash && location.hash.indexOf('access_token') >= 0) {
-      await new Promise(function (r) { setTimeout(r, 400); });
+  async function exchangeCodeIfNeeded() {
+    try {
+      var u = new URL(location.href);
+      var code = u.searchParams.get('code');
+      if (!code || !sb || !sb.auth || !sb.auth.exchangeCodeForSession) return;
+      await sb.auth.exchangeCodeForSession({ authCode: code });
+      if (history.replaceState) {
+        u.searchParams.delete('code');
+        history.replaceState(null, '', u.pathname + (u.search || '') );
+      }
+    } catch (e) { /* ignore */ }
+  }
+
+  async function restoreSession() {
+    await exchangeCodeIfNeeded();
+    // 给 detectSessionInUrl 一点时间解析 #access_token
+    for (var i = 0; i < 6; i++) {
       try {
-        var s2 = await sb.auth.getSession();
-        if (s2 && s2.data && s2.data.session && s2.data.session.user) {
-          return s2.data.session.user;
-        }
-      } catch (e) { /* continue */ }
-      // 3) 显式从 hash 取 token 交给 supabase
-      try {
-        var hash = location.hash.replace(/^#/, '');
-        var params = {};
-        hash.split('&').forEach(function (pair) {
-          var kv = pair.split('=');
-          params[decodeURIComponent(kv[0] || '')] = decodeURIComponent(kv[1] || '');
-        });
-        if (params.access_token) {
-          var s3 = await sb.auth.getSession();
-          if (s3 && s3.data && s3.data.session) return s3.data.session.user;
-        }
-      } catch (e) { /* continue */ }
+        var s = await sb.auth.getSession();
+        if (s && s.data && s.data.session && s.data.session.user) return s.data.session.user;
+      } catch (e) { /* retry */ }
+      await wait(150);
     }
+    // 最后用 getUser 再确认
+    try {
+      if (sb.auth.getUser) {
+        var u = await sb.auth.getUser();
+        if (u && u.data && u.data.user) return u.data.user;
+      }
+    } catch (e) { /* ignore */ }
     return null;
   }
 
   ready(async function () {
-    // 未确认前先显示极简等待，避免闪登录框
-    var boot = document.createElement('div');
-    boot.id = 'authGate';
-    boot.className = 'hidden';
-    mountGate();
-    var g = document.getElementById('authGate');
-    if (g) {
-      g.classList.remove('hidden');
-      setMsg('正在恢复登录状态…');
-      // 禁用按钮直到判定完成
-      ['agSend','agVerify','agResend','agGithub'].forEach(function(id){
-        var b = document.getElementById(id);
-        if (b) b.disabled = true;
-      });
-    }
-
+    showBoot('正在恢复登录状态…');
     try {
       if (typeof window.supabase === 'undefined') {
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js');
       }
-      if (typeof window.supabase === 'undefined') {
-        showGate();
-        ['agSend','agGithub'].forEach(function(id){
-          var b = document.getElementById(id); if (b) b.disabled = false;
-        });
+      if (!window.supabase || !window.supabase.createClient) {
+        ensureLoginUI();
         setMsg('无法加载登录组件（网络受限）', 'err');
         return;
       }
       sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        auth: { persistSession: true, detectSessionInUrl: true, autoRefreshToken: true }
-      });
-
-      user = await restoreSession();
-
-      if (user) {
-        hideGate();
-      } else {
-        showGate();
-        ['agSend','agGithub'].forEach(function(id){
-          var b = document.getElementById(id); if (b) b.disabled = false;
-        });
-        setMsg('');
-      }
-      gateReady = true;
-
-      sb.auth.onAuthStateChange(function (event, session) {
-        user = session && session.user;
-        if (user) {
-          hideGate();
-        } else if (gateReady) {
-          showGate();
-          ['agSend','agGithub'].forEach(function(id){
-            var b = document.getElementById(id); if (b) b.disabled = false;
-          });
+        auth: {
+          persistSession: true,
+          detectSessionInUrl: true,
+          autoRefreshToken: true
         }
       });
+
+      var user = await restoreSession();
+      if (user) {
+        hideAllGate();
+      } else {
+        ensureLoginUI();
+        setMsg('');
+      }
+
+      if (sb.auth && sb.auth.onAuthStateChange) {
+        sb.auth.onAuthStateChange(function (event, session) {
+          if (session && session.user) hideAllGate();
+          else if (event === 'SIGNED_OUT') {
+            ensureLoginUI();
+            setMsg('');
+          }
+        });
+      }
     } catch (e) {
-      showGate();
-      ['agSend','agGithub'].forEach(function(id){
-        var b = document.getElementById(id); if (b) b.disabled = false;
-      });
+      ensureLoginUI();
       setMsg('登录初始化失败：' + (e.message || e), 'err');
     }
   });
