@@ -1,4 +1,6 @@
-/* water-tools · GitHub / 邮箱验证码 登录墙（共用） */
+/* water-tools · GitHub / 邮箱验证码 登录墙（共用）
+   会话策略：先静默恢复（含 OAuth 回跳 #access_token），成功则直接进站；
+   仅在确认未登录时才显示登录墙。 */
 (function () {
   if (document.documentElement.hasAttribute('data-auth-gate-off')) return;
 
@@ -7,6 +9,7 @@
   var sb = null;
   var user = null;
   var otpSent = false;
+  var gateReady = false;
 
   function ready(fn) {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
@@ -19,6 +22,22 @@
       s.src = src; s.onload = resolve; s.onerror = reject;
       document.head.appendChild(s);
     });
+  }
+
+  function cleanAuthHash() {
+    // 清掉地址栏中的 token，避免收藏/分享泄露
+    if (!location.hash) return;
+    if (location.hash.indexOf('access_token') >= 0 ||
+        location.hash.indexOf('refresh_token') >= 0 ||
+        location.hash.indexOf('token_type') >= 0 ||
+        location.hash.indexOf('provider_token') >= 0 ||
+        location.hash.indexOf('type=signup') >= 0) {
+      if (history.replaceState) {
+        history.replaceState(null, '', location.pathname + location.search);
+      } else {
+        location.hash = '';
+      }
+    }
   }
 
   function mountGate() {
@@ -49,7 +68,6 @@
       '<div class="ag-foot">登录后同域保持会话。未登录无法使用计算功能。</div>' +
       '</div>';
     document.body.appendChild(el);
-    document.body.classList.add('auth-gate-locked');
   }
 
   function showGate() {
@@ -63,6 +81,7 @@
     var g = document.getElementById('authGate');
     if (g) g.classList.add('hidden');
     document.body.classList.remove('auth-gate-locked');
+    cleanAuthHash();
   }
 
   function setMsg(text, kind) {
@@ -126,7 +145,8 @@
       });
       if (error) throw error;
       user = data && data.user;
-      hideGate();
+      if (user) { hideGate(); return; }
+      setMsg('验证成功但未取到用户，请刷新页面', 'err');
     } catch (e) {
       setMsg('验证失败：' + (e.message || e), 'err');
     }
@@ -144,28 +164,105 @@
     }
   }
 
+  async function restoreSession() {
+    // 1) 让 supabase 解析 OAuth 回跳 hash / code
+    try {
+      if (sb.auth.getSession) {
+        var s1 = await sb.auth.getSession();
+        if (s1 && s1.data && s1.data.session && s1.data.session.user) {
+          return s1.data.session.user;
+        }
+      }
+    } catch (e) { /* continue */ }
+
+    // 2) 若 URL 仍带 token 且未入会话，再等一小会儿重试
+    if (location.hash && location.hash.indexOf('access_token') >= 0) {
+      await new Promise(function (r) { setTimeout(r, 400); });
+      try {
+        var s2 = await sb.auth.getSession();
+        if (s2 && s2.data && s2.data.session && s2.data.session.user) {
+          return s2.data.session.user;
+        }
+      } catch (e) { /* continue */ }
+      // 3) 显式从 hash 取 token 交给 supabase
+      try {
+        var hash = location.hash.replace(/^#/, '');
+        var params = {};
+        hash.split('&').forEach(function (pair) {
+          var kv = pair.split('=');
+          params[decodeURIComponent(kv[0] || '')] = decodeURIComponent(kv[1] || '');
+        });
+        if (params.access_token) {
+          var s3 = await sb.auth.getSession();
+          if (s3 && s3.data && s3.data.session) return s3.data.session.user;
+        }
+      } catch (e) { /* continue */ }
+    }
+    return null;
+  }
+
   ready(async function () {
+    // 未确认前先显示极简等待，避免闪登录框
+    var boot = document.createElement('div');
+    boot.id = 'authGate';
+    boot.className = 'hidden';
     mountGate();
-    bind();
+    var g = document.getElementById('authGate');
+    if (g) {
+      g.classList.remove('hidden');
+      setMsg('正在恢复登录状态…');
+      // 禁用按钮直到判定完成
+      ['agSend','agVerify','agResend','agGithub'].forEach(function(id){
+        var b = document.getElementById(id);
+        if (b) b.disabled = true;
+      });
+    }
+
     try {
       if (typeof window.supabase === 'undefined') {
         await loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js');
       }
       if (typeof window.supabase === 'undefined') {
+        showGate();
+        ['agSend','agGithub'].forEach(function(id){
+          var b = document.getElementById(id); if (b) b.disabled = false;
+        });
         setMsg('无法加载登录组件（网络受限）', 'err');
         return;
       }
-      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      var { data } = await sb.auth.getSession();
-      user = data && data.session && data.session.user;
-      if (user) hideGate();
-      else showGate();
+      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: true, detectSessionInUrl: true, autoRefreshToken: true }
+      });
+
+      user = await restoreSession();
+
+      if (user) {
+        hideGate();
+      } else {
+        showGate();
+        ['agSend','agGithub'].forEach(function(id){
+          var b = document.getElementById(id); if (b) b.disabled = false;
+        });
+        setMsg('');
+      }
+      gateReady = true;
+
       sb.auth.onAuthStateChange(function (event, session) {
         user = session && session.user;
-        if (user) hideGate();
-        else showGate();
+        if (user) {
+          hideGate();
+        } else if (gateReady) {
+          showGate();
+          ['agSend','agGithub'].forEach(function(id){
+            var b = document.getElementById(id); if (b) b.disabled = false;
+          });
+        }
       });
     } catch (e) {
+      showGate();
+      ['agSend','agGithub'].forEach(function(id){
+        var b = document.getElementById(id); if (b) b.disabled = false;
+      });
       setMsg('登录初始化失败：' + (e.message || e), 'err');
     }
   });
