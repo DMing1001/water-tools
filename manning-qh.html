@@ -403,10 +403,11 @@ function computeManning(pts,wse,slopeVal,nVal){
   }
   const ui=[...new Set(ints.map(v=>v.toFixed(6)))].map(Number).sort((a,b)=>a-b);
   const xCuts=[xMin];for(const xi of ui){if(xi>xMin&&xi<xMax)xCuts.push(xi);}xCuts.push(xMax);xCuts.sort((a,b)=>a-b);
-  let A=0,Pw=0;
+  let A=0,Pw=0,Bw=0;
   for(let ci=0;ci<xCuts.length-1;ci++){
     const xa=xCuts[ci],xb=xCuts[ci+1];
     if(getZ(pts,(xa+xb)/2)>=wse)continue;
+    Bw+=(xb-xa); // 水面宽度：浸没段桩号跨度之和
     const ns=Math.max(2,Math.ceil((xb-xa)/dx)),sd=(xb-xa)/ns;
     for(let s=0;s<ns;s++){
       const x0=xa+s*sd,x1=x0+sd,z0=getZ(pts,x0),z1=getZ(pts,x1);
@@ -417,7 +418,7 @@ function computeManning(pts,wse,slopeVal,nVal){
   if(A<=0)return null;
   const R=A/Pw;
   const V=(1/nVal)*Math.pow(R,2/3)*Math.sqrt(slopeVal);
-  return{area:A,wetPerimeter:Pw,hydraulicRadius:R,velocity:V,discharge:V*A,n:nVal};
+  return{area:A,wetPerimeter:Pw,surfaceWidth:Bw,hydraulicRadius:R,velocity:V,discharge:V*A,n:nVal};
 }
 function computeManningSubsection(pts,wse,slopeVal,nVal,xStart,xEnd){
   const sub=pts.filter(p=>p.x>=xStart&&p.x<=xEnd);
@@ -527,8 +528,8 @@ function calcNormal(){
     if(r)res.push({wse:w,depth:w-zMin,...r});
   }
   currentResults=res;
-  currentHeaders=['水位(m)','水深(m)','面积(m²)','湿周(m)','R(m)','流速(m/s)','流量(m³/s)','n'];
-  currentRowFn=r=>[fv(r.wse),fv(r.depth),fv(r.area),fv(r.wetPerimeter),fv(r.hydraulicRadius,3),fv(r.velocity,3),fv(r.discharge),fv(r.n,4)];
+  currentHeaders=['水位(m)','水深(m)','水面宽度(m)','面积(m²)','湿周(m)','R(m)','流速(m/s)','流量(m³/s)','n'];
+  currentRowFn=r=>[fv(r.wse),fv(r.depth),fv(r.surfaceWidth),fv(r.area),fv(r.wetPerimeter),fv(r.hydraulicRadius,3),fv(r.velocity,3),fv(r.discharge),fv(r.n,4)];
   finishRender('normal');
 }
 
@@ -547,11 +548,11 @@ function calcWeir(){
     const H=Math.max(0,w-cz);
     const Q=computeWeirQ(w,cz,B,m,wt);
     const V=H>0?Q/(B*H):0;
-    res.push({wse:w,depth:H,area:B*H,wetPerimeter:B+2*H,hydraulicRadius:H>0?B*H/(B+2*H):0,velocity:V,discharge:Q,n:m});
+    res.push({wse:w,depth:H,area:B*H,wetPerimeter:B+2*H,hydraulicRadius:H>0?B*H/(B+2*H):0,velocity:V,discharge:Q,n:m,surfaceWidth:B});
   }
   currentResults=res;
-  currentHeaders=['水位(m)','堰上水头(m)','过水面积(m²)','流速(m/s)','流量(m³/s)','m'];
-  currentRowFn=r=>[fv(r.wse),fv(r.depth),fv(r.area),fv(r.velocity,3),fv(r.discharge),fv(r.n,3)];
+  currentHeaders=['水位(m)','堰上水头(m)','水面宽度(m)','过水面积(m²)','流速(m/s)','流量(m³/s)','m'];
+  currentRowFn=r=>[fv(r.wse),fv(r.depth),fv(r.surfaceWidth),fv(r.area),fv(r.velocity,3),fv(r.discharge),fv(r.n,3)];
   finishRender('weir');
 }
 
