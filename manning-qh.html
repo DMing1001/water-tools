@@ -699,7 +699,8 @@ function drawSectionChart(ctx,R){
   }
   const xMin=pts[0].x,xMax=pts[pts.length-1].x;
   const n=R.length,idxs=[0,Math.floor(n*.35),Math.floor(n*.7),n-1].filter(i=>i>=0&&i<n);
-  const ds=[{label:'断面',data:pts.map(p=>({x:p.x,y:p.z})),borderColor:'#0f172a',borderWidth:2.5,pointRadius:0,tension:.2,fill:false,order:1}];
+  // 折线：tension=0，顶点可见，严格按 起点距–高程 连接
+  const ds=[{label:'断面',data:pts.map(p=>({x:p.x,y:p.z})),borderColor:'#0f172a',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'#0f172a',tension:0,fill:false,order:1}];
   const dx=Math.max(1,(xMax-xMin)/120);
   idxs.forEach((i,ci)=>{
     const w=R[i].wse;
@@ -707,7 +708,7 @@ function drawSectionChart(ctx,R){
     ds.push({label:`H=${fv(w,1)}`,data:[{x:xMin,y:w},{x:xMax,y:w}],borderColor:'rgba(3,105,161,.45)',borderWidth:1.5,borderDash:[6,3],pointRadius:0,order:2});
     const fd=[];
     for(let x=xMin;x<=xMax;x+=dx)fd.push({x,y:Math.min(w,getZ(pts,x))});
-    ds.push({label:'_'+ci,data:fd,borderColor:'transparent',backgroundColor:fc,fill:{target:'-1',above:fc,below:'transparent'},pointRadius:0,order:3});
+    ds.push({label:'_'+ci,data:fd,borderColor:'transparent',backgroundColor:fc,fill:{target:'-1',above:fc,below:'transparent'},pointRadius:0,tension:0,order:3});
   });
   if(mainChart){mainChart.destroy();mainChart=null}
   mainChart=new Chart(ctx,{
