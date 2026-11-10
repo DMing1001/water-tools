@@ -92,13 +92,28 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);line-height:1
 .f-item label .u{color:var(--t3);font-weight:400;font-size:10.5px}
 .inp{width:100%;padding:8px 10px;border:1.5px solid var(--bdr2);border-radius:8px;font-size:13px;font-family:inherit;color:var(--txt);background:var(--input-bg);outline:none}
 .inp:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(var(--pri-rgb),.12);background:#fff}
+.inp:disabled{opacity:.45;cursor:not-allowed;background:#f1f5f9}
 .inp.num{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums}
 select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:26px}
 textarea.inp{font-family:var(--mono);font-size:12px;line-height:1.5;min-height:140px;resize:vertical}
+#sectionData{flex:1;min-height:220px}
+.sec-mini{position:relative;width:100%}
+.sec-mini canvas{display:block}
+/* 普通断面：断面形态约与成果表等高（贴底），断面数据吃其余高度（底边落在互查底边附近） */
+#secDataPanel{flex:7;display:flex;flex-direction:column;min-height:0}
+#secDataPanel>.panel-bd{flex:1;display:flex;flex-direction:column;min-height:0}
+#secDataPanel>.panel-bd>.f-item{flex:1;display:flex;flex-direction:column;min-height:0}
+#panelNormal>.panel:last-of-type{flex:6;display:flex;flex-direction:column;min-height:413px}
+#panelNormal>.panel:last-of-type>.panel-bd{flex:1;display:flex;flex-direction:column;min-height:0;justify-content:center}
 .hint{font-size:11px;color:var(--t3);margin-top:4px;line-height:1.45}
 .note{background:var(--river-bg);border:1px solid var(--river-bdr);color:#0c4a6e;border-radius:8px;padding:8px 10px;font-size:11.5px;margin-top:8px;line-height:1.5}
 
-.type-panel{display:none}.type-panel.active{display:block}
+.type-panel{display:none}.type-panel.active{display:flex;flex-direction:column;flex:1;min-height:0}
+.input-panel{display:flex;flex-direction:column;min-height:0}
+.type-panel.active>.panel:last-of-type{flex:1;display:flex;flex-direction:column;min-height:0}
+.type-panel.active>.panel:last-of-type>.panel-bd{flex:1;display:flex;flex-direction:column;min-height:0}
+.type-panel.active>.panel:last-of-type>.panel-bd>.f-item{flex:1;display:flex;flex-direction:column;min-height:0}
+.type-panel.active>.panel:last-of-type textarea{flex:1;min-height:160px}
 .compound-only{display:none}
 .main-grid.mode-compound .normal-only{display:none}
 .main-grid.mode-compound .compound-only{display:block}
@@ -136,8 +151,8 @@ textarea.inp{font-family:var(--mono);font-size:12px;line-height:1.5;min-height:1
 
 .table-scroll{max-height:360px;overflow:auto;border:1px solid var(--bdr);border-radius:10px}
 .res-tbl{width:100%;border-collapse:collapse;font-size:12px}
-.res-tbl th{position:sticky;top:0;background:var(--pri-l);color:var(--pri);font-weight:600;padding:8px 6px;text-align:center;border-bottom:1px solid var(--bdr);white-space:nowrap;z-index:1}
-.res-tbl td{padding:6px;text-align:center;border-bottom:1px solid #f1f5f9;font-family:var(--mono);font-size:11.5px;font-variant-numeric:tabular-nums}
+.res-tbl th{position:sticky;top:0;background:var(--pri-l);color:var(--pri);font-weight:600;padding:8px 6px;text-align:right;border-bottom:1px solid var(--bdr);white-space:nowrap;z-index:1}
+.res-tbl td{padding:6px;text-align:right;border-bottom:1px solid #f1f5f9;font-family:var(--mono);font-size:11.5px;font-variant-numeric:tabular-nums}
 .res-tbl tr:hover td{background:var(--pri-l)}
 .res-tbl tr.hl td{background:var(--ok-bg);font-weight:600;color:var(--ok)}
 
@@ -239,7 +254,7 @@ textarea.inp{font-family:var(--mono);font-size:12px;line-height:1.5;min-height:1
           <div class="panel-bd">
             <div class="f-grid">
               <div class="f-item"><label>比降 S <span class="u">m/m</span></label><input class="inp num" type="number" id="slope" value="0.0005" step="any" min="1e-6"></div>
-              <div class="f-item"><label>糙率 n</label><input class="inp num" type="number" id="mannN" value="0.035" step="any" min="0.001"></div>
+              <div class="f-item"><label>糙率 n <span class="u">主槽/全断面</span></label><input class="inp num" type="number" id="mannN" value="0.035" step="any" min="0.001"></div>
               <div class="f-item"><label>起算水位 <span class="u">m</span></label><input class="inp num" type="number" id="wseStart" step="any" placeholder="自动=河底最低点"></div>
               <div class="f-item"><label>终止水位 <span class="u">m</span></label><input class="inp num" type="number" id="wseEnd" step="any" placeholder="自动=河底最高点"></div>
               <div class="f-item"><label>水位步长 <span class="u">m</span></label><input class="inp num" type="number" id="wseStep" value="0.2" step="any" min="0.01"></div>
@@ -249,18 +264,19 @@ textarea.inp{font-family:var(--mono);font-size:12px;line-height:1.5;min-height:1
         <div class="panel">
           <div class="panel-hd"><h2>分区糙率</h2><span class="chip">左滩 · 主槽 · 右滩</span></div>
           <div class="panel-bd">
-            <div class="hint"><label><input type="checkbox" id="partOn"> 启用三分区糙率（分区叠加法）</label></div>
-            <div class="f-grid" style="margin-top:8px">
-              <div class="f-item"><label>左滩 n</label><input class="inp num" type="number" id="partNL" value="0.045" step="any" min="0.001"></div>
-              <div class="f-item"><label>主槽 n</label><input class="inp num" type="number" id="partNM" value="0.035" step="any" min="0.001"></div>
-              <div class="f-item"><label>右滩 n</label><input class="inp num" type="number" id="partNR" value="0.045" step="any" min="0.001"></div>
-              <div class="f-item"><label>左/主分界桩号 <span class="u">m</span></label><input class="inp num" type="number" id="partX1" step="any" placeholder="自动=1/4 桩号"></div>
-              <div class="f-item"><label>主/右分界桩号 <span class="u">m</span></label><input class="inp num" type="number" id="partX2" step="any" placeholder="自动=3/4 桩号"></div>
+            <div class="hint"><label><input type="checkbox" id="partOn" onchange="togglePartInputs()"> 需区分主槽与边滩糙率时启用（默认统一 n）</label></div>
+            <div id="partDetail" style="display:none">
+              <div class="f-grid" style="margin-top:8px">
+                <div class="f-item"><label>左滩 n</label><input class="inp num" type="number" id="partNL" value="0.045" step="any" min="0.001"></div>
+                <div class="f-item"><label>右滩 n</label><input class="inp num" type="number" id="partNR" value="0.045" step="any" min="0.001"></div>
+                <div class="f-item"><label>左/主分界桩号 <span class="u">m</span></label><input class="inp num" type="number" id="partX1" step="any" placeholder="自动=1/4 桩号"></div>
+                <div class="f-item"><label>主/右分界桩号 <span class="u">m</span></label><input class="inp num" type="number" id="partX2" step="any" placeholder="自动=3/4 桩号"></div>
+              </div>
+              <div class="hint">边滩各用本区 n，主槽沿用上方「糙率 n」；三分区叠加算 Q。同水位、不计分界竖线摩阻。</div>
             </div>
-            <div class="hint">三分区各自用本区 n 按曼宁公式算 Q 后叠加；同水位、不计分界竖线摩阻。</div>
           </div>
         </div>
-        <div class="panel">
+        <div class="panel" id="secDataPanel">
           <div class="panel-hd"><h2>断面数据</h2><span class="chip">左岸→右岸</span></div>
           <div class="panel-bd">
             <div class="f-item">
@@ -268,6 +284,12 @@ textarea.inp{font-family:var(--mono);font-size:12px;line-height:1.5;min-height:1
               <textarea class="inp" id="sectionData" placeholder="0    52.0&#10;20   43.0&#10;60   42.0"></textarea>
               <div class="hint">至少 3 个点；桩号递增；高程为绝对高程 (m)</div>
             </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-hd"><h2>断面形态</h2><span class="chip">起点距—高程</span></div>
+          <div class="panel-bd">
+            <div class="sec-mini"><canvas id="secMiniChart"></canvas></div>
           </div>
         </div>
       </div>
@@ -341,7 +363,7 @@ textarea.inp{font-family:var(--mono);font-size:12px;line-height:1.5;min-height:1
 
     <div id="resultCol">
       <div class="panel" id="metricPanel">
-        <div class="panel-hd"><h2>计算结论</h2><span class="chip" id="modeChip">Manning</span></div>
+        <div class="panel-hd"><h2>计算结论</h2></div>
         <div class="panel-bd">
           <div class="metric-strip" id="metricStrip">
             <div class="metric hero"><div class="k">最大流量 Qmax</div><div class="v">—<span class="u">m³/s</span></div></div>
@@ -384,7 +406,7 @@ textarea.inp{font-family:var(--mono);font-size:12px;line-height:1.5;min-height:1
               <h4>已知流量 → 水位</h4>
               <div class="query-inline">
                 <input class="inp num" type="number" id="queryQ" step="any" placeholder="流量 m³/s">
-                <button class="btn btn-sm" style="background:var(--ok);color:#fff" onclick="queryByQ()">查询</button>
+                <button class="btn btn-sm" style="background:var(--pri);color:#fff" onclick="queryByQ()">查询</button>
               </div>
               <div class="query-out" id="queryQResult">—</div>
             </div>
@@ -567,7 +589,6 @@ function switchType(type, el){
   const panel=document.getElementById(id);
   if(panel)panel.classList.add('active');
   document.getElementById('mainGrid').classList.toggle('mode-compound',type==='compound');
-  document.getElementById('modeChip').textContent=type==='normal'?'Manning':type==='weir'?'堰流':'复合断面';
   if(type==='weir')updateWeirCoeffHelp();
   if(type==='compound')updateCWeirCoeffHelp();
 }
@@ -576,6 +597,7 @@ function loadPreset(key){
   const target=currentSectionType==='compound'?'cSectionData':'sectionData';
   document.getElementById(target).value=PRESETS[key]||'';
   document.querySelectorAll('#presetBar .qb-chip').forEach(b=>b.classList.toggle('active',b.getAttribute('data-preset')===key));
+  if(currentSectionType==='normal')drawSecMini();
 }
 document.getElementById('presetBar').addEventListener('click',e=>{
   const b=e.target.closest('[data-preset]');
@@ -628,7 +650,7 @@ function calcNormal(){
   const res=[];
   if(partOn){
     const nL=parseFloat(document.getElementById('partNL').value)||0.045;
-    const nM=parseFloat(document.getElementById('partNM').value)||0.035;
+    const nM=nVal;
     const nR=parseFloat(document.getElementById('partNR').value)||0.045;
     const xMin=pts[0].x,xMax=pts[pts.length-1].x;
     let x1=parseFloat(document.getElementById('partX1').value);
@@ -640,15 +662,15 @@ function calcNormal(){
       const r=computeManningPartitioned(pts,w,slope,nL,nM,nR,x1,x2);
       if(r)res.push({wse:w,depth:w-zMin,...r,nL,nM,nR,x1,x2});
     }
-    currentHeaders=['水位(m)','水深(m)','水面宽度(m)','面积(m²)','湿周(m)','R(m)','流速(m/s)','流量(m³/s)','左滩Q','主槽Q','右滩Q'];
-    currentRowFn=r=>[fv(r.wse),fv(r.depth),fv(r.surfaceWidth),fv(r.area),fv(r.wetPerimeter),fv(r.hydraulicRadius,3),fv(r.velocity,3),fv(r.discharge),fv(r.qLeft),fv(r.qMain),fv(r.qRight)];
+    currentHeaders=['水位(m)','流量(m³/s)','过水面积(m²)','流速(m/s)','水力半径R(m)','湿周(m)','水深(m)','水面宽度(m)','左滩Q','主槽Q','右滩Q'];
+    currentRowFn=r=>[fv(r.wse),fv(r.discharge),fv(r.area),fv(r.velocity,3),fv(r.hydraulicRadius,3),fv(r.wetPerimeter),fv(r.depth),fv(r.surfaceWidth),fv(r.qLeft),fv(r.qMain),fv(r.qRight)];
   }else{
     for(let w=wS;w<=wE+step*0.001;w+=step){
       const r=computeManning(pts,w,slope,nVal);
       if(r)res.push({wse:w,depth:w-zMin,...r});
     }
-    currentHeaders=['水位(m)','水深(m)','水面宽度(m)','面积(m²)','湿周(m)','R(m)','流速(m/s)','流量(m³/s)','n'];
-    currentRowFn=r=>[fv(r.wse),fv(r.depth),fv(r.surfaceWidth),fv(r.area),fv(r.wetPerimeter),fv(r.hydraulicRadius,3),fv(r.velocity,3),fv(r.discharge),fv(r.n,4)];
+    currentHeaders=['水位(m)','流量(m³/s)','过水面积(m²)','流速(m/s)','水力半径R(m)','湿周(m)','水深(m)','水面宽度(m)','糙率n'];
+    currentRowFn=r=>[fv(r.wse),fv(r.discharge),fv(r.area),fv(r.velocity,3),fv(r.hydraulicRadius,3),fv(r.wetPerimeter),fv(r.depth),fv(r.surfaceWidth),fv(r.n,4)];
   }
   currentResults=res;
   finishRender('normal');
@@ -852,6 +874,35 @@ function switchChart(type,el){
   drawMainChart(type);
 }
 
+/* 左栏断面形态缩略图（桩号—高程折线） */
+let secMiniChart=null;
+function drawSecMini(){
+  const canvas=document.getElementById('secMiniChart');
+  if(!canvas)return;
+  if(secMiniChart){secMiniChart.destroy();secMiniChart=null}
+  if(typeof Chart==='undefined')return;
+  const pts=parseSection('sectionData');
+  if(pts.length<2)return;
+  secMiniChart=new Chart(canvas.getContext('2d'),{
+    type:'line',
+    data:{datasets:[{
+      label:'断面',data:pts.map(p=>({x:p.x,y:p.z})),
+      borderColor:'#0f172a',borderWidth:2,pointRadius:2.5,pointBackgroundColor:'#0f172a',
+      tension:0,fill:{target:'origin',above:'rgba(37,99,235,.08)',below:'transparent'}
+    }]},
+    options:{responsive:true,maintainAspectRatio:true,aspectRatio:1.4,animation:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ci=>`桩号 ${ci.parsed.x} m · 高程 ${ci.parsed.y} m`}}
+      },
+      scales:{
+        x:{type:'linear',title:{display:true,text:'桩号 (m)',font:{size:10}},ticks:{font:{size:10}}},
+        y:{title:{display:true,text:'高程 (m)',font:{size:10}},ticks:{font:{size:10}}}
+      }
+    }
+  });
+}
+
 /* 互查（线性插值，展示用） */
 function queryByH(){
   const H=parseFloat(document.getElementById('queryH').value);
@@ -919,7 +970,7 @@ function buildReport(){
     lines.push('断面点数：'+pts.length+'（桩号 '+pts[0].x+'~'+pts[pts.length-1].x+' m）');
     lines.push('河床比降 S = '+document.getElementById('slope').value+' m/m');
     if(document.getElementById('partOn').checked&&R[0].nL!==undefined){
-      lines.push('左滩 n = '+R[0].nL+'，主槽 n = '+R[0].nM+'，右滩 n = '+R[0].nR);
+      lines.push('左滩 n = '+R[0].nL+'，主槽 n = '+R[0].nM+'（即糙率 n），右滩 n = '+R[0].nR);
       lines.push('分界桩号：左/主 '+R[0].x1+' m，主/右 '+R[0].x2+' m');
     }else{
       lines.push('糙率 n = '+document.getElementById('mannN').value);
@@ -996,6 +1047,7 @@ function applyFav(fav){
   });
   if(fav.mode==='weir')updateWeirCoeffHelp();
   if(fav.mode==='compound')updateCWeirCoeffHelp();
+  togglePartInputs();
   updateWarnings();
 }
 function saveFav(){
@@ -1011,7 +1063,7 @@ function renderFavs(){
   const list=favsLoad();
   box.innerHTML=list.length?list.map(f=>
     `<span class="fav-chip" data-t="${f.t}" title="${esc(f.name)}（${new Date(f.t).toLocaleString('zh-CN')}）点击回填"><span class="fav-name">${esc(f.name)}</span><button type="button" class="fav-x" title="删除">×</button></span>`
-  ).join(''):'<span class="hint" style="margin:0">暂无收藏，点「存当前」保存</span>';
+  ).join(''):'<span class="hint" style="margin:0">暂无收藏</span>';
 }
 document.getElementById('favBar').addEventListener('click',e=>{
   const chip=e.target.closest('.fav-chip');
@@ -1023,6 +1075,11 @@ document.getElementById('favBar').addEventListener('click',e=>{
 });
 
 /* ========== 适用性黄条提醒（只提醒、不拦算） ========== */
+function togglePartInputs(){
+  const on=document.getElementById('partOn').checked;
+  document.getElementById('partDetail').style.display=on?'block':'none';
+  ['partNL','partNR','partX1','partX2'].forEach(id=>{document.getElementById(id).disabled=!on});
+}
 function collectWarnings(){
   const w=[];
   const nCheck=(id,label)=>{
@@ -1045,7 +1102,7 @@ function collectWarnings(){
   };
   if(currentSectionType==='normal'){
     if(document.getElementById('partOn').checked){
-      nCheck('partNL','左滩');nCheck('partNM','主槽');nCheck('partNR','右滩');
+      nCheck('partNL','左滩');nCheck('mannN','主槽');nCheck('partNR','右滩');
       slopeCheck('slope','河床比降');
     }else{
       nCheck('mannN','糙率');slopeCheck('slope','河床比降');
@@ -1083,11 +1140,20 @@ function updateWarnings(){
 loadPreset('ushape');
 updateWeirCoeffHelp();updateCWeirCoeffHelp();
 renderFavs();
+togglePartInputs();
 updateWarnings();
+drawSecMini();
 document.getElementById('mainGrid').addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();calculate()}
 });
-document.getElementById('mainGrid').addEventListener('input',updateWarnings);
+let secMiniTimer=null;
+document.getElementById('mainGrid').addEventListener('input',e=>{
+  updateWarnings();
+  if(e.target&&e.target.id==='sectionData'){
+    clearTimeout(secMiniTimer);
+    secMiniTimer=setTimeout(drawSecMini,300);
+  }
+});
 document.getElementById('mainGrid').addEventListener('change',updateWarnings);
 
 /* Chart.js 加载失败时提示 */
