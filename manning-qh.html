@@ -54,6 +54,13 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);line-height:1
 .qb-chip{display:inline-flex;align-items:center;padding:5px 11px;border-radius:999px;border:1px solid var(--bdr);background:var(--input-bg);color:var(--t2);font-size:11.5px;font-family:inherit;cursor:pointer;transition:.15s}
 .qb-chip:hover{border-color:var(--pri);color:var(--pri);background:var(--pri-l)}
 .qb-chip.active{background:var(--pri);border-color:var(--pri);color:#fff}
+.ab-txt{height:30px;padding:0 10px;border:1px solid var(--bdr);border-radius:8px;background:var(--input-bg);color:var(--txt);font-size:12px;font-family:inherit}
+.fav-chip{display:inline-flex;align-items:center;gap:2px;padding:4px 4px 4px 11px;border-radius:999px;border:1px solid var(--bdr);background:var(--input-bg);color:var(--t2);font-size:11.5px;cursor:pointer;transition:.15s;max-width:150px}
+.fav-chip:hover{border-color:var(--pri);color:var(--pri);background:var(--pri-l)}
+.fav-chip .fav-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fav-x{border:none;background:none;color:var(--t3);cursor:pointer;font-size:13px;line-height:1;padding:0 5px}
+.fav-x:hover{color:#dc2626}
+.warn-bar{display:none;flex-direction:column;gap:4px;padding:9px 14px;margin-bottom:12px;background:#fef9c3;border:1px solid #fde047;border-radius:var(--radius);color:#854d0e;font-size:12px;line-height:1.6}
 
 .btn{padding:10px 18px;border:none;border-radius:9px;font:600 13.5px/1 inherit;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .btn-p{background:var(--pri);color:#fff;box-shadow:0 2px 8px rgba(var(--pri-rgb),.28);min-width:110px;padding:12px 20px}
@@ -203,11 +210,25 @@ textarea.inp{font-family:var(--mono);font-size:12px;line-height:1.5;min-height:1
         <button type="button" class="qb-chip" data-preset="natural">天然河道</button>
       </div>
     </div>
+    <div class="ab-group">
+      <span class="ab-label">工程信息</span>
+      <div class="quick-bar">
+        <input class="ab-txt" id="projName" placeholder="工程名称" style="width:118px">
+        <input class="ab-txt" id="projSta" placeholder="桩号/断面" style="width:108px">
+      </div>
+    </div>
+    <div class="ab-group">
+      <span class="ab-label">收藏</span>
+      <div class="quick-bar" id="favBar"></div>
+    </div>
     <div class="ab-actions">
+      <button class="btn" onclick="saveFav()">存当前</button>
       <button class="btn" onclick="showReport()">计算书</button>
       <button class="btn btn-p" onclick="calculate()">计算</button>
     </div>
   </div>
+
+  <div class="warn-bar" id="warnBar"></div>
 
   <div class="main-grid" id="mainGrid">
     <div class="input-panel">
@@ -732,6 +753,7 @@ function finishRender(mode){
   const tbody=document.getElementById('resultsBody');
   tbody.innerHTML=R.map((r,i)=>`<tr data-i="${i}">${currentRowFn(r).map(v=>`<td>${v}</td>`).join('')}</tr>`).join('');
   drawMainChart(currentChartType==='section'?'qh':currentChartType);
+  updateWarnings();
 }
 
 function mkDS(label,R,key,color,lw,dash){
@@ -837,7 +859,7 @@ function queryByH(){
   const R=currentResults;
   if(!R.length||isNaN(H)){el.textContent='请先计算';el.classList.remove('has');return}
   const Q=interpQByH(R,H);
-  if(Q==null){el.textContent=`水位需在 ${fv(R[0].wse)}~${fv(R[R.length-1].wse)} m`;}
+  if(Q==null){el.textContent=`⚠ 水位需在 ${fv(R[0].wse)}~${fv(R[R.length-1].wse)} m（超出已算范围，外插不可靠）`;}
   else{
     el.textContent=`Q ≈ ${fv(Q)} m³/s`;
     highlightRow(H);
@@ -850,7 +872,7 @@ function queryByQ(){
   const R=currentResults;
   if(!R.length||isNaN(Q)){el.textContent='请先计算';el.classList.remove('has');return}
   const H=interpHByQ(R,Q);
-  if(H==null)el.textContent=`Q 需在 ${fv(R[0].discharge)}~${fv(R[R.length-1].discharge)} m³/s 附近`;
+  if(H==null)el.textContent=`⚠ Q 需在 ${fv(R[0].discharge)}~${fv(R[R.length-1].discharge)} m³/s（超出已算范围，外插不可靠）`;
   else{el.textContent=`H ≈ ${fv(H)} m`;highlightRow(H)}
   el.classList.add('has');
 }
@@ -883,6 +905,8 @@ function buildReport(){
   const lines=[];
   lines.push('水位流量关系计算书');
   lines.push('生成时间：'+new Date().toLocaleString('zh-CN'));
+  lines.push('工程名称：'+(document.getElementById('projName').value.trim()||'—'));
+  lines.push('桩号/断面：'+(document.getElementById('projSta').value.trim()||'—'));
   let modeName='普通断面（Manning 全断面单一 n）';
   if(currentSectionType==='normal'&&document.getElementById('partOn').checked)modeName='普通断面 · 分区糙率（左滩/主槽/右滩）';
   else if(currentSectionType==='weir')modeName='控制堰（堰流公式）';
@@ -945,12 +969,126 @@ function downloadReport(){
 }
 function closeReport(){document.getElementById('reportOverlay').classList.remove('show')}
 
+/* ========== 收藏（localStorage，最多 8 条） ========== */
+const FAV_KEY='manningQhFavs';
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function favsLoad(){try{return JSON.parse(localStorage.getItem(FAV_KEY))||[]}catch(e){return[]}}
+function favsSave(list){localStorage.setItem(FAV_KEY,JSON.stringify(list.slice(0,8)))}
+function captureInputs(){
+  const vals={};
+  document.querySelectorAll('#panelNormal input,#panelNormal textarea,#panelNormal select,#panelWeir input,#panelWeir select,#panelCompound input,#panelCompound textarea,#panelCompound select').forEach(el=>{
+    if(!el.id)return;
+    vals[el.id]=el.type==='checkbox'?el.checked:el.value;
+  });
+  vals._projName=document.getElementById('projName').value;
+  vals._projSta=document.getElementById('projSta').value;
+  return{mode:currentSectionType,vals};
+}
+function applyFav(fav){
+  switchType(fav.mode,document.querySelector(`#modeSeg button[data-mode="${fav.mode}"]`));
+  Object.keys(fav.vals).forEach(id=>{
+    if(id==='_projName'){document.getElementById('projName').value=fav.vals[id]||'';return}
+    if(id==='_projSta'){document.getElementById('projSta').value=fav.vals[id]||'';return}
+    const el=document.getElementById(id);
+    if(!el)return;
+    if(el.type==='checkbox')el.checked=!!fav.vals[id];
+    else el.value=fav.vals[id];
+  });
+  if(fav.mode==='weir')updateWeirCoeffHelp();
+  if(fav.mode==='compound')updateCWeirCoeffHelp();
+  updateWarnings();
+}
+function saveFav(){
+  const name=prompt('收藏名称（回填用，最多 8 条）','工况 '+new Date().toLocaleString('zh-CN'));
+  if(name==null)return;
+  const list=favsLoad();
+  list.unshift({name:(name.trim()||'未命名'),t:Date.now(),...captureInputs()});
+  favsSave(list);renderFavs();
+}
+function delFav(t){favsSave(favsLoad().filter(f=>f.t!==t));renderFavs()}
+function renderFavs(){
+  const box=document.getElementById('favBar');
+  const list=favsLoad();
+  box.innerHTML=list.length?list.map(f=>
+    `<span class="fav-chip" data-t="${f.t}" title="${esc(f.name)}（${new Date(f.t).toLocaleString('zh-CN')}）点击回填"><span class="fav-name">${esc(f.name)}</span><button type="button" class="fav-x" title="删除">×</button></span>`
+  ).join(''):'<span class="hint" style="margin:0">暂无收藏，点「存当前」保存</span>';
+}
+document.getElementById('favBar').addEventListener('click',e=>{
+  const chip=e.target.closest('.fav-chip');
+  if(!chip)return;
+  const t=Number(chip.dataset.t);
+  if(e.target.closest('.fav-x')){delFav(t);return}
+  const f=favsLoad().find(v=>v.t===t);
+  if(f)applyFav(f);
+});
+
+/* ========== 适用性黄条提醒（只提醒、不拦算） ========== */
+function collectWarnings(){
+  const w=[];
+  const nCheck=(id,label)=>{
+    const el=document.getElementById(id);
+    if(!el||el.value==='')return;
+    const v=parseFloat(el.value);
+    if(!isNaN(v)&&(v<0.011||v>0.1))w.push(`${label} n = ${v} 超出常用范围 0.011~0.10，请核对`);
+  };
+  const slopeCheck=(id,label)=>{
+    const el=document.getElementById(id);
+    if(!el||el.value==='')return;
+    const v=parseFloat(el.value);
+    if(!isNaN(v)&&(v<0.00001||v>0.05))w.push(`${label} S = ${v} 超出常用范围 0.00001~0.05，请核对`);
+  };
+  const mRanges={broad:[0.32,0.385],practical:[0.42,0.50],sharp:[0.42,0.46]};
+  const mCheck=(typeId,mId)=>{
+    const wt=document.getElementById(typeId).value,m=parseFloat(document.getElementById(mId).value);
+    const r=mRanges[wt];
+    if(!isNaN(m)&&r&&(m<r[0]||m>r[1]))w.push(`流量系数 m = ${m} 超出该堰型常用范围 ${r[0]}~${r[1]}，请核对`);
+  };
+  if(currentSectionType==='normal'){
+    if(document.getElementById('partOn').checked){
+      nCheck('partNL','左滩');nCheck('partNM','主槽');nCheck('partNR','右滩');
+      slopeCheck('slope','河床比降');
+    }else{
+      nCheck('mannN','糙率');slopeCheck('slope','河床比降');
+    }
+  }else if(currentSectionType==='weir'){
+    mCheck('weirType','weirM');
+  }else{
+    slopeCheck('cSlope','河床比降');
+    mCheck('cWeirType','cWeirM');
+    nCheck('cLeftN','左天然');nCheck('cRightN','右天然');
+  }
+  const secId=currentSectionType==='compound'?'cSectionData':(currentSectionType==='normal'?'sectionData':null);
+  if(secId){
+    const raw=document.getElementById(secId).value.trim();
+    if(raw){
+      const lines=raw.split('\n').map(l=>l.trim()).filter(l=>l&&!l.startsWith('#'));
+      const xs=lines.map(l=>{const p=l.split(/[\s,;]+/).map(Number).filter(n=>!isNaN(n));return p[0]}).filter(x=>x!==undefined);
+      const seen=new Set();
+      for(const x of xs){if(seen.has(x)){w.push(`断面存在重复桩号 ${x}，请核对输入`);break}seen.add(x)}
+      const sorted=[...xs].sort((a,b)=>a-b);
+      if(xs.some((v,i)=>v!==sorted[i]))w.push('断面桩号未按递增排列，计算时已自动排序，请核对输入顺序');
+    }
+  }
+  return w;
+}
+function updateWarnings(){
+  const el=document.getElementById('warnBar');
+  const w=collectWarnings();
+  if(!w.length){el.style.display='none';el.innerHTML='';return}
+  el.style.display='flex';
+  el.innerHTML=w.map(s=>`<div>⚠ ${s}</div>`).join('');
+}
+
 /* 默认加载 U 形样例便于预览 */
 loadPreset('ushape');
 updateWeirCoeffHelp();updateCWeirCoeffHelp();
+renderFavs();
+updateWarnings();
 document.getElementById('mainGrid').addEventListener('keydown',e=>{
   if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();calculate()}
 });
+document.getElementById('mainGrid').addEventListener('input',updateWarnings);
+document.getElementById('mainGrid').addEventListener('change',updateWarnings);
 
 /* Chart.js 加载失败时提示 */
 if(typeof Chart==='undefined'){
