@@ -1,72 +1,24 @@
-// manning-qh — 基准（计算逻辑与原 manning-qh.html 一致）
-// 用法: node baseline.js
+// manning-qh — 基准生成
+// 计算函数从 manning-qh.html 的 calc 区抽取（单一事实来源，避免副本漂移）
+// 用法: node manning-qh-baseline.js  > manning-qh-baseline-expected.json
+const fs = require('fs');
+const path = require('path');
 
-function getZ(pts,x){
-  if(x<=pts[0].x)return pts[0].z;
-  if(x>=pts[pts.length-1].x)return pts[pts.length-1].z;
-  for(let i=0;i<pts.length-1;i++){
-    if(x>=pts[i].x&&x<=pts[i+1].x){const t=(x-pts[i].x)/(pts[i+1].x-pts[i].x);return pts[i].z+t*(pts[i+1].z-pts[i].z);}
-  }
-  return pts[pts.length-1].z;
-}
-
-function computeManning(pts,wse,slopeVal,nVal){
-  const zMin=Math.min(...pts.map(p=>p.z));
-  if(wse<=zMin)return null;
-  const xMin=pts[0].x,xMax=pts[pts.length-1].x,dx=0.05;
-  const ints=[];
-  for(let i=0;i<pts.length-1;i++){
-    if((pts[i].z-wse)*(pts[i+1].z-wse)<0){
-      const t=(wse-pts[i].z)/(pts[i+1].z-pts[i].z);
-      ints.push(pts[i].x+t*(pts[i+1].x-pts[i].x));
-    }
-  }
-  const ui=[...new Set(ints.map(v=>v.toFixed(6)))].map(Number).sort((a,b)=>a-b);
-  const xCuts=[xMin];for(const xi of ui){if(xi>xMin&&xi<xMax)xCuts.push(xi);}xCuts.push(xMax);xCuts.sort((a,b)=>a-b);
-  let A=0,Pw=0;
-  for(let ci=0;ci<xCuts.length-1;ci++){
-    const xa=xCuts[ci],xb=xCuts[ci+1];
-    if(getZ(pts,(xa+xb)/2)>=wse)continue;
-    const ns=Math.max(2,Math.ceil((xb-xa)/dx)),sd=(xb-xa)/ns;
-    for(let s=0;s<ns;s++){
-      const x0=xa+s*sd,x1=x0+sd,z0=getZ(pts,x0),z1=getZ(pts,x1);
-      const d0=Math.max(0,wse-z0),d1=Math.max(0,wse-z1);
-      A+=(d0+d1)/2*sd;Pw+=Math.sqrt(sd*sd+(z1-z0)*(z1-z0));
-    }
-  }
-  if(A<=0)return null;
-  const R=A/Pw;
-  const V=(1/nVal)*Math.pow(R,2/3)*Math.sqrt(slopeVal);
-  return{area:A,wetPerimeter:Pw,hydraulicRadius:R,velocity:V,discharge:V*A,n:nVal};
-}
-
-function computeWeirQ(wse,crestZ,B,m,wt){
-  if(wse<=crestZ)return 0;
-  const H=wse-crestZ,g=9.81;
-  if(wt==='broad') return m*B*Math.sqrt(2*g)*Math.pow(H,1.5);
-  if(wt==='practical') return m*B*Math.sqrt(2*g)*Math.pow(H+0.003,1.5);
-  return m*B*Math.sqrt(2*g)*Math.pow(H,1.5);
-}
+const html = fs.readFileSync(path.join(__dirname, 'manning-qh.html'), 'utf8');
+const start = html.indexOf('function getZ');
+const end = html.indexOf('/* ========== UI ==========');
+if (start < 0 || end < 0) { console.error('cannot locate calc block'); process.exit(1); }
+const api = new Function(html.slice(start, end) + '\nreturn {getZ, computeManning, computeManningSubsection, sliceSection, computeManningPartitioned, computeWeirQ, interpQByH, interpHByQ};')();
 
 function parseSectionText(raw){
-  const lines=String(raw).trim().split('\n').map(l=>l.trim()).filter(l=>l&&!l.startsWith('#'));
-  const pts=[];
-  for(const line of lines){
-    const parts=line.split(/[\s,;]+/).map(Number).filter(n=>!isNaN(n));
-    if(parts.length>=2) pts.push({x:parts[0],z:parts[1]});
+  const lines = String(raw).trim().split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+  const pts = [];
+  for (const line of lines){
+    const parts = line.split(/[\s,;]+/).map(Number).filter(n => !isNaN(n));
+    if (parts.length >= 2) pts.push({x: parts[0], z: parts[1]});
   }
-  pts.sort((a,b)=>a.x-b.x);
+  pts.sort((a, b) => a.x - b.x);
   return pts;
-}
-
-function calcNormalSeries(pts, slope, nVal, wS, wE, step){
-  const res=[];
-  const zMin=Math.min(...pts.map(p=>p.z));
-  for(let w=wS;w<=wE+step*0.001;w+=step){
-    const r=computeManning(pts,w,slope,nVal);
-    if(r)res.push({wse:w,depth:w-zMin,...r});
-  }
-  return res;
 }
 
 const U = `0    52.0
@@ -82,28 +34,66 @@ const U = `0    52.0
 120  52.0`;
 
 const ptsU = parseSectionText(U);
-const series = calcNormalSeries(ptsU, 0.0005, 0.035, 42.0, 48.0, 1.0);
 
-// 选取关键点用于基准
-const pick = r => ({
-  wse: r.wse, depth: r.depth,
-  area: r.area, wetPerimeter: r.wetPerimeter,
-  hydraulicRadius: r.hydraulicRadius,
-  velocity: r.velocity, discharge: r.discharge
-});
+function pick(r){
+  return {
+    wse: r.wse, depth: r.depth,
+    area: r.area, wetPerimeter: r.wetPerimeter,
+    hydraulicRadius: r.hydraulicRadius,
+    velocity: r.velocity, discharge: r.discharge
+  };
+}
 
-// 单点验算（与序列中同水位一致）
-const single = computeManning(ptsU, 45.0, 0.0005, 0.035);
+// —— 工况1：全断面单一 n 系列（U 形，S=0.0005，n=0.035，H=43~48 步长1）——
+const series = [];
+for (let w = 43.0; w <= 48.0 + 0.001; w += 1.0){
+  const r = api.computeManning(ptsU, w, 0.0005, 0.035);
+  if (r) series.push(pick({wse: w, depth: w - 42, ...r}));
+}
 
-// 堰流验算
-const weirBroad = computeWeirQ(45.0, 42.0, 50, 0.36, 'broad');
-const weirPrac = computeWeirQ(45.0, 42.0, 50, 0.45, 'practical');
+// —— 工况2：单点 H=45 ——
+const single = api.computeManning(ptsU, 45.0, 0.0005, 0.035);
+
+// —— 工况3：堰流 ——
+const weirBroad = api.computeWeirQ(45.0, 42.0, 50, 0.36, 'broad');
+const weirPrac = api.computeWeirQ(45.0, 42.0, 50, 0.45, 'practical');
+
+// —— 工况4：三分区糙率（左滩 n=0.045 / 主槽 n=0.030 / 右滩 n=0.045，分界 20/100，H=45）——
+const part = api.computeManningPartitioned(ptsU, 45.0, 0.0005, 0.045, 0.030, 0.045, 20, 100);
+
+// —— 工况5：堰+天然复合（堰段 40~80，堰顶 42，m=0.36 宽顶堰，n左=n右=0.04，H=44）——
+// 复合汇总与 calcCompound 同一约定：Q总 = Q堰 + Q左 + Q右
+const cWse = 44.0, cSlope = 0.0005, cNL = 0.04, cNR = 0.04, cX0 = 40, cX1 = 80, cCrest = 42, cM = 0.36;
+const cl = api.computeManningSubsection(ptsU, cWse, cSlope, cNL, 0, cX0);
+const cr = api.computeManningSubsection(ptsU, cWse, cSlope, cNR, cX1, 120);
+const cqw = api.computeWeirQ(cWse, cCrest, cX1 - cX0, cM, 'broad');
+const compound = {
+  wse: cWse,
+  qWeir: cqw,
+  qLeft: cl ? cl.discharge : 0,
+  qRight: cr ? cr.discharge : 0,
+  qTotal: cqw + (cl ? cl.discharge : 0) + (cr ? cr.discharge : 0)
+};
+
+// —— 工况6：互查插值（基于工况1系列，H 范围 43~48）——
+const q435 = api.interpQByH(series, 43.5);
+const qMid = (series[0].discharge + series[1].discharge) / 2;
+const hMid = api.interpHByQ(series, qMid);
+const interp = { qAtH43_5: q435, qMidLow: qMid, hAtQMid: hMid };
 
 console.log(JSON.stringify({
-  note:'manning-qh baseline',
+  note: 'manning-qh baseline（生成源：manning-qh.html calc 区）',
+  cases: ['seriesU', 'singleH45', 'weir', 'partition3', 'compound', 'interp'],
   nPoints: series.length,
-  series: series.map(pick),
-  singleH45: single ? pick({wse:45, depth:45-42, ...single}) : null,
+  series,
+  singleH45: single ? pick({wse: 45, depth: 45 - 42, ...single}) : null,
   weirBroadH3: weirBroad,
-  weirPracH3: weirPrac
+  weirPracH3: weirPrac,
+  partitionH45: part ? {
+    qLeft: part.qLeft, qMain: part.qMain, qRight: part.qRight,
+    area: part.area, wetPerimeter: part.wetPerimeter,
+    hydraulicRadius: part.hydraulicRadius, velocity: part.velocity, discharge: part.discharge
+  } : null,
+  compoundH44: compound,
+  interp
 }, null, 2));

@@ -157,6 +157,13 @@ textarea.inp{font-family:var(--mono);font-size:12px;line-height:1.5;min-height:1
 .float-tip{position:fixed;z-index:9999;max-width:280px;padding:8px 12px;border-radius:8px;background:var(--txt);color:#fff;font-size:12px;line-height:1.5;white-space:pre-line;box-shadow:0 8px 24px rgba(15,23,42,.2);pointer-events:none;opacity:0;visibility:hidden;transition:opacity .12s}
 .float-tip.show{opacity:1;visibility:visible}
 
+.report-overlay{position:fixed;inset:0;z-index:10000;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:20px}
+.report-overlay.show{display:flex}
+.report-box{background:#fff;border-radius:12px;width:min(720px,100%);max-height:82vh;display:flex;flex-direction:column;box-shadow:0 18px 48px rgba(15,23,42,.25)}
+.report-hd{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #e5e7eb;font-size:14px;color:var(--txt)}
+.report-box pre{flex:1;overflow:auto;margin:0;padding:14px 16px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;line-height:1.65;color:#1f2937;white-space:pre-wrap}
+.report-ft{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid #e5e7eb}
+
 @media print{.topbar{background:#0f2744!important;-webkit-print-color-adjust:exact}.action-bar,.btn,.back{display:none!important}}
 </style>
 <link rel="stylesheet" href="auth-gate.css">
@@ -197,6 +204,7 @@ textarea.inp{font-family:var(--mono);font-size:12px;line-height:1.5;min-height:1
       </div>
     </div>
     <div class="ab-actions">
+      <button class="btn" onclick="showReport()">计算书</button>
       <button class="btn btn-p" onclick="calculate()">计算</button>
     </div>
   </div>
@@ -215,6 +223,20 @@ textarea.inp{font-family:var(--mono);font-size:12px;line-height:1.5;min-height:1
               <div class="f-item"><label>终止水位 <span class="u">m</span></label><input class="inp num" type="number" id="wseEnd" step="any" placeholder="自动=河底最高点"></div>
               <div class="f-item"><label>水位步长 <span class="u">m</span></label><input class="inp num" type="number" id="wseStep" value="0.2" step="any" min="0.01"></div>
             </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-hd"><h2>分区糙率</h2><span class="chip">左滩 · 主槽 · 右滩</span></div>
+          <div class="panel-bd">
+            <div class="hint"><label><input type="checkbox" id="partOn"> 启用三分区糙率（分区叠加法）</label></div>
+            <div class="f-grid" style="margin-top:8px">
+              <div class="f-item"><label>左滩 n</label><input class="inp num" type="number" id="partNL" value="0.045" step="any" min="0.001"></div>
+              <div class="f-item"><label>主槽 n</label><input class="inp num" type="number" id="partNM" value="0.035" step="any" min="0.001"></div>
+              <div class="f-item"><label>右滩 n</label><input class="inp num" type="number" id="partNR" value="0.045" step="any" min="0.001"></div>
+              <div class="f-item"><label>左/主分界桩号 <span class="u">m</span></label><input class="inp num" type="number" id="partX1" step="any" placeholder="自动=1/4 桩号"></div>
+              <div class="f-item"><label>主/右分界桩号 <span class="u">m</span></label><input class="inp num" type="number" id="partX2" step="any" placeholder="自动=3/4 桩号"></div>
+            </div>
+            <div class="hint">三分区各自用本区 n 按曼宁公式算 Q 后叠加；同水位、不计分界竖线摩阻。</div>
           </div>
         </div>
         <div class="panel">
@@ -372,6 +394,7 @@ textarea.inp{font-family:var(--mono);font-size:12px;line-height:1.5;min-height:1
       <div class="fml"><b>Manning</b>　Q = (1/n)·A·R<sup>2/3</sup>·S<sup>1/2</sup>　R=A/P</div>
       <div class="fml"><b>堰流</b>　Q = m·B·√(2g)·H<sup>3/2</sup>　实用堰 H 加 0.003</div>
       <div class="fml"><b>复合断面</b>　Q<sub>总</sub> = Q<sub>左天然</sub> + Q<sub>堰</sub> + Q<sub>右天然</sub></div>
+      <div class="fml"><b>分区糙率</b>　Q<sub>总</sub> = Q<sub>左滩</sub> + Q<sub>主槽</sub> + Q<sub>右滩</sub>（各区 n 分别取值，分区叠加）</div>
     </div>
   </div>
 
@@ -379,6 +402,18 @@ textarea.inp{font-family:var(--mono);font-size:12px;line-height:1.5;min-height:1
 </div>
 
 <div class="float-tip" id="floatTip"><span class="ft-arrow"></span><span class="ft-text"></span></div>
+
+<div class="report-overlay" id="reportOverlay">
+  <div class="report-box">
+    <div class="report-hd"><b>计算书</b><span class="hint" style="margin:0">纯文本 · 可整篇复制</span></div>
+    <pre id="reportText"></pre>
+    <div class="report-ft">
+      <button class="btn" onclick="copyReport()">复制全文</button>
+      <button class="btn" onclick="downloadReport()">下载 .txt</button>
+      <button class="btn btn-p" onclick="closeReport()">关闭</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ========== 计算逻辑（与原版一致） ========== */
@@ -424,6 +459,52 @@ function computeManningSubsection(pts,wse,slopeVal,nVal,xStart,xEnd){
   const sub=pts.filter(p=>p.x>=xStart&&p.x<=xEnd);
   if(sub.length<2)return{area:0,wetPerimeter:0,hydraulicRadius:0,velocity:0,discharge:0,n:nVal};
   return computeManning(sub,wse,slopeVal,nVal);
+}
+/* 分区断面精确切片：端点用折线插值补出，保证三分区面积/湿周无缺口 */
+function sliceSection(pts,x0,x1){
+  const sub=[{x:x0,z:getZ(pts,x0)}];
+  for(let i=0;i<pts.length;i++){if(pts[i].x>x0&&pts[i].x<x1)sub.push(pts[i]);}
+  sub.push({x:x1,z:getZ(pts,x1)});
+  return sub;
+}
+/* 三分区糙率（左滩/主槽/右滩）分区叠加：各区独立曼宁后 Q 相加 */
+function computeManningPartitioned(pts,wse,slopeVal,nL,nM,nR,x1,x2){
+  const xMin=pts[0].x,xMax=pts[pts.length-1].x;
+  if(!(x1>xMin&&x2>x1&&x2<xMax))return null;
+  const zMin=Math.min(...pts.map(p=>p.z));
+  if(wse<=zMin)return null;
+  const L=computeManning(sliceSection(pts,xMin,x1),wse,slopeVal,nL);
+  const M=computeManning(sliceSection(pts,x1,x2),wse,slopeVal,nM);
+  const Rr=computeManning(sliceSection(pts,x2,xMax),wse,slopeVal,nR);
+  const g=r=>r?{q:r.discharge,a:r.area,p:r.wetPerimeter,b:r.surfaceWidth||0}:{q:0,a:0,p:0,b:0};
+  const l=g(L),m=g(M),rr=g(Rr);
+  const A=l.a+m.a+rr.a,P=l.p+m.p+rr.p,B=l.b+m.b+rr.b;
+  if(A<=0)return null;
+  const Q=l.q+m.q+rr.q;
+  return{area:A,wetPerimeter:P,surfaceWidth:B,hydraulicRadius:A/P,velocity:Q/A,discharge:Q,
+    qLeft:l.q,qMain:m.q,qRight:rr.q,n:nM};
+}
+/* 互查插值（线性） */
+function interpQByH(R,H){
+  if(!R||!R.length||isNaN(H))return null;
+  if(H<=R[0].wse||H>=R[R.length-1].wse)return null;
+  for(let i=0;i<R.length-1;i++){
+    if(H>=R[i].wse&&H<=R[i+1].wse){
+      const t=(H-R[i].wse)/(R[i+1].wse-R[i].wse||1);
+      return R[i].discharge+t*(R[i+1].discharge-R[i].discharge);
+    }
+  }
+  return null;
+}
+function interpHByQ(R,Q){
+  if(!R||!R.length||isNaN(Q))return null;
+  for(let i=0;i<R.length-1;i++){
+    const q0=R[i].discharge,q1=R[i+1].discharge;
+    if((Q-q0)*(Q-q1)<=0&&q1!==q0){
+      return R[i].wse+(Q-q0)/(q1-q0)*(R[i+1].wse-R[i].wse);
+    }
+  }
+  return null;
 }
 function computeWeirQ(wse,crestZ,B,m,wt){
   if(wse<=crestZ)return 0;
@@ -522,14 +603,33 @@ function calcNormal(){
   const wS=parseFloat(document.getElementById('wseStart').value)||zMin+0.01;
   const wE=parseFloat(document.getElementById('wseEnd').value)||zMax;
   if(wS>=wE){alert('起算水位必须小于终止水位');return}
+  const partOn=document.getElementById('partOn').checked;
   const res=[];
-  for(let w=wS;w<=wE+step*0.001;w+=step){
-    const r=computeManning(pts,w,slope,nVal);
-    if(r)res.push({wse:w,depth:w-zMin,...r});
+  if(partOn){
+    const nL=parseFloat(document.getElementById('partNL').value)||0.045;
+    const nM=parseFloat(document.getElementById('partNM').value)||0.035;
+    const nR=parseFloat(document.getElementById('partNR').value)||0.045;
+    const xMin=pts[0].x,xMax=pts[pts.length-1].x;
+    let x1=parseFloat(document.getElementById('partX1').value);
+    let x2=parseFloat(document.getElementById('partX2').value);
+    if(isNaN(x1))x1=xMin+(xMax-xMin)*0.25;
+    if(isNaN(x2))x2=xMin+(xMax-xMin)*0.75;
+    if(!(x1>xMin&&x2>x1&&x2<xMax)){alert('分界桩号须满足 断面起点 < 左/主分界 < 主/右分界 < 断面终点');return}
+    for(let w=wS;w<=wE+step*0.001;w+=step){
+      const r=computeManningPartitioned(pts,w,slope,nL,nM,nR,x1,x2);
+      if(r)res.push({wse:w,depth:w-zMin,...r,nL,nM,nR,x1,x2});
+    }
+    currentHeaders=['水位(m)','水深(m)','水面宽度(m)','面积(m²)','湿周(m)','R(m)','流速(m/s)','流量(m³/s)','左滩Q','主槽Q','右滩Q'];
+    currentRowFn=r=>[fv(r.wse),fv(r.depth),fv(r.surfaceWidth),fv(r.area),fv(r.wetPerimeter),fv(r.hydraulicRadius,3),fv(r.velocity,3),fv(r.discharge),fv(r.qLeft),fv(r.qMain),fv(r.qRight)];
+  }else{
+    for(let w=wS;w<=wE+step*0.001;w+=step){
+      const r=computeManning(pts,w,slope,nVal);
+      if(r)res.push({wse:w,depth:w-zMin,...r});
+    }
+    currentHeaders=['水位(m)','水深(m)','水面宽度(m)','面积(m²)','湿周(m)','R(m)','流速(m/s)','流量(m³/s)','n'];
+    currentRowFn=r=>[fv(r.wse),fv(r.depth),fv(r.surfaceWidth),fv(r.area),fv(r.wetPerimeter),fv(r.hydraulicRadius,3),fv(r.velocity,3),fv(r.discharge),fv(r.n,4)];
   }
   currentResults=res;
-  currentHeaders=['水位(m)','水深(m)','水面宽度(m)','面积(m²)','湿周(m)','R(m)','流速(m/s)','流量(m³/s)','n'];
-  currentRowFn=r=>[fv(r.wse),fv(r.depth),fv(r.surfaceWidth),fv(r.area),fv(r.wetPerimeter),fv(r.hydraulicRadius,3),fv(r.velocity,3),fv(r.discharge),fv(r.n,4)];
   finishRender('normal');
 }
 
@@ -665,6 +765,11 @@ function drawMainChart(type){
     }else{
       ds=[mkDS('Q-H',R,'discharge','#2563eb',3.5)];
       ds[0].fill={target:'origin',above:'rgba(37,99,235,.06)'};
+      if(R[0]&&R[0].qMain!==undefined){
+        ds.push(mkDS('主槽',R,'qMain','#059669',2,[4,4]));
+        ds.push(mkDS('左滩',R,'qLeft','#d97706',2,[4,4]));
+        ds.push(mkDS('右滩',R,'qRight','#c2410c',2,[4,4]));
+      }
     }
     xl='流量 Q (m³/s)';yl='水位 H (m)';title='水位—流量关系 Q-H';
   }else if(type==='vh'){
@@ -679,7 +784,7 @@ function drawMainChart(type){
       responsive:true,maintainAspectRatio:false,
       plugins:{
         title:{display:true,text:title,font:{size:14,weight:'600'},color:'#0f172a'},
-        legend:{display:currentSectionType==='compound'&&type==='qh',position:'top',labels:{font:{size:11}}},
+        legend:{display:(currentSectionType==='compound'||(R[0]&&R[0].qMain!==undefined))&&type==='qh',position:'top',labels:{font:{size:11}}},
         tooltip:{callbacks:{label:ci=>{
           const rd=R[ci.dataIndex];
           return [`水位 ${fv(rd.wse)} m`,`流量 ${fv(rd.discharge)} m³/s`,`流速 ${fv(rd.velocity,3)} m/s`];
@@ -731,16 +836,9 @@ function queryByH(){
   const el=document.getElementById('queryHResult');
   const R=currentResults;
   if(!R.length||isNaN(H)){el.textContent='请先计算';el.classList.remove('has');return}
-  if(H<=R[0].wse||H>=R[R.length-1].wse){el.textContent=`水位需在 ${fv(R[0].wse)}~${fv(R[R.length-1].wse)} m`;}
+  const Q=interpQByH(R,H);
+  if(Q==null){el.textContent=`水位需在 ${fv(R[0].wse)}~${fv(R[R.length-1].wse)} m`;}
   else{
-    let Q=0;
-    for(let i=0;i<R.length-1;i++){
-      if(H>=R[i].wse&&H<=R[i+1].wse){
-        const t=(H-R[i].wse)/(R[i+1].wse-R[i].wse||1);
-        Q=R[i].discharge+t*(R[i+1].discharge-R[i].discharge);
-        break;
-      }
-    }
     el.textContent=`Q ≈ ${fv(Q)} m³/s`;
     highlightRow(H);
   }
@@ -751,14 +849,7 @@ function queryByQ(){
   const el=document.getElementById('queryQResult');
   const R=currentResults;
   if(!R.length||isNaN(Q)){el.textContent='请先计算';el.classList.remove('has');return}
-  let H=null;
-  for(let i=0;i<R.length-1;i++){
-    const q0=R[i].discharge,q1=R[i+1].discharge;
-    if((Q-q0)*(Q-q1)<=0&&q1!==q0){
-      H=R[i].wse+(Q-q0)/(q1-q0)*(R[i+1].wse-R[i].wse);
-      break;
-    }
-  }
+  const H=interpHByQ(R,Q);
   if(H==null)el.textContent=`Q 需在 ${fv(R[0].discharge)}~${fv(R[R.length-1].discharge)} m³/s 附近`;
   else{el.textContent=`H ≈ ${fv(H)} m`;highlightRow(H)}
   el.classList.add('has');
@@ -784,6 +875,75 @@ function copyTable(){
   navigator.clipboard.writeText(t).then(()=>alert('已复制'));
 }
 function toggleAcc(hd){hd.parentElement.classList.toggle('open')}
+
+/* ========== 计算书（纯文本） ========== */
+function buildReport(){
+  const R=currentResults;
+  if(!R.length||!currentRowFn)return null;
+  const lines=[];
+  lines.push('水位流量关系计算书');
+  lines.push('生成时间：'+new Date().toLocaleString('zh-CN'));
+  let modeName='普通断面（Manning 全断面单一 n）';
+  if(currentSectionType==='normal'&&document.getElementById('partOn').checked)modeName='普通断面 · 分区糙率（左滩/主槽/右滩）';
+  else if(currentSectionType==='weir')modeName='控制堰（堰流公式）';
+  else if(currentSectionType==='compound')modeName='堰+天然复合断面（分区叠加）';
+  lines.push('计算模式：'+modeName);
+  lines.push('');
+  lines.push('【输入参数】');
+  if(currentSectionType==='normal'){
+    const pts=parseSection('sectionData');
+    lines.push('断面点数：'+pts.length+'（桩号 '+pts[0].x+'~'+pts[pts.length-1].x+' m）');
+    lines.push('河床比降 S = '+document.getElementById('slope').value+' m/m');
+    if(document.getElementById('partOn').checked&&R[0].nL!==undefined){
+      lines.push('左滩 n = '+R[0].nL+'，主槽 n = '+R[0].nM+'，右滩 n = '+R[0].nR);
+      lines.push('分界桩号：左/主 '+R[0].x1+' m，主/右 '+R[0].x2+' m');
+    }else{
+      lines.push('糙率 n = '+document.getElementById('mannN').value);
+    }
+  }else if(currentSectionType==='weir'){
+    const wt=document.getElementById('weirType').selectedOptions[0].textContent;
+    lines.push('堰型：'+wt);
+    lines.push('堰顶高程 = '+document.getElementById('weirCrestZ').value+' m，堰宽 B = '+document.getElementById('weirWidth').value+' m');
+    lines.push('流量系数 m = '+document.getElementById('weirM').value);
+  }else{
+    const wt=document.getElementById('cWeirType').selectedOptions[0].textContent;
+    lines.push('堰型：'+wt+'，堰顶高程 ≈ '+(R[0].crestZ!=null?R[0].crestZ:'—')+' m，堰宽 B ≈ '+(R[0].Bweir!=null?R[0].Bweir:'—')+' m');
+    lines.push('流量系数 m = '+document.getElementById('cWeirM').value);
+    lines.push('左天然 n = '+document.getElementById('cLeftN').value+'（'+(document.getElementById('cLeftOn').checked?'计入':'不计入')+'），右天然 n = '+document.getElementById('cRightN').value+'（'+(document.getElementById('cRightOn').checked?'计入':'不计入')+'）');
+    lines.push('堰段桩号：'+(R[0].wx0!=null?R[0].wx0:'—')+'~'+(R[0].wx1!=null?R[0].wx1:'—')+' m');
+    lines.push('河床比降 S = '+document.getElementById('cSlope').value+' m/m');
+  }
+  lines.push('水位范围：'+fv(R[0].wse)+'~'+fv(R[R.length-1].wse)+' m，共 '+R.length+' 个计算点');
+  lines.push('');
+  lines.push('【计算公式】');
+  lines.push('曼宁公式：V = (1/n)·R^(2/3)·S^(1/2)，R = A/P，Q = V·A');
+  if(currentSectionType!=='normal')lines.push('堰流公式：Q = m·B·√(2g)·H^(3/2)（g = 9.81 m/s²）'+(document.getElementById(currentSectionType==='weir'?'weirType':'cWeirType').value==='practical'?'；WES 实用堰水头取 H+0.003 m':''));
+  if(currentSectionType!=='normal'||(document.getElementById('partOn').checked&&R[0].nL!==undefined)){
+    lines.push('分区叠加：各分区用本区 n（或堰流公式）独立计算 Q 后直接相加');
+    lines.push('假定与约定：分区水面同高；不计分界竖线摩阻与分区间动量交换；分区 A/P 取本段河床折线');
+  }
+  lines.push('');
+  lines.push('【计算成果表】');
+  lines.push(currentHeaders.join('\t'));
+  R.forEach(r=>lines.push(currentRowFn(r).join('\t')));
+  lines.push('');
+  lines.push('注：本计算书由水位流量关系工具生成，仅供参考；实际工程以规范原文及审查意见为准。');
+  return lines.join('\n');
+}
+function showReport(){
+  const text=buildReport();
+  if(!text){alert('请先点击「计算」');return}
+  document.getElementById('reportText').textContent=text;
+  document.getElementById('reportOverlay').classList.add('show');
+}
+function copyReport(){
+  navigator.clipboard.writeText(document.getElementById('reportText').textContent).then(()=>alert('计算书已复制'));
+}
+function downloadReport(){
+  const blob=new Blob(['﻿'+document.getElementById('reportText').textContent],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='QH-计算书.txt';a.click();
+}
+function closeReport(){document.getElementById('reportOverlay').classList.remove('show')}
 
 /* 默认加载 U 形样例便于预览 */
 loadPreset('ushape');
